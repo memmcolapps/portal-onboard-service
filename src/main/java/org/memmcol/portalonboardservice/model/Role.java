@@ -15,7 +15,6 @@ public class Role implements Serializable{
 
 
 	private UUID id;
-	private UUID orgId;
 	private UUID userId;
     private String userRole;
 
@@ -25,14 +24,6 @@ public class Role implements Serializable{
 
 	public void setId(UUID id) {
 		this.id = id;
-	}
-
-	public UUID getOrgId() {
-		return orgId;
-	}
-
-	public void setOrgId(UUID orgId) {
-		this.orgId = orgId;
 	}
 
 	public UUID getUserId() {
