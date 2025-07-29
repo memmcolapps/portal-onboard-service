@@ -13,7 +13,6 @@ public class Role implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
-
 	private UUID id;
 	private UUID userId;
     private String userRole;
