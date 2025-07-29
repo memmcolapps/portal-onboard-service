@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.CustomUserDetails;
-import org.memmcol.portalonboardservice.model.DataAuditDTO;
+import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.Operator;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.slf4j.Logger;
@@ -107,7 +107,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 			Authentication authentication) throws IOException, ServletException {
 		CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
 //		User user = (User) authentication.getPrincipal();// Add a custom header with the JWT token
-		DataAuditDTO auditNotificationDTO = new DataAuditDTO();
+		AuditLog auditNotificationDTO = new AuditLog();
 		String ipAddress = getClientIp(request);
 		String userAgent = request.getHeader("User-Agent");
 		Algorithm algorithm = Algorithm.HMAC256("secret".getBytes()); //Encrypt/Sign the token

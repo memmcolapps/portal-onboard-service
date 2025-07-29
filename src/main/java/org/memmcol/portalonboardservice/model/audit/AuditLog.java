@@ -1,27 +1,45 @@
-package org.memmcol.portalonboardservice.model;
+package org.memmcol.portalonboardservice.model.audit;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.memmcol.portalonboardservice.model.Operator;
+import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
+import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "portal-audit-logs")
-public class DataAuditDTO {
+public class AuditLog {
 
     @Id
     private String id;
+
     private Operator creator;
+
     private String description;
+
+    private String reason;
+
     private String type;
+
     private String userAgent;
+
     private String ipAddress;
+
     private Operator operator;
+
+    private SubStationTransformerFeederLine subStationTransformerFeederLine;
+
+    private RegionBhubServiceCenter regionBhubServiceCenter;
+
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
 
-    public DataAuditDTO() {
+    public AuditLog() {
         this.createdAt = new Date();
     }
 
@@ -87,5 +105,29 @@ public class DataAuditDTO {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public SubStationTransformerFeederLine getSubStationTransformerFeederLine() {
+        return subStationTransformerFeederLine;
+    }
+
+    public void setSubStationTransformerFeederLine(SubStationTransformerFeederLine subStationTransformerFeederLine) {
+        this.subStationTransformerFeederLine = subStationTransformerFeederLine;
+    }
+
+    public RegionBhubServiceCenter getRegionBhubServiceCenter() {
+        return regionBhubServiceCenter;
+    }
+
+    public void setRegionBhubServiceCenter(RegionBhubServiceCenter regionBhubServiceCenter) {
+        this.regionBhubServiceCenter = regionBhubServiceCenter;
     }
 }

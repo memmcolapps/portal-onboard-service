@@ -55,7 +55,7 @@ public class  SecurityConfig {
 
 		CustomAuthenticationFilter userAuthFilter = new CustomAuthenticationFilter(
 				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance);
-		userAuthFilter.setFilterProcessesUrl("/auth/service/login");
+		userAuthFilter.setFilterProcessesUrl("/gridflex/auth/service/login");
 
 //		CustomAuthenticationFilter adminAuthFilter = new CustomAuthenticationFilter(
 //				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance);
@@ -74,10 +74,10 @@ public class  SecurityConfig {
 
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
-				.requestMatchers("/auth/service/login/**", "/auth/service/admin/login/**", "/auth/service/logout/**", "/actuator/prometheus").permitAll()
+				.requestMatchers("/gridflex/auth/service/login/**", "/gridflex/auth/service/logout/**", "/actuator/prometheus").permitAll()
 				.requestMatchers("/auth/service/**")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN")
-				.requestMatchers("/operator/service/get")
+				.requestMatchers("/gridflex/operator/service/get")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN", "READ")
 				.anyRequest().authenticated());
 

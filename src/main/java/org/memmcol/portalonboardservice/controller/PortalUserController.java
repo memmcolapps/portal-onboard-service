@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/operator/service")
+@RequestMapping("/gridflex/operator/service")
 public class PortalUserController {
 
     @Autowired private PortalUserService service;
@@ -19,7 +19,7 @@ public class PortalUserController {
     @Autowired
     private GlobalExceptionHandler exception;
 
-    @GetMapping("/get-all")
+    @GetMapping("/all")
     public ResponseEntity<?> getAll() {
         try {
             Map<String, Object> result = service.getAll();
