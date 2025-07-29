@@ -1,7 +1,7 @@
 package org.memmcol.portalonboardservice.util;
 
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
-import org.memmcol.portalonboardservice.model.Operator;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;

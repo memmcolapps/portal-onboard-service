@@ -1,4 +1,4 @@
-package org.memmcol.portalonboardservice.model;
+package org.memmcol.portalonboardservice.model.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
