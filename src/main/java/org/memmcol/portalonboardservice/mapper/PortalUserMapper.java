@@ -2,8 +2,8 @@ package org.memmcol.portalonboardservice.mapper;
 
 
 import org.apache.ibatis.annotations.*;
-import org.memmcol.portalonboardservice.model.Operator;
-import org.memmcol.portalonboardservice.model.Role;
+import org.memmcol.portalonboardservice.model.user.Operator;
+import org.memmcol.portalonboardservice.model.user.Role;
 
 import java.util.List;
 import java.util.UUID;

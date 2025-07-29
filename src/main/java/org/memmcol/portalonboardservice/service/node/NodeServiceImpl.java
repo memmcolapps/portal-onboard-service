@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.mapper.NodeMapper;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
-import org.memmcol.portalonboardservice.model.Operator;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.*;
 import org.memmcol.portalonboardservice.repository.AuditRepository;

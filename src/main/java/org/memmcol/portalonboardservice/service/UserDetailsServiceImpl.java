@@ -3,8 +3,8 @@ package org.memmcol.portalonboardservice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
-import org.memmcol.portalonboardservice.model.CustomUserDetails;
-import org.memmcol.portalonboardservice.model.Operator;
+import org.memmcol.portalonboardservice.model.user.CustomUserDetails;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.util.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

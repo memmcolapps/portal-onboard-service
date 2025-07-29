@@ -2,7 +2,7 @@ package org.memmcol.portalonboardservice.model.audit;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.memmcol.portalonboardservice.model.Operator;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
 import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
 import org.springframework.data.annotation.Id;
