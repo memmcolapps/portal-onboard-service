@@ -197,7 +197,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         try {
             Group group = new Group();
 
-            group.setGroupTitle("Super Admin");
+            group.setGroupTitle("Full access");
             group.setOrgId(organizationId);
 
             organizationMapper.insertGroup(group);

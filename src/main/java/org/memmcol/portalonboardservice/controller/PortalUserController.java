@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/gridflex/operator/service")
+@RequestMapping("/gfPortal/operator/service")
 public class PortalUserController {
 
     @Autowired private PortalUserService service;

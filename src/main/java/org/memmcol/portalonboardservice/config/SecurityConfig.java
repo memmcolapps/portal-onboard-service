@@ -69,7 +69,7 @@ public class  SecurityConfig {
 
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
-				.requestMatchers("/gridflex/auth/service/login/**", "/gridflex/auth/service/logout/**", "/actuator/prometheus").permitAll()
+				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus").permitAll()
 				.requestMatchers("/auth/service/**")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN")
 				.requestMatchers("/gridflex/operator/service/get")

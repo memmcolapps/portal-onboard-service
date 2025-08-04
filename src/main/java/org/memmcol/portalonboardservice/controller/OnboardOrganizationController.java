@@ -46,8 +46,7 @@ public class OnboardOrganizationController {
         userModel.setPhoneNumber(request.getPhoneNumber());
 
         try {
-            Map<String, Object> result = onboardOrganizationService.addOrganization(organization,
-                    userModel);
+            Map<String, Object> result = onboardOrganizationService.addOrganization(organization, userModel);
             return ResponseEntity.ok(result);
         }catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

@@ -29,6 +29,10 @@ public class Organization implements Serializable {
 
     private String city;
 
+    private Boolean status;
+
+    private String imagePath;
+
 //    private String email;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
@@ -98,6 +102,22 @@ public class Organization implements Serializable {
         this.city = city;
     }
 
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -113,4 +133,6 @@ public class Organization implements Serializable {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/node/service")
+@RequestMapping("/gfPortal/node/service")
 public class NodeController {
 
     @Autowired private NodeService nodeService;
@@ -68,7 +68,7 @@ public class NodeController {
         }
     }
 
-    @GetMapping("/single-node")
+    @GetMapping("/single")
     public ResponseEntity<Map<String, Object>> singleNode(@RequestParam UUID nodeId, @RequestParam UUID orgId) {
 
         try {
@@ -81,7 +81,7 @@ public class NodeController {
     }
 
 
-    @GetMapping("/all-nodes")
+    @GetMapping("/all")
     public ResponseEntity<Map<String, Object>> fetchAllNodes(UUID orgId) {
 
         try {
