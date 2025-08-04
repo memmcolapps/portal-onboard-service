@@ -20,20 +20,34 @@ public interface OrganizationMapper {
     void insertOrganization(Organization organization);
 
     @Update("<script>" +
-            "UPDATE organizations " +
-            "<set>" +
-            "    <if test='businessName != null'>business_name = #{businessName},</if>" +
-            "    <if test='postalCode != null'>postal_code = #{postalCode},</if>" +
-            "    <if test='address != null'>address = #{address},</if>" +
-            "    <if test='country != null'>country = #{country},</if>" +
-            "    <if test='state != null'>state = #{state},</if>" +
-            "    <if test='city != null'>city = #{city},</if>" +
-            "    <if test='email != null'>email = #{email},</if>" +
-            "    updated_at = NOW()" +
-            "</set>" +
-            "WHERE id = #{id}" +
+            "UPDATE organizations O " +
+            "SET " +
+            "  <if test='organization.businessName != null'>business_name = #{organization.businessName},</if>" +
+            "  <if test='organization.postalCode != null'>postal_code = #{organization.postalCode},</if>" +
+            "  <if test='organization.address != null'>address = #{organization.address},</if>" +
+            "  <if test='organization.country != null'>country = #{organization.country},</if>" +
+            "  <if test='organization.state != null'>state = #{organization.state},</if>" +
+            "  <if test='organization.city != null'>city = #{organization.city},</if>" +
+            "  updated_at = NOW() " +
+            "WHERE O.id = #{organization.id} " +
             "</script>")
-    void updateOrganizationSelective(Organization organization);
+    void updateOrganizationSelective(@Param("organization") Organization organization);
+
+    @Update("<script>" +
+            "UPDATE users " +
+            "<trim prefix='SET' suffixOverrides=','>" +
+            "  <if test='email != null'>email = #{email},</if>" +
+            "  <if test='phone != null'>phone = #{phone},</if>" +
+            "  <if test='firstname != null'>firstname = #{firstname},</if>" +
+            "  <if test='lastname != null'>lastname = #{lastname},</if>" +
+            "</trim>" +
+            "WHERE org_id = #{orgId}" +
+            "</script>")
+    void updateUserByOrgId(@Param("orgId") UUID orgId,
+                           @Param("email") String email,
+                           @Param("phone") String phone,
+                           @Param("firstname") String firstname,
+                           @Param("lastname") String lastname);
 
 
     @Insert("""
@@ -43,6 +57,9 @@ public interface OrganizationMapper {
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertUser(UserModel userModel);
+
+    @Select("SELECT count(*) From Customers")
+    int countCustomers();
 
     @Insert("""
             Insert Into nodes(name, org_id)
@@ -73,6 +90,9 @@ public interface OrganizationMapper {
 
     @Select("SELECT * FROM users WHERE email = #{email}")
     UserModel getUserByEmail(@Param("email") String email);
+
+    @Select("SELECT * FROM users WHERE org_id = #{id}")
+    UserModel getUserByOrgId(@Param("id") UUID id);
 
     @Select("SELECT * FROM organizations ORDER BY created_at DESC ")
     @Results({

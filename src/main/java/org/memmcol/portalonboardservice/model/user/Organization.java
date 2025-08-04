@@ -17,8 +17,6 @@ public class Organization implements Serializable {
 
     private String businessName;
 
-//    private String businessType;
-
     private String postalCode;
 
     private String address;
@@ -29,7 +27,7 @@ public class Organization implements Serializable {
 
     private String city;
 
-//    private String email;
+    private UserModel userModel;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;

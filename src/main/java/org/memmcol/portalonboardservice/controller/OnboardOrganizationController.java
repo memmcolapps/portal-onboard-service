@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/admin-portal/gridflex")
+@RequestMapping("/gfPortal/service/organization")
 public class OnboardOrganizationController {
 
     @Autowired
@@ -27,7 +27,7 @@ public class OnboardOrganizationController {
         this.onboardOrganizationService = onboardOrganizationService;
     }
 
-    @PostMapping("/onboard/organization")
+    @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createOrganization(@RequestBody OnboardingOrganizationDTO request) {
 
         Organization organization = new Organization();
@@ -54,18 +54,33 @@ public class OnboardOrganizationController {
         }
     }
 
-    @PatchMapping("/edit/organization")
-    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody Organization organization,
+    @PatchMapping("/edit")
+    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody OnboardingOrganizationDTO request,
                                                                   @RequestParam UUID orgId) {
+        Organization organization = new Organization();
+        organization.setBusinessName(request.getBusinessName());
+        organization.setPostalCode(request.getPostalCode());
+        organization.setAddress(request.getAddress());
+        organization.setCountry(request.getCountry());
+        organization.setState(request.getState());
+        organization.setCity(request.getCity());
+
+        UserModel userModel = new UserModel();
+        userModel.setFirstname(request.getFirstName());
+        userModel.setLastname(request.getLastName());
+        userModel.setEmail(request.getEmail());
+        userModel.setPhoneNumber(request.getPhoneNumber());
+
         try {
-            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization,orgId);
+
+            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization,userModel,orgId);
             return ResponseEntity.ok(result);
         }catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
         }
     }
 
-    @GetMapping("/get-all/organization")
+    @GetMapping("/all")
     public ResponseEntity<Map<String, Object>> getOrganization(
             @RequestParam(value = "page", required = false,  defaultValue = "0") int page,
             @RequestParam(value = "size", required = false,  defaultValue = "0") int size) {
@@ -77,7 +92,7 @@ public class OnboardOrganizationController {
         }
     }
 
-    @GetMapping("/get-single/organization")
+    @GetMapping("/single")
     public ResponseEntity<Map<String, Object>> getOrganizationById(@RequestParam UUID id) {
         try {
             Map<String, Object> result = onboardOrganizationService.getOrganizationById(id);
