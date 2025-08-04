@@ -1,5 +1,6 @@
 package org.memmcol.portalonboardservice.service.organization;
 
+import org.memmcol.portalonboardservice.model.user.OnboardingOrganizationDTO;
 import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.model.user.UserModel;
 
@@ -15,5 +16,5 @@ public interface OnboardOrganizationService {
     Map<String, Object> createDefaultGroupPermission(UUID organizationId);
     Map<String, Object> getOrganization(int page,int size);
     Map<String, Object> getOrganizationById(UUID id);
-    Map<String, Object> updateOrganization(Organization organization, UUID orgId);
+    Map<String, Object> updateOrganization(Organization organization,UserModel UserModel, UUID orgId);
 }

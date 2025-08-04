@@ -29,7 +29,7 @@ public class Organization implements Serializable {
 
     private String city;
 
-    private String imageUrl;
+//    private String email;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -96,14 +96,6 @@ public class Organization implements Serializable {
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
     }
 
     public Date getCreatedAt() {
