@@ -31,7 +31,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		if (request.getServletPath().equals("/gridflex/auth/service/login")
+		if (request.getServletPath().equals("/gfPortal/auth/service/login")
 				|| request.getServletPath().equals("/actuator/prometheus")
 
 		) {

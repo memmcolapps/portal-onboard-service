@@ -55,16 +55,11 @@ public class  SecurityConfig {
 
 		CustomAuthenticationFilter userAuthFilter = new CustomAuthenticationFilter(
 				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance);
-		userAuthFilter.setFilterProcessesUrl("/gridflex/auth/service/login");
+		userAuthFilter.setFilterProcessesUrl("/gfPortal/auth/service/login");
 
 //		CustomAuthenticationFilter adminAuthFilter = new CustomAuthenticationFilter(
 //				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance);
 //		adminAuthFilter.setFilterProcessesUrl("/auth/service/admin/login");
-
-		// // disable cors
-		// http.cors((cors) -> cors.disable());
-		// http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
-		// disable csrf
 		http.csrf((csrf) -> csrf.disable());
 
 		// header
