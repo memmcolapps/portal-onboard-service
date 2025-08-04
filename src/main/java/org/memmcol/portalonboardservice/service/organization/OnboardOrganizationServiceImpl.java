@@ -350,15 +350,23 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     }
 
     @Override
-    public Map<String, Object> updateOrganization(Organization organization, UUID orgId) {
+    public Map<String, Object> updateOrganization(Organization organization,UserModel userModel, UUID orgId) {
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
         try {
             Organization originalData = organizationMapper.getOrganizationById(orgId)
                     .orElseThrow(()-> new RuntimeException("Organization not found with ID: " + orgId));
 
+//            UserModel user = organizationMapper.getUserByOrgId(orgId);
             organization.setId(orgId);
             organizationMapper.updateOrganizationSelective(organization);
+            organizationMapper.updateUserByOrgId(orgId,userModel.getEmail(),
+                    userModel.getPhoneNumber(),
+                    userModel.getFirstname(),
+                    userModel.getLastname());
+
+            System.out.println("############################"+ userModel.getEmail());
+
 
             Organization updatedData = organizationMapper.getOrganizationById(orgId)
                     .orElseThrow(()-> new RuntimeException("Organization not found with ID: " + orgId));
