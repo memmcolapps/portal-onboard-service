@@ -143,13 +143,13 @@ public class UserModel implements Serializable {
         this.password = password;
     }
 
-//    public GroupWithPermissionsDTO getGroups() {
-//        return groups;
-//    }
-//
-//    public void setGroups(GroupWithPermissionsDTO groups) {
-//        this.groups = groups;
-//    }
+    public GroupWithPermissionsDTO getGroups() {
+        return groups;
+    }
+
+    public void setGroups(GroupWithPermissionsDTO groups) {
+        this.groups = groups;
+    }
 
     public Organization getBusiness() {
         return business;
