@@ -7,6 +7,7 @@ import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.user.*;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.util.ResponseProperties;
 import org.slf4j.Logger;
@@ -54,19 +55,37 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             organizationMapper.insertOrganization(organization);
             UUID orgId = organization.getId();
             String name = organization.getBusinessName();
+
             // Create root node
-            Map<String, Object> rootNodeResponse = creatRootNode(orgId, name);
-            UUID rootNodeId = (UUID) ((Map<?, ?>) rootNodeResponse.get("data")).get("id");
+            Node rootNode = new Node();
+            rootNode.setName(name);
+            rootNode.setOrgId(orgId);
+
+            organizationMapper.insertNodes(rootNode);
+            UUID rootNodeId = rootNode.getId();
 
             // Create Permissions
-            createDefaultPermission(orgId);
+            int result;
+            result = createDefaultPermission(orgId);
+            if (result == 0) {
+                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
+            }
 
             // Create Group
-            createDefaultGroup(orgId);
+            result = createDefaultGroup(orgId);
+            if (result == 0) {
+                throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
+            }
             // Create Group Permissions
-            createDefaultGroupPermission(orgId);
+            result = createDefaultGroupPermission(orgId);
+            if (result == 0) {
+                throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
+            }
             // Create Default User
-            createDefaultUser(orgId, rootNodeId, userModel);
+            result = createDefaultUser(orgId, rootNodeId, userModel);
+            if (result == 0) {
+                throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
+            }
 
             return ResponseMap.response(
                     status.getSuccessCode(),
@@ -86,81 +105,26 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
+    private int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
 
-    @Override
-    public Map<String, Object> creatRootNode(UUID organizationId, String name) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        Map<String, Object> response = new HashMap<>();
-        Node rootNode = new Node();
-
-        try {
-
-            rootNode.setName(name);
-            rootNode.setOrgId(organizationId);
-
-            organizationMapper.insertNodes(rootNode);
-
-            Node savedNode = organizationMapper.getNodeByNameAndOrgId(name, organizationId);
-
-            response.put("success", true);
-            response.put("message", "Root Node created successfully");
-            response.put("data", Map.of(
-                    "id", savedNode.getId(),
-                    "name", savedNode.getName()
-            ));
-            return response;
-        } catch (Exception exception) {
-            log.error("Error adding node: {}", exception.getMessage(), exception);
-
-            errorLog.setDescription("Error creating Root Node");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw exception;
-        }
-    }
-
-    @Override
-    public Map<String, Object> createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-
+        System.out.println(">>>>>>>>>>::: "+organizationId);
+        System.out.println(">>>>>>>>>>::: "+nodeId);
+        System.out.println(">>>>>>>>>>::: "+userModel.getEmail());
+        System.out.println(">>>>>>>>>>::: "+userModel.getCreatedAt());
+        System.out.println(">>>>>>>>>>::: "+userModel.getUpdatedAt());
             userModel.setOrgId(organizationId);
             userModel.setNodeId(nodeId);
             userModel.setStatus(true);
             userModel.setActive(true);
-
-            organizationMapper.insertUser(userModel);
-
-            return response;
-
-        } catch (Exception exception) {
-            log.error("Error creating default user: {}", exception.getMessage(), exception);
-
-            // Log error details
-            errorLog.setDescription("Error creating default user");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw exception;
-
-        }
+            int result;
+            result = organizationMapper.insertUser(userModel);
+            UUID id = userModel.getId();
+            organizationMapper.updateOrg(id, organizationId);
+            return result;
 
     }
 
-    @Override
-    public Map<String, Object> createDefaultPermission(UUID organizationId) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        Map<String, Object> response = new HashMap<>();
-
-        try {
+    private int createDefaultPermission(UUID organizationId) {
             Permission permission = new Permission();
 
             permission.setView(true);
@@ -169,125 +133,69 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             permission.setDisable(true);
             permission.setOrgId(organizationId);
 
-            organizationMapper.insertPermission(permission);
-
-            response.put("success", true);
-            response.put("message", "Permission created successfully");
-            response.put("data", permission);
-            return response;
-
-        } catch (Exception exception) {
-            log.error("Error creating default Permission: {}", exception.getMessage(), exception);
-
-            // Log error details
-            errorLog.setDescription("Error creating default Permission");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw exception;
-        }
+            int result;
+            result = organizationMapper.insertPermission(permission);
+            return result;
     }
 
-    @Override
-    public Map<String, Object> createDefaultGroup(UUID organizationId) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        Map<String, Object> response = new HashMap<>();
-
-        try {
+    private int createDefaultGroup(UUID organizationId) {
             Group group = new Group();
 
-            group.setGroupTitle("Full access");
+            group.setGroupTitle("User management");
             group.setOrgId(organizationId);
 
-            organizationMapper.insertGroup(group);
-
-            response.put("success", true);
-            response.put("message", "Default Group created successfully");
-            response.put("data", group);
-            return response;
-
-        } catch (Exception exception) {
-            log.error("Error creating default Group: {}", exception.getMessage(), exception);
-
-            // Log error details
-            errorLog.setDescription("Error creating default Group");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw exception;
-        }
+            int result;
+            result = organizationMapper.insertGroup(group);
+            return result;
     }
 
-    @Override
-    public Map<String, Object> createDefaultGroupPermission(UUID organizationId) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        Map<String, Object> response = new HashMap<>();
-
-        try {
+    public int createDefaultGroupPermission(UUID organizationId) {
 
             Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
             Group group = organizationMapper.getGroupByOrgId(organizationId);
 
-            organizationMapper.insertGroupPermission(group.getId(), permission.getId(), organizationId);
-
-            response.put("success", true);
-            response.put("message", "Default Group Permission created successfully");
+            int response;
+            response = organizationMapper.insertGroupPermission(group.getId(), permission.getId(), organizationId);
             return response;
-
-        } catch (Exception exception) {
-            log.error("Error creating default Group Permission: {}", exception.getMessage(), exception);
-
-            // Log error details
-            errorLog.setDescription("Error creating default Group Permission");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw exception;
-        }
     }
 
     @Override
-    public Map<String, Object> getOrganization(int page, int size) {
+    public Map<String, Object> getOrganization() {
         try {
 
-            // Calculate offset
-            int offset = page * size;
-
             List<Organization> organizations;
+
             // Get paginated data
-            if(size == 0){
-                organizations = organizationMapper.getAllOrganizations();
-            } else {
-                organizations = organizationMapper.getOrganizations(size, offset);
+            organizations = organizationMapper.getAllOrganizations();
+
+            for (Organization org : organizations) {
+
+                List<Node> nodes = organizationMapper.getNodeWithChildren(org.getOperator().getNodeId(), org.getId());
+
+                Map<UUID, Node> nodeMap = new HashMap<>();
+                Node root = null;
+
+                for (Node node : nodes) {
+                    node.setNodesTree(new ArrayList<>());
+                    nodeMap.put(node.getId(), node);
+                }
+
+                for (Node node : nodes) {
+                    if (node.getId().equals(org.getOperator().getNodeId())) {
+                        root = node; // this is the node we're querying for
+                    }
+                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+                        Node parent = nodeMap.get(node.getParentId());
+                        parent.getNodesTree().add(node);
+                    }
+                }
+                org.getOperator().setNodes(root);
             }
 
-
-            long totalCount = organizationMapper.getOrganizationCount();
-            int totalPages = (int) Math.ceil((double) totalCount / size);
-
-            Map<String, Object> paginationData = new HashMap<>();
-            paginationData.put("content", organizations);
-            paginationData.put("pageNumber", page);
-            paginationData.put("pageSize", size);
-            paginationData.put("totalElements", totalCount);
-            paginationData.put("totalPages", totalPages);
-            paginationData.put("isFirst", page == 0);
-            paginationData.put("isLast", (offset + size) >= totalCount);
-
-            return ResponseMap.response(
-                    status.getSuccessCode(),
-                    "Organizations retrieved successfully",
-                    paginationData
-            );
+            return ResponseMap.response(status.getSuccessCode(), "Organizations retrieved successfully", organizations);
 
         } catch (Exception exception) {
-            log.error("Error fetching organizations - Page: {}, Size: {}: {}",
-                    page, size, exception.getMessage(), exception);
+            log.error("Error fetching organizations {}", exception.getMessage(), exception);
 
             ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
             errorLog.setDescription("Error fetching organizations");
@@ -304,24 +212,41 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Override
     public Map<String, Object> getOrganizationById(UUID id) {
         try {
-            Optional<Organization> result = organizationMapper.getOrganizationById(id);
 
-            if (result.isEmpty()) {
-                return ResponseMap.response(
-                        status.getNotFoundCode(),
-                        "Organization not found with ID: " + id,
-                        Map.of("organizationId", id)
-                );
+            Organization result = organizationMapper.getOrganizationById(id);
+
+            if (result == null) {
+                throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
             }
 
+            List<Node> nodes = organizationMapper.getNodeWithChildren(result.getOperator().getNodeId(), result.getId());
+
+            Map<UUID, Node> nodeMap = new HashMap<>();
+            Node root = null;
+
+            for (Node node : nodes) {
+                node.setNodesTree(new ArrayList<>());
+                nodeMap.put(node.getId(), node);
+            }
+
+            for (Node node : nodes) {
+                if (node.getId().equals(result.getOperator().getNodeId())) {
+                    root = node; // this is the node we're querying for
+                }
+                if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+                    Node parent = nodeMap.get(node.getParentId());
+                    parent.getNodesTree().add(node);
+                }
+            }
+            result.getOperator().setNodes(root);
+
             return ResponseMap.response(
-                    status.getSuccessCode(),
-                    "Organization retrieved successfully",
+                    status.getSuccessCode(), status.getDesc(),
                     result
             );
 
         } catch (Exception exception) {
-            log.error("Error fetching organization {}: {}", id, exception.getMessage(), exception);
+            log.error("Error fetching organization {}", exception.getMessage(), exception);
 
             ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
             errorLog.setDescription("Error fetching organization");
@@ -331,14 +256,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             throw exception;
 
-//            return ResponseMap.response(
-//                    status.getFailCode(),
-//                    "Failed to fetch organization",
-//                    Map.of(
-//                            "error", exception.getMessage(),
-//                            "organizationId", id
-//                    )
-//            );
         }
     }
 
@@ -347,32 +264,22 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
         try {
-            Organization originalData = organizationMapper.getOrganizationById(orgId)
-                    .orElseThrow(()-> new RuntimeException("Organization not found with ID: " + orgId));
+            Organization res = organizationMapper.getOrganizationById(organization.getId());
 
-//            UserModel user = organizationMapper.getUserByOrgId(orgId);
-            organization.setId(orgId);
-            organizationMapper.updateOrganizationSelective(organization);
-            organizationMapper.updateUserByOrgId(orgId,userModel.getEmail(),
-                    userModel.getPhoneNumber(),
-                    userModel.getFirstname(),
-                    userModel.getLastname());
-
-            System.out.println("############################"+ userModel.getEmail());
+            if (res == null) {
+                throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
+            }
 
 
-            Organization updatedData = organizationMapper.getOrganizationById(orgId)
-                    .orElseThrow(()-> new RuntimeException("Organization not found with ID: " + orgId));
-
-            Map<String, Map<String, String>> changes = new HashMap<>();
-
-            addChangeIfDifferent("businessName", originalData.getBusinessName(), updatedData.getBusinessName(), changes);
-            addChangeIfDifferent("businessType", originalData.getPostalCode(), updatedData.getPostalCode(), changes);
-            addChangeIfDifferent("registrationNumber", originalData.getAddress(), updatedData.getAddress(), changes);
-            addChangeIfDifferent("country", originalData.getCountry(), updatedData.getCountry(), changes);
-            addChangeIfDifferent("state", originalData.getState(), updatedData.getState(), changes);
-            addChangeIfDifferent("city", originalData.getCity(), updatedData.getCity(), changes);
-
+            int result;
+            result = organizationMapper.updateOrganizationSelective(organization);
+            if(result == 0){
+                throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
+            }
+            result = organizationMapper.updateUserByOrgId(userModel);
+            if(result == 0){
+                throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
+            }
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Organization updated Successfully",

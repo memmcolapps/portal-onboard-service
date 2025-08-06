@@ -18,14 +18,14 @@ import java.util.UUID;
 public class OnboardOrganizationController {
 
     @Autowired
-    private final OnboardOrganizationService onboardOrganizationService;
+    private OnboardOrganizationService onboardOrganizationService;
 
     @Autowired
     private GlobalExceptionHandler exception;
 
-    public OnboardOrganizationController(OnboardOrganizationService onboardOrganizationService) {
-        this.onboardOrganizationService = onboardOrganizationService;
-    }
+//    public OnboardOrganizationController(OnboardOrganizationService onboardOrganizationService) {
+//        this.onboardOrganizationService = onboardOrganizationService;
+//    }
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createOrganization(@RequestBody OnboardingOrganizationDTO request) {
@@ -80,11 +80,9 @@ public class OnboardOrganizationController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Map<String, Object>> getOrganization(
-            @RequestParam(value = "page", required = false,  defaultValue = "0") int page,
-            @RequestParam(value = "size", required = false,  defaultValue = "0") int size) {
+    public ResponseEntity<Map<String, Object>> getOrganization() {
         try {
-            Map<String, Object> result = onboardOrganizationService.getOrganization(page,size);
+            Map<String, Object> result = onboardOrganizationService.getOrganization();
             return ResponseEntity.ok(result);
         }catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

@@ -15,6 +15,8 @@ public class Organization implements Serializable {
     @Id
     private UUID id;
 
+    private UUID userId;
+
     private String businessName;
 
 //    private String businessType;
@@ -32,6 +34,8 @@ public class Organization implements Serializable {
     private Boolean status;
 
     private String imagePath;
+
+    private UserModel operator;
 
 //    private String email;
 
@@ -52,6 +56,14 @@ public class Organization implements Serializable {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
     }
 
     public String getBusinessName() {
@@ -134,5 +146,11 @@ public class Organization implements Serializable {
         this.updatedAt = updatedAt;
     }
 
+    public UserModel getOperator() {
+        return operator;
+    }
 
+    public void setOperator(UserModel operator) {
+        this.operator = operator;
+    }
 }
