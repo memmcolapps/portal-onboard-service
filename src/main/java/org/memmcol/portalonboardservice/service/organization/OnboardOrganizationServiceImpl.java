@@ -60,6 +60,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             // Create Permissions
             createDefaultPermission(orgId);
+
             // Create Group
             createDefaultGroup(orgId);
             // Create Group Permissions
@@ -296,15 +297,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             throw exception;
 
-//            return ResponseMap.response(
-//                    status.getFailCode(),
-//                    "Failed to fetch organizations",
-//                    Map.of(
-//                            "error", exception.getMessage(),
-//                            "page", page,
-//                            "size", size
-//                    )
-//            );
+
         }
     }
 
