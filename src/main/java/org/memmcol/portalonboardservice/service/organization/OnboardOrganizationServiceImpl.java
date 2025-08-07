@@ -205,7 +205,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
                 // Set in organization object
-                org.setCustomerCount(orgCustomerCount);
+                org.setTotalCustomer(orgCustomerCount);
                 org.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
                 org.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
 
@@ -240,6 +240,9 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Override
     public Map<String, Object> getOrganizationById(UUID id) {
         try {
+//            Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
+            BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
+            BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
             Organization result = organizationMapper.getOrganizationById(id);
 
@@ -247,11 +250,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
             }
 
-            Long customer = organizationMapper.totalCustomer(result.getId());
-
-            BigDecimal vending = BigDecimal.valueOf(0);
-
-            BigDecimal billing = BigDecimal.valueOf(0);
+            Long totalCustomer = organizationMapper.totalCustomer(result.getId());
 
             List<Node> nodes = organizationMapper.getNodeWithChildren(result.getOperator().getNodeId(), result.getId());
 
@@ -273,13 +272,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 }
             }
             result.getOperator().setNodes(root);
-            Map<String, Object> response = new HashMap<>();
-            response.put("organization", result);
-            response.put("totalCustomer", customer);
-            response.put("totalVending", vending);
-            response.put("totalBilling", billing);
 
-            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), response);
+            result.setTotalCustomer(totalCustomer);
+            result.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
+            result.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
+
+            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), result);
 
         } catch (Exception exception) {
             log.error("Error fetching organization {}", exception.getMessage(), exception);

@@ -38,7 +38,7 @@ public class Organization implements Serializable {
 
     private UserModel operator;
 
-    private Long customerCount;
+    private Long totalCustomer;
 
     private BigDecimal totalVending;
 
@@ -161,12 +161,12 @@ public class Organization implements Serializable {
         this.operator = operator;
     }
 
-    public Long getCustomerCount() {
-        return customerCount;
+    public Long getTotalCustomer() {
+        return totalCustomer;
     }
 
-    public void setCustomerCount(Long customerCount) {
-        this.customerCount = customerCount;
+    public void setTotalCustomer(Long totalCustomer) {
+        this.totalCustomer = totalCustomer;
     }
 
     public BigDecimal getTotalVending() {
