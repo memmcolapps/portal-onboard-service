@@ -16,5 +16,5 @@ public interface OnboardOrganizationService {
 //    Map<String, Object> createDefaultGroupPermission(UUID organizationId);
     Map<String, Object> getOrganization();
     Map<String, Object> getOrganizationById(UUID id);
-    Map<String, Object> updateOrganization(Organization organization,UserModel UserModel, UUID orgId);
+    Map<String, Object> updateOrganization(Organization organization,UserModel UserModel);
 }

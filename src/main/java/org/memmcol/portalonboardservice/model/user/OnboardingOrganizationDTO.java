@@ -1,7 +1,11 @@
 package org.memmcol.portalonboardservice.model.user;
 
 
+import java.util.UUID;
+
 public class OnboardingOrganizationDTO {
+    private UUID id;
+    private UUID userId;
     private String businessName;
     private String postalCode;
     private String address;
@@ -14,6 +18,22 @@ public class OnboardingOrganizationDTO {
     private String email;
     private String password;
     private String phoneNumber;
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
 
     public String getBusinessName() {
         return businessName;

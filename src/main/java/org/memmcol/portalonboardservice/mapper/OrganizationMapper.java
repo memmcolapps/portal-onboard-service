@@ -21,22 +21,30 @@ public interface OrganizationMapper {
 
     @Update("<script>" +
             "UPDATE organizations o " +
-            "SET business_name = #{organization.businessName}, postal_code = #{organization.postalCode}, address = #{organization.address}, " +
-            "country = #{organization.country}, state = #{organization.state}, city = #{organization.city}, updated_at = #{organization.updatedAt} " +
+            "SET " +
+            "  <if test='organization.businessName != null'>business_name = #{organization.businessName},</if>" +
+            "  <if test='organization.postalCode != null'>postal_code = #{organization.postalCode},</if>" +
+            "  <if test='organization.address != null'>address = #{organization.address},</if>" +
+            "  <if test='organization.country != null'>country = #{organization.country},</if>" +
+            "  <if test='organization.state != null'>state = #{organization.state},</if>" +
+            "  <if test='organization.city != null'>city = #{organization.city},</if>" +
+            "  updated_at = #{organization.updatedAt} " +
             "WHERE o.id = #{organization.id} " +
             "</script>")
     int updateOrganizationSelective(@Param("organization") Organization organization);
 
     @Update("<script>" +
-            "UPDATE users SET email = #{userModel.email}, firstname = #{userModel.firstname}, lastname = #{userModel.lastname}, " +
-            "lastname = #{userModel.lastname}, updated_at = #{userModel.updatedAt} WHERE org_id = #{userModel.orgId} " +
+            "UPDATE users " +
+            "<trim prefix='SET' suffixOverrides=','>" +
+            "  <if test='userModel.email != null'>email = #{userModel.email},</if>" +
+            "  <if test='userModel.phoneNumber != null'>phone_number = #{userModel.phoneNumber},</if>" +
+            "  <if test='userModel.firstname != null'>firstname = #{userModel.firstname},</if>" +
+            "  <if test='userModel.lastname != null'>lastname = #{userModel.lastname},</if>" +
+            "  updated_at = #{userModel.updatedAt}" +
+            "</trim> " +
+            "WHERE id = #{userModel.id} AND org_id = #{orgId}" +
             "</script>")
-    int updateUserByOrgId(UserModel userModel);
-//            @Param("orgId") UUID orgId,
-//                           @Param("email") String email,
-//                           @Param("phone") String phone,
-//                           @Param("firstname") String firstname,
-//                           @Param("lastname") String lastname);
+    int updateUserByOrgId(@Param("userModel") UserModel userModel, @Param("orgId") UUID orgId);
 
 
     @Insert("""

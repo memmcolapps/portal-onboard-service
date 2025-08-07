@@ -107,11 +107,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     private int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
 
-        System.out.println(">>>>>>>>>>::: "+organizationId);
-        System.out.println(">>>>>>>>>>::: "+nodeId);
-        System.out.println(">>>>>>>>>>::: "+userModel.getEmail());
-        System.out.println(">>>>>>>>>>::: "+userModel.getCreatedAt());
-        System.out.println(">>>>>>>>>>::: "+userModel.getUpdatedAt());
             userModel.setOrgId(organizationId);
             userModel.setNodeId(nodeId);
             userModel.setStatus(true);
@@ -260,7 +255,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     }
 
     @Override
-    public Map<String, Object> updateOrganization(Organization organization,UserModel userModel, UUID orgId) {
+    public Map<String, Object> updateOrganization(Organization organization,UserModel userModel) {
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
         try {
@@ -270,19 +265,18 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
             }
 
-
             int result;
             result = organizationMapper.updateOrganizationSelective(organization);
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
-            result = organizationMapper.updateUserByOrgId(userModel);
+            result = organizationMapper.updateUserByOrgId(userModel, organization.getId());
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
 
             return ResponseMap.response(status.getSuccessCode(),
-                    "Organization updated Successfully",
+                    "Organization "+status.getUpdateDesc(),
                     "");
 
         } catch (Exception exception) {

@@ -53,10 +53,10 @@ public class OnboardOrganizationController {
         }
     }
 
-    @PatchMapping("/edit")
-    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody OnboardingOrganizationDTO request,
-                                                                  @RequestParam UUID orgId) {
+    @PatchMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody OnboardingOrganizationDTO request) {
         Organization organization = new Organization();
+        organization.setId(request.getId());
         organization.setBusinessName(request.getBusinessName());
         organization.setPostalCode(request.getPostalCode());
         organization.setAddress(request.getAddress());
@@ -65,6 +65,7 @@ public class OnboardOrganizationController {
         organization.setCity(request.getCity());
 
         UserModel userModel = new UserModel();
+        userModel.setId(request.getUserId());
         userModel.setFirstname(request.getFirstName());
         userModel.setLastname(request.getLastName());
         userModel.setEmail(request.getEmail());
@@ -72,7 +73,7 @@ public class OnboardOrganizationController {
 
         try {
 
-            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization,userModel,orgId);
+            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization,userModel);
             return ResponseEntity.ok(result);
         }catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
