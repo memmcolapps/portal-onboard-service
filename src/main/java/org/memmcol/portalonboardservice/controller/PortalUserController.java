@@ -64,7 +64,7 @@ public class PortalUserController {
     }
 
     @PatchMapping("/block")
-    public ResponseEntity<?> block(@@RequestParam UUID id, @RequestParam Boolean status) {
+    public ResponseEntity<?> block(@RequestParam UUID id, @RequestParam Boolean status) {
         try {
             Map<String, Object> result = service.blockOperator(id, status);
             return ResponseEntity.ok(result);
