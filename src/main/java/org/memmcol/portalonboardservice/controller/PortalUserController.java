@@ -24,22 +24,7 @@ public class PortalUserController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-//        // Validate Authorization header
-//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-//            Map<String, Object> errorResponse = ResponseMap.response(
-//                    HttpStatus.UNAUTHORIZED.toString(),
-//                    "Invalid or Missing Authorization Header",
-//                    ""
-//            );
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-//        }
-
         try {
-//            // Extract the token after "Bearer "
-//            String token = authHeader.substring(7).trim();
-
-            // Blacklist the token (with expiration, e.g., 1800s = 30 mins)
             Map<String, Object> result = service.logout();
             return ResponseEntity.ok(result);
 

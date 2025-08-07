@@ -54,7 +54,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 				try {
 					String token = authorizationHeader.substring("Bearer ".length());
-					// ✅ Check if token is blacklisted
+					// Check if token is blacklisted
 					if (Boolean.TRUE.equals(authCache.get(token))) {
 						handleException(response, new Exception("Token is blacklisted"),
 								"Token is blacklisted", HttpServletResponse.SC_UNAUTHORIZED);
