@@ -80,7 +80,7 @@ public class  SecurityConfig {
 		http.addFilter(userAuthFilter);
 //		http.addFilter(adminAuthFilter);
 		http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-		http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+		http.addFilterBefore(new CustomAuthorizationFilter(hazelcastInstance), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

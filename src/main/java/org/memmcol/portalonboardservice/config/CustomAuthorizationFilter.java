@@ -6,11 +6,16 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.memmcol.portalonboardservice.service.portal_user.PortalUserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +33,14 @@ import java.util.stream.Stream;
 @Slf4j
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
+//	@Autowired
+	private final IMap<String, Object> authCache;
+
+    public CustomAuthorizationFilter(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
+        this.authCache = hazelcastInstance.getMap("authCache");
+    }
+//	private AuthCache authCache;
+
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
@@ -41,7 +54,12 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 			if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
 				try {
 					String token = authorizationHeader.substring("Bearer ".length());
-
+					// ✅ Check if token is blacklisted
+					if (Boolean.TRUE.equals(authCache.get(token))) {
+						handleException(response, new Exception("Token is blacklisted"),
+								"Token is blacklisted", HttpServletResponse.SC_UNAUTHORIZED);
+						return;
+					}
 					Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
 					JWTVerifier verifier = JWT.require(algorithm).build();
 					DecodedJWT decodedJWT = verifier.verify(token);
@@ -63,10 +81,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 				}
 			} else {
 				handleException(response, new Exception("Authorization Token Not Found"), "Authorization Token Not Found", HttpServletResponse.SC_UNAUTHORIZED);
-//				filterChain.doFilter(request, response);
 			}
 		}
-
 	}
 	// Helper method to handle exceptions and send a custom error message
 	private void handleException(HttpServletResponse response, Exception exception, String description, int statusCode) throws IOException {

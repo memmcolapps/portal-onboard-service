@@ -6,4 +6,5 @@ public interface PortalUserService {
 
     Map<String, Object> getAll();
 
+    Map<String, Object> logout();
 }

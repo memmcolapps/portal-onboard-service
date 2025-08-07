@@ -396,7 +396,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             auditNotificationDTO.setType("organization");
             auditNotificationDTO.setOrganization(res);
             auditRepository.save(auditNotificationDTO);
-            return ResponseMap.response(status.getSuccessCode(), desc + "successfully", "");
+            return ResponseMap.response(status.getSuccessCode(), desc + " successfully", "");
 
         } catch (Exception exception) {
             log.error("Error updating organization: {}", exception.getMessage(), exception);

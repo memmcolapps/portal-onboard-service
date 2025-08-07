@@ -27,6 +27,7 @@ public class handleValidUser {
             throw new UsernameNotFoundException("User not authenticated");
         }
 
+        System.out.println(">>>>>>>>>>>>>>>::: "+username);
         Operator user = staticOperatorMapper.findByAuthEmail(username);
 
         if (user == null) {
@@ -34,7 +35,7 @@ public class handleValidUser {
         }
 
         if (!user.isStatus()) {
-            throw new LockedException("User Access has been revoked");
+            throw new LockedException("User access has been revoked");
         }
 
         return user;

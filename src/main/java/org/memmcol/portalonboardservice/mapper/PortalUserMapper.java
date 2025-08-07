@@ -40,6 +40,6 @@ public interface PortalUserMapper {
     @Update("UPDATE portal_users SET Active = true WHERE Email = #{email}")
     void updateLoginState(String email);
 
-    @Update("UPDATE portal_users SET Active = false WHERE Email = #{email}")
+    @Update("UPDATE portal_users SET Active = false, updated_at = NOW() WHERE Email = #{email}")
     void updateLogoutState(String email);
 }
