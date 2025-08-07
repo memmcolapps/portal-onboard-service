@@ -335,6 +335,35 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     }
 
+    @Override
+    public Map<String, Object> suspendOrganization(UUID id, Boolean suspend) {
+
+        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+        try {
+            Organization res = organizationMapper.getOrganizationById(id);
+
+            if (res == null) {
+                throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
+            }
+
+            organizationMapper.suspendOrganization(id, suspend);
+
+            Organization response = organizationMapper.getOrganizationById(id);
+
+            String desc = response.getStatus() ? "Organization activated successfully" : "Organization suspended successfully";
+
+            return ResponseMap.response(status.getSuccessCode(), desc, "");
+
+        } catch (Exception exception) {
+            log.error("Error updating organization: {}", exception.getMessage(), exception);
+            errorLog.setDescription("Error updating organization");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+            throw exception;
+        }
+    }
+
     private void addChangeIfDifferent(String fieldName, String oldValue, String newValue,
                                       Map<String, Map<String, String>> changes) {
         if (!Objects.equals(oldValue, newValue)) {

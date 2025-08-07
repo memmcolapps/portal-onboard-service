@@ -11,4 +11,6 @@ public interface OnboardOrganizationService {
     Map<String, Object> getOrganization();
     Map<String, Object> getOrganizationById(UUID id);
     Map<String, Object> updateOrganization(Organization organization,UserModel UserModel);
+
+    Map<String, Object> suspendOrganization(UUID id, Boolean suspend);
 }

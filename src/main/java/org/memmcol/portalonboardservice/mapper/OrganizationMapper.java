@@ -5,7 +5,6 @@ import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.node.NodeInfo;
 import org.memmcol.portalonboardservice.model.user.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -264,4 +263,7 @@ public interface OrganizationMapper {
 
     @Select("SELECT COUNT(*) FROM substation_trans_feeder_lines WHERE org_id = #{id} AND type = 'feeder line'")
     Long totalFeeder(UUID id);
+
+    @Update("UPDATE organizations SET status = #{suspend} WHERE id = #{id}")
+    void suspendOrganization(UUID id, Boolean suspend);
 }

@@ -296,7 +296,7 @@ public class NodeServiceImpl implements NodeService {
 
             auditNotificationDTO.setCreator(um);
             auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType(request.getType().equalsIgnoreCase("transformer") ? "Transformer" : request.getType().equalsIgnoreCase("feeder line") ? "Feeder line" : "Substation");
+            auditNotificationDTO.setType(request.getType().equalsIgnoreCase("dss") ? "dss" : request.getType().equalsIgnoreCase("feeder line") ? "Feeder line" : "Substation");
             auditNotificationDTO.setUserAgent(userAgent);
             auditNotificationDTO.setIpAddress(ipAddress);
             auditNotificationDTO.setSubStationTransformerFeederLine(subStationTransformerFeederLine);

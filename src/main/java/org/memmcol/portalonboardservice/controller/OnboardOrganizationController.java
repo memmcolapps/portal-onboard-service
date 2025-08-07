@@ -23,10 +23,6 @@ public class OnboardOrganizationController {
     @Autowired
     private GlobalExceptionHandler exception;
 
-//    public OnboardOrganizationController(OnboardOrganizationService onboardOrganizationService) {
-//        this.onboardOrganizationService = onboardOrganizationService;
-//    }
-
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createOrganization(@RequestBody OnboardingOrganizationDTO request) {
 
@@ -94,6 +90,16 @@ public class OnboardOrganizationController {
     public ResponseEntity<Map<String, Object>> getOrganizationById(@RequestParam UUID id) {
         try {
             Map<String, Object> result = onboardOrganizationService.getOrganizationById(id);
+            return ResponseEntity.ok(result);
+        }catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PatchMapping("/suspend")
+    public ResponseEntity<Map<String, Object>> suspendOrganization(@RequestParam UUID id, @RequestParam Boolean status) {
+        try {
+            Map<String, Object> result = onboardOrganizationService.suspendOrganization(id, status);
             return ResponseEntity.ok(result);
         }catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
