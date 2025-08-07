@@ -165,13 +165,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             int totalActiveOrganizations = 0;
             BigDecimal totalVending = BigDecimal.ZERO;
             BigDecimal totalBilling = BigDecimal.ZERO;
-            int overallCustomers = 0;
+            Long overallCustomers = 0L;
+            Long overallFeeders = 0L;
             BigDecimal overallVending = BigDecimal.ZERO;
             BigDecimal overallBilling = BigDecimal.ZERO;
-//            private Integer customerCount;
-//            private BigDecimal totalVending;
-//            private BigDecimal totalBilling;
-
 
             for (Organization org : organizations) {
                 if (org.getStatus()) {
@@ -201,16 +198,19 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
                 // Get per-org metrics
                 Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
+                Long orgFeederCount = organizationMapper.totalFeeder(org.getId());
                 BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
                 BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
                 // Set in organization object
                 org.setTotalCustomer(orgCustomerCount);
+                org.setTotalFeeder(orgFeederCount);
                 org.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
                 org.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
 
                 // Accumulate for global totals
                 overallCustomers += orgCustomerCount;
+                overallFeeders += orgFeederCount;
                 overallVending = totalVending.add(org.getTotalVending());
                 overallBilling = totalBilling.add(org.getTotalBilling());
             }
@@ -218,9 +218,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             Map<String, Object> response = new HashMap<>();
             response.put("totalOrganizations", totalOrganizations);
             response.put("totalActiveOrganizations", totalActiveOrganizations);
-            response.put("overallCustomers", overallCustomers);
+            response.put("overallCustomer", overallCustomers);
             response.put("overallVending", overallVending);
             response.put("overallBilling", overallBilling);
+            response.put("overallFeeder", overallFeeders);
             response.put("organizations", organizations);
 
             return ResponseMap.response(status.getSuccessCode(), "Organizations "+status.getDesc(), response);
@@ -252,6 +253,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             Long totalCustomer = organizationMapper.totalCustomer(result.getId());
 
+            Long totalFeeder = organizationMapper.totalFeeder(result.getId());
+
             List<Node> nodes = organizationMapper.getNodeWithChildren(result.getOperator().getNodeId(), result.getId());
 
             Map<UUID, Node> nodeMap = new HashMap<>();
@@ -274,6 +277,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             result.getOperator().setNodes(root);
 
             result.setTotalCustomer(totalCustomer);
+            result.setTotalFeeder(totalFeeder);
             result.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
             result.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
 

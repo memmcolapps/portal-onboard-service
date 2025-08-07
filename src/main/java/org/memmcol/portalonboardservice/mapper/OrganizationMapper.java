@@ -261,4 +261,7 @@ public interface OrganizationMapper {
 
     @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
     Long totalCustomer(UUID id);
+
+    @Select("SELECT COUNT(*) FROM substation_trans_feeder_lines WHERE org_id = #{id} AND type = 'feeder line'")
+    Long totalFeeder(UUID id);
 }

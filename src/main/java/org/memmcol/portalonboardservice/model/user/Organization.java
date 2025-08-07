@@ -40,6 +40,8 @@ public class Organization implements Serializable {
 
     private Long totalCustomer;
 
+    private Long totalFeeder;
+
     private BigDecimal totalVending;
 
     private BigDecimal totalBilling;
@@ -161,14 +163,6 @@ public class Organization implements Serializable {
         this.operator = operator;
     }
 
-    public Long getTotalCustomer() {
-        return totalCustomer;
-    }
-
-    public void setTotalCustomer(Long totalCustomer) {
-        this.totalCustomer = totalCustomer;
-    }
-
     public BigDecimal getTotalVending() {
         return totalVending;
     }
@@ -183,5 +177,21 @@ public class Organization implements Serializable {
 
     public void setTotalBilling(BigDecimal totalBilling) {
         this.totalBilling = totalBilling;
+    }
+
+    public Long getTotalCustomer() {
+        return totalCustomer;
+    }
+
+    public void setTotalCustomer(Long totalCustomer) {
+        this.totalCustomer = totalCustomer;
+    }
+
+    public Long getTotalFeeder() {
+        return totalFeeder;
+    }
+
+    public void setTotalFeeder(Long totalFeeder) {
+        this.totalFeeder = totalFeeder;
     }
 }
