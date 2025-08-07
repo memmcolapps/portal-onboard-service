@@ -46,6 +46,9 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		if (request.getServletPath().equals("/gfPortal/auth/service/login")
 				|| request.getServletPath().equals("/actuator/prometheus")
+				|| request.getServletPath().equals("/gfPortal/operator/service/generate-otp")
+				|| request.getServletPath().equals("/gfPortal/operator/service/forget-password")
+
 
 		) {
 			filterChain.doFilter(request, response);

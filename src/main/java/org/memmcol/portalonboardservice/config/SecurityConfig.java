@@ -70,9 +70,11 @@ public class  SecurityConfig {
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus").permitAll()
-				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend")
+				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
+				 "/gfPortal/operator/service/create","/gfPortal/operator/block","/gfPortal/operator/service/all")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN")
-				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all")
+				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/operator/service/profile",
+						"/gfPortal/operator/service/logout", "/gfPortal/operator/service/update", "/gfPortal/operator/service/single")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN", "READ")
 				.anyRequest().authenticated());
 
