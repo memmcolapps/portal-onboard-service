@@ -9,8 +9,6 @@ import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
-import org.memmcol.portalonboardservice.service.organization.OnboardOrganizationServiceImpl;
-import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.util.ResponseProperties;
 import org.slf4j.Logger;
@@ -22,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
@@ -125,6 +124,36 @@ public class PortalUserServiceImpl implements PortalUserService {
             exceptionAuditRepository.save(errorLog);
             throw exception;
         }
+    }
+
+    @Override
+    public Map<String, Object> createOperator(Operator operator) {
+        return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> updateOperator(Operator operator) {
+        return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> blockOperator(UUID id, Boolean status) {
+        return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> getSingle(UUID id) {
+        return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> generateOtp(String username) {
+        return Map.of();
+    }
+
+    @Override
+    public Map<String, Object> verifyOtp(String username, String otp, String password, String retypePassword) {
+        return Map.of();
     }
 
     private void blacklistToken(String token, int expirySeconds) {

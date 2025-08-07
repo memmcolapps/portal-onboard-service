@@ -1,6 +1,7 @@
 package org.memmcol.portalonboardservice.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.service.portal_user.PortalUserService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/gfPortal/operator/service")
@@ -41,25 +43,67 @@ public class PortalUserController {
         }
     }
 
-//    @PostMapping("/logout")
-//    public ResponseEntity<?> logout(HttpServletRequest request) {
-//        String token = request.getHeader("Authorization");
-//        try {
-//            if (token != null && token.startsWith("Bearer ")) {
-//                token = token.substring(7); // Remove "Bearer "
-//
-//                String finalToken = token;
-//                Map<String, Object> result = service.logout(finalToken, 1800);
-//                // Return the map wrapped in ResponseEntity
-//                return ResponseEntity.ok(result);
-//            }
-//            Map<String, Object> errorResponse = ResponseMap.response(HttpStatus.UNAUTHORIZED.toString(), "Invalid Token", "");
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-//
-//        } catch (GlobalExceptionHandler.SQLServerException e) {
-//            return handleException(e);
-//        }
-//    }
+    @PostMapping("/create")
+    public ResponseEntity<?> create(@RequestBody Operator operator) {
+        try {
+            Map<String, Object> result = service.createOperator(operator);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<?> update(@RequestBody Operator operator) {
+        try {
+            Map<String, Object> result = service.updateOperator(operator);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PatchMapping("/block")
+    public ResponseEntity<?> block(@@RequestParam UUID id, @RequestParam Boolean status) {
+        try {
+            Map<String, Object> result = service.blockOperator(id, status);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getSingle(@RequestParam UUID id) {
+        try {
+            Map<String, Object> result = service.getSingle(id);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PostMapping("/generate-otp")
+    public ResponseEntity<?> generateOtp(@RequestParam String username) {
+        try {
+            Map<String, Object> result = service.generateOtp(username);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+
+    }
+
+    @PostMapping("/forget-password")
+    public ResponseEntity<?> verifyOtp(@RequestParam String username, @RequestParam String password, @RequestParam String retype_password, @RequestParam String otp) {
+        try {
+            Map<String, Object> result = service.verifyOtp(username, otp, password, retype_password);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
 
     @GetMapping("/all")
     public ResponseEntity<?> getAll() {
@@ -70,6 +114,8 @@ public class PortalUserController {
             return handleException(e);
         }
     }
+
+
 
     private ResponseEntity<Map<String, Object>> handleException(GlobalExceptionHandler.SQLServerException e) {
         return (ResponseEntity<Map<String, Object>>) exception.handleSQLServerException(e);
