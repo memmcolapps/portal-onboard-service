@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
@@ -36,6 +37,12 @@ public class Organization implements Serializable {
     private String imagePath;
 
     private UserModel operator;
+
+    private Long customerCount;
+
+    private BigDecimal totalVending;
+
+    private BigDecimal totalBilling;
 
 //    private String email;
 
@@ -152,5 +159,29 @@ public class Organization implements Serializable {
 
     public void setOperator(UserModel operator) {
         this.operator = operator;
+    }
+
+    public Long getCustomerCount() {
+        return customerCount;
+    }
+
+    public void setCustomerCount(Long customerCount) {
+        this.customerCount = customerCount;
+    }
+
+    public BigDecimal getTotalVending() {
+        return totalVending;
+    }
+
+    public void setTotalVending(BigDecimal totalVending) {
+        this.totalVending = totalVending;
+    }
+
+    public BigDecimal getTotalBilling() {
+        return totalBilling;
+    }
+
+    public void setTotalBilling(BigDecimal totalBilling) {
+        this.totalBilling = totalBilling;
     }
 }

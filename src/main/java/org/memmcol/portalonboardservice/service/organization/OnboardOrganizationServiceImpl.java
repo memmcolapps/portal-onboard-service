@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 
@@ -158,15 +159,27 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> getOrganization() {
         try {
 
-            List<Organization> organizations;
+            List<Organization> organizations = organizations = organizationMapper.getAllOrganizations();
 
-            // Get paginated data
-            organizations = organizationMapper.getAllOrganizations();
+            int totalOrganizations = organizations.size();
+            int totalActiveOrganizations = 0;
+            BigDecimal totalVending = BigDecimal.ZERO;
+            BigDecimal totalBilling = BigDecimal.ZERO;
+            int overallCustomers = 0;
+            BigDecimal overallVending = BigDecimal.ZERO;
+            BigDecimal overallBilling = BigDecimal.ZERO;
+//            private Integer customerCount;
+//            private BigDecimal totalVending;
+//            private BigDecimal totalBilling;
+
 
             for (Organization org : organizations) {
+                if (org.getStatus()) {
+                    totalActiveOrganizations++;
+                }
 
+                // Build node tree...
                 List<Node> nodes = organizationMapper.getNodeWithChildren(org.getOperator().getNodeId(), org.getId());
-
                 Map<UUID, Node> nodeMap = new HashMap<>();
                 Node root = null;
 
@@ -177,17 +190,40 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
                 for (Node node : nodes) {
                     if (node.getId().equals(org.getOperator().getNodeId())) {
-                        root = node; // this is the node we're querying for
+                        root = node;
                     }
                     if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
-                        Node parent = nodeMap.get(node.getParentId());
-                        parent.getNodesTree().add(node);
+                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
                     }
                 }
+
                 org.getOperator().setNodes(root);
+
+                // Get per-org metrics
+                Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
+                BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
+                BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
+
+                // Set in organization object
+                org.setCustomerCount(orgCustomerCount);
+                org.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
+                org.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
+
+                // Accumulate for global totals
+                overallCustomers += orgCustomerCount;
+                overallVending = totalVending.add(org.getTotalVending());
+                overallBilling = totalBilling.add(org.getTotalBilling());
             }
 
-            return ResponseMap.response(status.getSuccessCode(), "Organizations retrieved successfully", organizations);
+            Map<String, Object> response = new HashMap<>();
+            response.put("totalOrganizations", totalOrganizations);
+            response.put("totalActiveOrganizations", totalActiveOrganizations);
+            response.put("overallCustomers", overallCustomers);
+            response.put("overallVending", overallVending);
+            response.put("overallBilling", overallBilling);
+            response.put("organizations", organizations);
+
+            return ResponseMap.response(status.getSuccessCode(), "Organizations "+status.getDesc(), response);
 
         } catch (Exception exception) {
             log.error("Error fetching organizations {}", exception.getMessage(), exception);
@@ -197,10 +233,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             errorLog.setError_message(exception.getMessage());
             errorLog.setError(exception.toString());
             exceptionAuditRepository.save(errorLog);
-
             throw exception;
-
-
         }
     }
 
@@ -213,6 +246,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if (result == null) {
                 throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
             }
+
+            Long customer = organizationMapper.totalCustomer(result.getId());
+
+            BigDecimal vending = BigDecimal.valueOf(0);
+
+            BigDecimal billing = BigDecimal.valueOf(0);
 
             List<Node> nodes = organizationMapper.getNodeWithChildren(result.getOperator().getNodeId(), result.getId());
 
@@ -234,11 +273,13 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 }
             }
             result.getOperator().setNodes(root);
+            Map<String, Object> response = new HashMap<>();
+            response.put("organization", result);
+            response.put("totalCustomer", customer);
+            response.put("totalVending", vending);
+            response.put("totalBilling", billing);
 
-            return ResponseMap.response(
-                    status.getSuccessCode(), status.getDesc(),
-                    result
-            );
+            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), response);
 
         } catch (Exception exception) {
             log.error("Error fetching organization {}", exception.getMessage(), exception);

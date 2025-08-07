@@ -5,6 +5,7 @@ import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.node.NodeInfo;
 import org.memmcol.portalonboardservice.model.user.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -257,4 +258,7 @@ public interface OrganizationMapper {
             @Result(property = "updatedAt", column = "updated_at")
     })
     NodeInfo getHierarchyById(UUID nodeId);
+
+    @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
+    Long totalCustomer(UUID id);
 }
