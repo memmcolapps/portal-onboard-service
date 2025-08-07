@@ -1,11 +1,14 @@
 package org.memmcol.portalonboardservice.service.organization;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.memmcol.portalonboardservice.mapper.OrganizationMapper;
 import org.memmcol.portalonboardservice.mapper.UserMapper;
+import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.user.*;
+import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
@@ -18,6 +21,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
+
+import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
+import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
 
 
 @Service
@@ -32,6 +38,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     @Autowired
     private ResponseProperties status;
+
+    @Autowired
+    private AuditRepository auditRepository;
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -49,9 +61,11 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-
+        AuditLog auditNotificationDTO = new AuditLog();
         try {
-
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Operator operator = handleUserValidation();
             // Save to database
             organizationMapper.insertOrganization(organization);
             UUID orgId = organization.getId();
@@ -87,6 +101,14 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if (result == 0) {
                 throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
             }
+            Organization res = organizationMapper.getOrganizationById(organization.getId());
+            auditNotificationDTO.setCreator(operator);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setDescription("Organization created");
+            auditNotificationDTO.setType("organization");
+            auditNotificationDTO.setOrganization(res);
+            auditRepository.save(auditNotificationDTO);
 
             return ResponseMap.response(
                     status.getSuccessCode(),
@@ -301,7 +323,11 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> updateOrganization(Organization organization,UserModel userModel) {
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+        AuditLog auditNotificationDTO = new AuditLog();
         try {
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Operator operator = handleUserValidation();
             Organization res = organizationMapper.getOrganizationById(organization.getId());
 
             if (res == null) {
@@ -317,6 +343,13 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
+            auditNotificationDTO.setCreator(operator);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setDescription("Organization edited");
+            auditNotificationDTO.setType("organization");
+            auditNotificationDTO.setOrganization(res);
+            auditRepository.save(auditNotificationDTO);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Organization "+status.getUpdateDesc(),
@@ -339,7 +372,11 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> suspendOrganization(UUID id, Boolean suspend) {
 
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+        AuditLog auditNotificationDTO = new AuditLog();
         try {
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Operator operator = handleUserValidation();
             Organization res = organizationMapper.getOrganizationById(id);
 
             if (res == null) {
@@ -350,9 +387,16 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             Organization response = organizationMapper.getOrganizationById(id);
 
-            String desc = response.getStatus() ? "Organization activated successfully" : "Organization suspended successfully";
+            String desc = response.getStatus() ? "Organization activated" : "Organization suspended";
 
-            return ResponseMap.response(status.getSuccessCode(), desc, "");
+            auditNotificationDTO.setCreator(operator);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setDescription(desc);
+            auditNotificationDTO.setType("organization");
+            auditNotificationDTO.setOrganization(res);
+            auditRepository.save(auditNotificationDTO);
+            return ResponseMap.response(status.getSuccessCode(), desc + "successfully", "");
 
         } catch (Exception exception) {
             log.error("Error updating organization: {}", exception.getMessage(), exception);

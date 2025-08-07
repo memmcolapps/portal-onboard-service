@@ -33,8 +33,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("Operator " + status.getNotFoundDesc());
         } else if (!user.isStatus()) {
-            log.info("User is blocked: {}", user.isStatus());
-            throw new LockedException("User is blocked");
+            throw new LockedException("User access has been revoked");
         } else {
             Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
             user.getRoles().forEach(role -> {

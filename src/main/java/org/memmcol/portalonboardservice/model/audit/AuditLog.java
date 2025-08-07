@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
 import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
+import org.memmcol.portalonboardservice.model.user.Organization;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -30,6 +31,8 @@ public class AuditLog {
     private String ipAddress;
 
     private Operator operator;
+
+    private Organization organization;
 
     private SubStationTransformerFeederLine subStationTransformerFeederLine;
 
@@ -129,5 +132,13 @@ public class AuditLog {
 
     public void setRegionBhubServiceCenter(RegionBhubServiceCenter regionBhubServiceCenter) {
         this.regionBhubServiceCenter = regionBhubServiceCenter;
+    }
+
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
     }
 }

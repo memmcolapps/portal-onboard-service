@@ -80,24 +80,11 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 		if (user == null) {
 			throw new UsernameNotFoundException("User not found");
 		}
-
-//		// Determine if user is admin or regular user
-//		boolean isAdmin = user.isPermission();
-//		String requiredHeaderKey = isAdmin ? ADMIN_HEADER_KEY : USER_HEADER_KEY;
-//		String requiredHeaderValue = isAdmin ? ADMIN_HEADER_VALUE : USER_HEADER_VALUE;
-
 		// Validate the required header
 		String headerValue = request.getHeader(ADMIN_HEADER_KEY);
 		if (headerValue == null || !headerValue.equals(ADMIN_HEADER_VALUE)) {
 			throw new BadCredentialsException("Missing or invalid authentication header: " + ADMIN_HEADER_KEY);
 		}
-
-//		// Dynamically set login URL
-//		if (isAdmin) {
-//			setFilterProcessesUrl("/auth/service/admin/login");
-//		} else {
-//			setFilterProcessesUrl("/auth/service/login");
-//		}
 		UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
 		return authenticationManager.authenticate(authenticationToken);
 	}
