@@ -69,12 +69,13 @@ public class  SecurityConfig {
 
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
-				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus").permitAll()
+				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus",
+						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password").permitAll()
 				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
-				 "/gfPortal/operator/service/create","/gfPortal/operator/block","/gfPortal/operator/service/all")
+				 "/gfPortal/auth/service/create","/gfPortal/auth/block","/gfPortal/auth/service/all")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN")
-				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/operator/service/profile",
-						"/gfPortal/operator/service/logout", "/gfPortal/operator/service/update", "/gfPortal/operator/service/single")
+				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile",
+						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN", "READ")
 				.anyRequest().authenticated());
 

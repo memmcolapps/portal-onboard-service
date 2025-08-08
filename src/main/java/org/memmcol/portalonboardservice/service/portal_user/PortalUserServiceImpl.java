@@ -7,8 +7,10 @@ import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
+import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.util.ResponseProperties;
 import org.slf4j.Logger;
@@ -16,10 +18,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
+import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -45,45 +53,26 @@ public class PortalUserServiceImpl implements PortalUserService {
     private AuditRepository auditRepository;
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private PortalUserMapper portalUserMapper;
+
+    @Autowired private RestTemplate restTemplate;
 
     private final IMap<String, Object> authCache;
 
+    private final IMap<String, String> otpCache;
+
+    private final IMap<String, Boolean> verifiedUsers;
+
+    private final Random random = new SecureRandom();
+
     public PortalUserServiceImpl(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
         this.authCache = hazelcastInstance.getMap("authCache");
+        this.otpCache = hazelcastInstance.getMap("otpCache");
+        this.verifiedUsers = hazelcastInstance.getMap("verifiedUsers");
     }
-
-//    @Override
-//    public Map<String, Object> logout(String token, int expirySeconds) {
-//        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-//        AuditLog auditNotificationDTO = new AuditLog();
-//        try {
-//            String ipAddress = getClientIp(httpServletRequest);
-//            String userAgent = httpServletRequest.getHeader("User-Agent");
-//            Operator operator = handleUserValidation();
-//            operator.setPassword("");
-//            portalUserMapper.updateLogoutState(operator.getEmail());
-//            blacklistToken(token, expirySeconds);
-//            auditNotificationDTO.setCreator(operator);
-//            auditNotificationDTO.setUserAgent(userAgent);
-//            auditNotificationDTO.setIpAddress(ipAddress);
-//            auditNotificationDTO.setDescription("Logged out");
-//            auditNotificationDTO.setType("auth");
-////            removeFromCache();
-////			authCache.remove("dashboard");
-//            auditRepository.save(auditNotificationDTO);
-//            return ResponseMap.response(status.getSuccessCode(), "Logged out successfully", "");
-//        } catch (Exception exception) {
-//            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-//            log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
-//            exceptionErrorLogs.setDescription("Error occurred while logout");
-//            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-//            exceptionErrorLogs.setError(exception.toString().trim());
-//            exceptionAuditRepository.save(exceptionErrorLogs);
-//            throw exception;
-//        }
-//
-//    }
 
     @Override
     public Map<String, Object> logout() {
@@ -148,16 +137,108 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Override
     public Map<String, Object> generateOtp(String username) {
-        return Map.of();
+        return handleGenerateOtp(username);
     }
 
-    @Override
-    public Map<String, Object> verifyOtp(String username, String otp, String password, String retypePassword) {
-        return Map.of();
+//    @Override
+    public  Map<String, Object> verifyOtp(String email, String otp, String password, String retypePassword) {
+        try {
+
+            if(!password.equals(retypePassword)){
+                return ResponseMap.response(status.getNotFoundCode(), "Passwords do not match", "");
+            }
+            Operator isOperator = portalUserMapper.findByAuthEmail(email);
+            if (isOperator == null) {
+                throw new RuntimeException("User not found");
+            }
+            String storedOtp = otpCache.get(email);
+            if (storedOtp != null && storedOtp.equals(otp)) {
+                otpCache.remove(email);
+
+                verifiedUsers.put(email, true, 2, TimeUnit.MINUTES);
+
+                return handleForgetPassword(isOperator, password);
+
+            }
+            throw new GlobalExceptionHandler.NotFoundException("OTP verification failed");
+
+        } catch (Exception exception){
+            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+            log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
+            exceptionErrorLogs.setDescription("Error occurred while verifying OTP");
+            exceptionErrorLogs.setError_message(exception.getMessage().trim());
+            exceptionErrorLogs.setError(exception.toString().trim());
+            exceptionAuditRepository.save(exceptionErrorLogs);
+            throw exception;
+        }
     }
+
+
+    private Map<String, Object>  handleGenerateOtp(String username) {
+        String otp = String.format("%04d", random.nextInt(10000));
+
+        String emailServiceUrl = "http://localhost:8081/smarte/email/api/send";
+
+        try {
+            restTemplate.postForEntity(emailServiceUrl, Map.of(
+                    "toAddress", username,
+                    "subject", "OTP Code",
+                    "message", "Your OTP code is: " + otp
+            ), Void.class);
+        } catch (RestClientException emailException) {
+            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+            log.error("Failed to send OTP email to {}: {}", username, emailException.getMessage().trim(), emailException);
+            exceptionErrorLogs.setDescription("Error occurred while generating OTP");
+            exceptionErrorLogs.setError_message(emailException.getMessage().trim());
+            exceptionErrorLogs.setError(emailException.toString().trim());
+            exceptionAuditRepository.save(exceptionErrorLogs);
+            throw emailException;
+        }
+
+        otpCache.put(username, otp);
+        return ResponseMap.response(status.getSuccessCode(), "OTP Generated and sent successfully", "");
+    }
+
+
+    public Map<String, Object> handleForgetPassword(Operator user, String password) {
+        AuditLog AuditLog = new AuditLog();
+        String ipAddress = getClientIp(httpServletRequest);
+        String userAgent = httpServletRequest.getHeader("User-Agent");
+        try {
+
+            if (!verifiedUsers.containsKey(user.getEmail())) {
+                return ResponseMap.response(status.getNotFoundCode(), "OTP verification required before password change", "");
+            }
+
+            int passwordChangeResult = portalUserMapper.resetPassword(user.getEmail(), passwordEncoder.encode(password));
+            if (passwordChangeResult == 0) {
+                return ResponseMap.response(status.getBlockCode(),  "Operator " + status.getBlockFailureDesc(), "");
+            }
+            user.setPassword("");
+            // Remove OTP verification from cache after successful password reset
+            verifiedUsers.remove(user.getEmail());
+//			handleCacheUpdate(isOperator);
+            AuditLog.setCreator(user);
+            AuditLog.setUserAgent(userAgent);
+            AuditLog.setIpAddress(ipAddress);
+            AuditLog.setDescription("Reset password");
+            AuditLog.setType("auth");
+            auditRepository.save(AuditLog);
+            return ResponseMap.response(status.getSuccessCode(), "Password " + status.getUpdateDesc(), "");
+
+        } catch (Exception exception) {
+            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+            log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
+            exceptionErrorLogs.setDescription("Error occurred while changing operator password");
+            exceptionErrorLogs.setError_message(exception.getMessage().trim());
+            exceptionErrorLogs.setError(exception.toString().trim());
+            exceptionAuditRepository.save(exceptionErrorLogs);
+            throw exception;
+        }
+    }
+
 
     private void blacklistToken(String token, int expirySeconds) {
-        System.out.println(">>>>>>>>token:: "+token);
         authCache.put(token, true, expirySeconds, TimeUnit.SECONDS);
     }
 

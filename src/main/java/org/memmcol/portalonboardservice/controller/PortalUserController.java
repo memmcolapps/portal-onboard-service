@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/gfPortal/operator/service")
+@RequestMapping("/gfPortal/auth/service")
 public class PortalUserController {
 
     @Autowired private PortalUserService service;
