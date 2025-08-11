@@ -136,11 +136,16 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
+    public Map<String, Object> getAll() {
+        return Map.of();
+    }
+
+    @Override
     public Map<String, Object> generateOtp(String username) {
         return handleGenerateOtp(username);
     }
 
-//    @Override
+    @Override
     public  Map<String, Object> verifyOtp(String email, String otp, String password, String retypePassword) {
         try {
 
@@ -183,7 +188,7 @@ public class PortalUserServiceImpl implements PortalUserService {
             restTemplate.postForEntity(emailServiceUrl, Map.of(
                     "toAddress", username,
                     "subject", "OTP Code",
-                    "message", "Your OTP code is: " + otp
+                    "message", otp
             ), Void.class);
         } catch (RestClientException emailException) {
             ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -240,10 +245,5 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     private void blacklistToken(String token, int expirySeconds) {
         authCache.put(token, true, expirySeconds, TimeUnit.SECONDS);
-    }
-
-    @Override
-    public Map<String, Object> getAll() {
-        return Map.of();
     }
 }
