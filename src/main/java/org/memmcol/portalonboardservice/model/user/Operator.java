@@ -26,9 +26,10 @@ public class Operator implements Serializable {
     private String email;
     private String password;
     private String lastActive;
-    private String phoneNumber;
+//    private String phoneNumber;
     private boolean status;
     private boolean active;
+    private String role;
 
     @NotNull(message = "Roles must not be null")
     private List<Role> roles;
@@ -84,13 +85,13 @@ public class Operator implements Serializable {
         this.password = password;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+//    public String getPhoneNumber() {
+//        return phoneNumber;
+//    }
+//
+//    public void setPhoneNumber(String phoneNumber) {
+//        this.phoneNumber = phoneNumber;
+//    }
 
     public boolean isStatus() {
         return status;
@@ -146,6 +147,14 @@ public class Operator implements Serializable {
 
     public void setLastActive(String lastActive) {
         this.lastActive = lastActive;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getRole() {
+        return role;
     }
 }
 

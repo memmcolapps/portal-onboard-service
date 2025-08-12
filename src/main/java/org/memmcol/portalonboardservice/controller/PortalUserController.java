@@ -3,6 +3,7 @@ package org.memmcol.portalonboardservice.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.service.portal_user.PortalUserService;
+import org.memmcol.portalonboardservice.service.portal_user.PortalUserServiceImpl;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,8 @@ public class PortalUserController {
 
     @Autowired
     private GlobalExceptionHandler exception;
+    @Autowired
+    private PortalUserServiceImpl portalUserServiceImpl;
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
@@ -63,8 +66,8 @@ public class PortalUserController {
         }
     }
 
-    @PatchMapping("/block")
-    public ResponseEntity<?> block(@RequestParam UUID id, @RequestParam Boolean status) {
+    @PatchMapping("/change-status")
+    public ResponseEntity<?> block(@RequestParam UUID id,@RequestParam boolean status) {
         try {
             Map<String, Object> result = service.blockOperator(id, status);
             return ResponseEntity.ok(result);

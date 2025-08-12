@@ -7,6 +7,7 @@ import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
+import org.memmcol.portalonboardservice.model.user.Role;
 import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
@@ -25,11 +26,9 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.SecureRandom;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
@@ -117,7 +116,61 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Override
     public Map<String, Object> createOperator(Operator operator) {
-        return Map.of();
+
+        AuditLog auditNotificationDTO = new AuditLog();
+        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+
+        try {
+
+            String email = operator.getEmail();
+
+            Optional<Operator> existingOperator = portalUserMapper.findByEmail(email);
+            if (existingOperator.isPresent()) {
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
+            }
+
+            String password = passwordEncoder.encode(operator.getPassword());
+            operator.setPassword(password);
+            operator.setStatus(true);
+            operator.setActive(true);
+
+            portalUserMapper.createPortalUser(operator);
+
+            Role role = new Role();
+            role.setUserId(operator.getId());
+            role.setUserRole(operator.getRole());
+
+            boolean result;
+            result = portalUserMapper.createPortalRole(role);
+            if (result == false){
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Failed to create Role");
+            }
+            Operator operatorAction = handleUserValidation();
+
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+
+            auditNotificationDTO.setCreator(operatorAction);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setDescription("Created new operator account "+ operator.getEmail());
+            auditNotificationDTO.setType("auth");
+            auditRepository.save(auditNotificationDTO);
+
+            return ResponseMap.response(status.getSuccessCode(),
+                    "Created new operator successfully",
+                    ""
+            );
+
+        }catch (Exception exception){
+            log.error("Error occurred while creating operator: {}", exception.getMessage(), exception);
+            errorLog.setDescription("Error occurred while creating operator");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw exception;
+        }
     }
 
     @Override
@@ -126,8 +179,64 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
-    public Map<String, Object> blockOperator(UUID id, Boolean status) {
-        return Map.of();
+    public Map<String, Object> blockOperator(UUID id,boolean stat) {
+
+        AuditLog auditNotificationDTO = new AuditLog();
+        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+
+        try {
+
+            Optional<Operator> result = portalUserMapper.getSinglePortalUser(id);
+            if (result.isPresent()) {
+                portalUserMapper.blockAndUnblockOperator(id, stat);
+            }
+
+            boolean isStatus = portalUserMapper.getSinglePortalUser(id)
+                    .map(Operator::isStatus)
+                    .orElse(false);
+
+            Operator operatorAction = handleUserValidation();
+
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+
+            auditNotificationDTO.setCreator(operatorAction);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setType("auth");
+
+            if (!isStatus) {
+
+                auditNotificationDTO.setDescription("Blocked operator account with ID: " + id);
+                auditRepository.save(auditNotificationDTO);
+
+                return ResponseMap.response(status.getSuccessCode(),
+                        "Operator Suspended successfully",
+                        ""
+                );
+            } else {
+                auditNotificationDTO.setDescription("Activated operator account with ID: " + id);
+                auditRepository.save(auditNotificationDTO);
+                return ResponseMap.response(status.getSuccessCode(),
+                        "Operator Activated successfully",
+                        ""
+                );
+            }
+
+//            return ResponseMap.response(status.getSuccessCode(),
+//                    "Operator Suspended successfully",
+//                    ""
+//            );
+
+        }catch (Exception exception){
+            log.error("Error occurred while blocking operator: {}", exception.getMessage(), exception);
+            errorLog.setDescription("Error occurred while blocking operator");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw exception;
+        }
     }
 
     @Override
