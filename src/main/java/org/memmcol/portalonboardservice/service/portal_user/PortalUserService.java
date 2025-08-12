@@ -15,7 +15,7 @@ public interface PortalUserService {
 
     Map<String, Object> updateOperator(Operator operator);
 
-    Map<String, Object> blockOperator(UUID id, Boolean status);
+    Map<String, Object> blockOperator(UUID id, boolean status);
 
     Map<String, Object> getSingle(UUID id);
 
