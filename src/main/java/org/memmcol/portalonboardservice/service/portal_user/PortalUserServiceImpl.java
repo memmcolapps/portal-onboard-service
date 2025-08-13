@@ -173,9 +173,56 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+
     @Override
     public Map<String, Object> updateOperator(Operator operator) {
-        return Map.of();
+
+        AuditLog auditNotificationDTO = new AuditLog();
+        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+
+        try {
+
+            Operator currentUser = handleUserValidation();
+
+            UUID id =  operator.getId();
+            Optional<Operator> user = portalUserMapper.getSinglePortalUser(id);
+            if (user.isPresent()) {
+                portalUserMapper.updatePortalUser(operator);
+
+                String userRole = operator.getRole();
+                if (userRole != null) {
+                    portalUserMapper.updateRole(userRole, id);
+                }
+
+            }else {
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator does not exist");
+            }
+
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+
+            auditNotificationDTO.setCreator(currentUser);
+            auditNotificationDTO.setUserAgent(userAgent);
+            auditNotificationDTO.setIpAddress(ipAddress);
+            auditNotificationDTO.setDescription("Updated operator account with ID: " + operator.getId());
+            auditNotificationDTO.setType("auth");
+            auditRepository.save(auditNotificationDTO);
+
+            return ResponseMap.response(
+                    status.getSuccessCode(),
+                    "Operator updated successfully",
+                    ""
+            );
+        }catch (Exception exception){
+
+            log.error("Error occurred while updating operator: {}", exception.getMessage(), exception);
+            errorLog.setDescription("Error occurred while updating operator");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw exception;
+        }
     }
 
     @Override
@@ -241,12 +288,54 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Override
     public Map<String, Object> getSingle(UUID id) {
-        return Map.of();
+
+        try {
+            Optional<Operator> result = portalUserMapper.getSinglePortalUser(id);
+            if (result.isEmpty()) {
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
+            }
+
+            return ResponseMap.response(status.getSuccessCode(),
+                    status.getDesc(),
+                    result
+            );
+
+        }catch (Exception exception){
+            log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
+            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+
+            errorLog.setDescription("Error occurred while fetching operator");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw exception;
+        }
     }
 
     @Override
     public Map<String, Object> getAll() {
-        return Map.of();
+
+        try {
+            List<Operator> operators = portalUserMapper.getAllPortalUser();
+
+            return ResponseMap.response(
+                    status.getSuccessCode(),
+                    "Operators fetched successfully",
+                    operators
+            );
+        }catch (Exception exception){
+
+            log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
+            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+
+            errorLog.setDescription("Error occurred while fetching operator");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw exception;
+        }
     }
 
     @Override
