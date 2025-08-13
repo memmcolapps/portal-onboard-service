@@ -56,7 +56,7 @@ public class PortalUserController {
         }
     }
 
-    @PostMapping("/update")
+    @PatchMapping("/update")
     public ResponseEntity<?> update(@RequestBody Operator operator) {
         try {
             Map<String, Object> result = service.updateOperator(operator);
@@ -117,8 +117,6 @@ public class PortalUserController {
             return handleException(e);
         }
     }
-
-
 
     private ResponseEntity<Map<String, Object>> handleException(GlobalExceptionHandler.SQLServerException e) {
         return (ResponseEntity<Map<String, Object>>) exception.handleSQLServerException(e);

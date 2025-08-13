@@ -40,7 +40,10 @@ public interface PortalUserMapper {
             @Result(property = "id", column = "id"),
             @Result(property = "lastActive", column = "last_active"),
             @Result(property = "createdAt", column = "Created_at"),
-            @Result(property = "updatedAt", column = "Updated_at")
+            @Result(property = "updatedAt", column = "Updated_at"),
+            @Result(property = "roles", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
+
     })
     Optional<Operator> getSinglePortalUser(UUID id);
 
@@ -50,7 +53,20 @@ public interface PortalUserMapper {
             @Result(property = "userId", column = "user_id"),
             @Result(property = "userRole", column = "user_role"),
     })
-    List<Role> getRolesByOperatorEmail(UUID userId);
+    Optional<Role> getRolesByOperatorId(UUID userId);
+
+    @Select("SELECT * FROM portal_users")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "createdAt", column = "Created_at"),
+            @Result(property = "updatedAt", column = "Updated_at"),
+            @Result(property = "roles", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
+
+    })
+    List<Operator> getAllPortalUser();
+
 
     @Select("SELECT o.*, r.* " +
             "FROM portal_users o " +
@@ -61,12 +77,28 @@ public interface PortalUserMapper {
 //            @Result(property = "phoneNumber", column = "phone_number"),
             @Result(property = "lastActive", column = "last_active"),
             @Result(property = "roles", column = "id",
-                    one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorEmail")),
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
             @Result(property = "createdAt", column = "Created_at"),
             @Result(property = "updatedAt", column = "Updated_at"),
     })
     Operator findByAuthEmail(String email);
 
+    @Update({
+            "<script>",
+            "UPDATE portal_users",
+            "SET "+
+            "  <if test='firstname != null'> firstname = #{firstname},</if>"+
+            "  <if test='lastname != null'> lastname = #{lastname},</if>"+
+            "  <if test='department != null'> department = #{department},</if>"+
+            "  updated_at = #{updatedAt}"+
+            " WHERE id = #{id}"+
+            "</script>"
+    })
+    int updatePortalUser(Operator operator);
+
+    @Update("UPDATE portal_roles SET user_role = #{role}" +
+            " Where user_id = #{id} ")
+    int updateRole(String role, UUID id);
 
     @Update("UPDATE portal_users SET status = #{stat} WHERE id = #{id}")
     int blockAndUnblockOperator(UUID id, boolean stat);
