@@ -42,7 +42,7 @@ public interface NodeMapper {
             @Result(property = "parentId", column = "parent_id"),
             @Result(property = "orgId", column = "org_id"),
             @Result(property = "nodeInfo", column = "id",
-                    many = @Many(select = "org.memmcol.gridflexbackendservice.mapper.NodeMapper.getHierarchyById"))
+                    many = @Many(select = "org.memmcol.portalonboardservice.mapper.NodeMapper.getHierarchyById"))
     })
     List<Node> getNodeWithChildren(@Param("nodeId") UUID nodeId, @Param("orgId") UUID orgId);
 
@@ -83,7 +83,7 @@ public interface NodeMapper {
             @Result(property = "parentId", column = "parent_id"),
             @Result(property = "orgId", column = "org_id"),
             @Result(property = "nodeInfo", column = "id",
-                    many = @Many(select = "org.memmcol.gridflexbackendservice.mapper.NodeMapper.getHierarchyById"))
+                    many = @Many(select = "org.memmcol.portalonboardservice.mapper.NodeMapper.getHierarchyById"))
     })
     List<Node> getAllNode(UUID orgId);
 

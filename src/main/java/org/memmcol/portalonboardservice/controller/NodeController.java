@@ -69,10 +69,10 @@ public class NodeController {
     }
 
     @GetMapping("/single")
-    public ResponseEntity<Map<String, Object>> singleNode(@RequestParam UUID nodeId, @RequestParam UUID orgId) {
+    public ResponseEntity<Map<String, Object>> singleNode(@RequestParam UUID id, @RequestParam UUID orgId) {
 
         try {
-            Map<String, Object> result =  nodeService.singleNode(nodeId, orgId);
+            Map<String, Object> result =  nodeService.singleNode(id, orgId);
 
             return ResponseEntity.ok(result);
         } catch (SQLServerException e) {
@@ -82,7 +82,7 @@ public class NodeController {
 
 
     @GetMapping("/all")
-    public ResponseEntity<Map<String, Object>> fetchAllNodes(UUID orgId) {
+    public ResponseEntity<Map<String, Object>> fetchAllNodes(@RequestParam UUID orgId) {
 
         try {
             Map<String, Object> result =  nodeService.getAllNodes(orgId);
