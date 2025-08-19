@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -181,7 +182,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> getOrganization() {
         try {
 
-            List<Organization> organizations = organizations = organizationMapper.getAllOrganizations();
+            List<Organization> organizations = organizationMapper.getAllOrganizations();
+            String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 
             int totalOrganizations = organizations.size();
             int totalActiveOrganizations = 0;
@@ -235,7 +237,14 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 overallFeeders += orgFeederCount;
                 overallVending = totalVending.add(org.getTotalVending());
                 overallBilling = totalBilling.add(org.getTotalBilling());
+
+                if (org.getImage() != null) {
+                    // Convert relative path to full URL
+                    String fullUrl = baseUrl + org.getImage();
+                    org.setImage(fullUrl);
+                }
             }
+
 
             Map<String, Object> response = new HashMap<>();
             response.put("totalOrganizations", totalOrganizations);
@@ -263,7 +272,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Override
     public Map<String, Object> getOrganizationById(UUID id) {
         try {
-//            Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
+            String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
             BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
             BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
@@ -295,6 +304,13 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                     Node parent = nodeMap.get(node.getParentId());
                     parent.getNodesTree().add(node);
                 }
+            }
+
+
+            if (result.getImage() != null) {
+                // Convert relative path to full URL
+                String fullUrl = baseUrl + result.getImage();
+                result.setImage(fullUrl);
             }
             result.getOperator().setNodes(root);
 

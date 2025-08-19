@@ -121,11 +121,14 @@ public class PortalUserServiceImpl implements PortalUserService {
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
 
         try {
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Operator operatorAction = handleUserValidation();
 
             String email = operator.getEmail();
 
-            Optional<Operator> existingOperator = portalUserMapper.findByEmail(email);
-            if (existingOperator.isPresent()) {
+            Operator existingOperator = portalUserMapper.findByEmail(email);
+            if (existingOperator != null) {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
             }
 
@@ -145,24 +148,21 @@ public class PortalUserServiceImpl implements PortalUserService {
             if (result == false){
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Failed to create Role");
             }
-            Operator operatorAction = handleUserValidation();
-
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
-
+            Operator operator1 = portalUserMapper.findByEmail(email);
             auditNotificationDTO.setCreator(operatorAction);
             auditNotificationDTO.setUserAgent(userAgent);
             auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setDescription("Created new operator account "+ operator.getEmail());
-            auditNotificationDTO.setType("auth");
+            auditNotificationDTO.setDescription("Operator newly created");
+            auditNotificationDTO.setType("operator");
+            auditNotificationDTO.setOperator(operator1);
             auditRepository.save(auditNotificationDTO);
 
             return ResponseMap.response(status.getSuccessCode(),
-                    "Created new operator successfully",
+                    "Operator "+status.getRegDesc(),
                     ""
             );
 
-        }catch (Exception exception){
+        } catch (Exception exception){
             log.error("Error occurred while creating operator: {}", exception.getMessage(), exception);
             errorLog.setDescription("Error occurred while creating operator");
             errorLog.setError_message(exception.getMessage());
@@ -181,39 +181,41 @@ public class PortalUserServiceImpl implements PortalUserService {
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
 
         try {
-
+            String ipAddress = getClientIp(httpServletRequest);
+            String userAgent = httpServletRequest.getHeader("User-Agent");
             Operator currentUser = handleUserValidation();
 
             UUID id =  operator.getId();
-            Optional<Operator> user = portalUserMapper.getSinglePortalUser(id);
-            if (user.isPresent()) {
-                portalUserMapper.updatePortalUser(operator);
-
-                String userRole = operator.getRole();
-                if (userRole != null) {
-                    portalUserMapper.updateRole(userRole, id);
-                }
-
-            }else {
-                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator does not exist");
+            Operator user = portalUserMapper.getSinglePortalUser(id);
+            if(user == null){
+                throw new GlobalExceptionHandler.NotFoundException("Operator does not exist");
             }
 
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            if (!currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("SUPER_ADMIN")
+                    && currentUser.getId() != operator.getId()
+            ) {
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator do not have permission to perform this action");
+            }
+
+            portalUserMapper.updatePortalUser(operator);
+
+            String userRole = operator.getRole();
+            if (userRole != null && (currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("SUPER_ADMIN")
+                    || currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("WRITE"))) {
+                portalUserMapper.updateRole(userRole, id);
+            }
+            Operator operator1 = portalUserMapper.findByEmail(currentUser.getEmail());
 
             auditNotificationDTO.setCreator(currentUser);
             auditNotificationDTO.setUserAgent(userAgent);
             auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setDescription("Updated operator account with ID: " + operator.getId());
-            auditNotificationDTO.setType("auth");
+            auditNotificationDTO.setDescription("Operator updated");
+            auditNotificationDTO.setType("operator");
+            auditNotificationDTO.setOperator(operator1);
             auditRepository.save(auditNotificationDTO);
 
-            return ResponseMap.response(
-                    status.getSuccessCode(),
-                    "Operator updated successfully",
-                    ""
-            );
-        }catch (Exception exception){
+            return ResponseMap.response(status.getSuccessCode(), "Operator "+status.getUpdateDesc(), "");
+        } catch (Exception exception){
 
             log.error("Error occurred while updating operator: {}", exception.getMessage(), exception);
             errorLog.setDescription("Error occurred while updating operator");
@@ -232,48 +234,29 @@ public class PortalUserServiceImpl implements PortalUserService {
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
 
         try {
-
-            Optional<Operator> result = portalUserMapper.getSinglePortalUser(id);
-            if (result.isPresent()) {
-                portalUserMapper.blockAndUnblockOperator(id, stat);
-            }
-
-            boolean isStatus = portalUserMapper.getSinglePortalUser(id)
-                    .map(Operator::isStatus)
-                    .orElse(false);
-
-            Operator operatorAction = handleUserValidation();
-
             String ipAddress = getClientIp(httpServletRequest);
             String userAgent = httpServletRequest.getHeader("User-Agent");
+            Operator operatorAction = handleUserValidation();
+
+            Operator result = portalUserMapper.getSinglePortalUser(id);
+            if (result == null) {
+               throw new GlobalExceptionHandler.NotFoundException("Operator not found");
+            }
+            portalUserMapper.blockAndUnblockOperator(id, stat);
+
+            Operator operator = portalUserMapper.getSinglePortalUser(id);
+
+            String desc = operator.isStatus() ? "Operator activated" : "Operator deactivated";
 
             auditNotificationDTO.setCreator(operatorAction);
             auditNotificationDTO.setUserAgent(userAgent);
             auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setType("auth");
+            auditNotificationDTO.setType("operator");
+            auditNotificationDTO.setOperator(operator);
+            auditNotificationDTO.setDescription(desc);
+            auditRepository.save(auditNotificationDTO);
 
-            if (!isStatus) {
-
-                auditNotificationDTO.setDescription("Blocked operator account with ID: " + id);
-                auditRepository.save(auditNotificationDTO);
-
-                return ResponseMap.response(status.getSuccessCode(),
-                        "Operator Suspended successfully",
-                        ""
-                );
-            } else {
-                auditNotificationDTO.setDescription("Activated operator account with ID: " + id);
-                auditRepository.save(auditNotificationDTO);
-                return ResponseMap.response(status.getSuccessCode(),
-                        "Operator Activated successfully",
-                        ""
-                );
-            }
-
-//            return ResponseMap.response(status.getSuccessCode(),
-//                    "Operator Suspended successfully",
-//                    ""
-//            );
+            return ResponseMap.response(status.getSuccessCode(), desc+" successfully", "");
 
         }catch (Exception exception){
             log.error("Error occurred while blocking operator: {}", exception.getMessage(), exception);
@@ -290,8 +273,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     public Map<String, Object> getSingle(UUID id) {
 
         try {
-            Optional<Operator> result = portalUserMapper.getSinglePortalUser(id);
-            if (result.isEmpty()) {
+            Operator result = portalUserMapper.getSinglePortalUser(id);
+            if (result == null) {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
             }
 
@@ -324,7 +307,7 @@ public class PortalUserServiceImpl implements PortalUserService {
                     "Operators fetched successfully",
                     operators
             );
-        }catch (Exception exception){
+        } catch (Exception exception){
 
             log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
             ExceptionErrorLogs errorLog = new ExceptionErrorLogs();

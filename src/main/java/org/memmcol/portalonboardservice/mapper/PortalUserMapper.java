@@ -33,7 +33,7 @@ public interface PortalUserMapper {
             @Result(property = "createdAt", column = "Created_at"),
             @Result(property = "updatedAt", column = "Updated_at")
     })
-    Optional<Operator> findByEmail(String email);
+    Operator findByEmail(String email);
 
     @Select("SELECT * FROM portal_users WHERE id = #{id}")
     @Results({
@@ -45,7 +45,7 @@ public interface PortalUserMapper {
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
 
     })
-    Optional<Operator> getSinglePortalUser(UUID id);
+    Operator getSinglePortalUser(UUID id);
 
     @Select("SELECT * FROM portal_roles WHERE user_id = #{userId}")
     @Results({
@@ -96,8 +96,8 @@ public interface PortalUserMapper {
     })
     int updatePortalUser(Operator operator);
 
-    @Update("UPDATE portal_roles SET user_role = #{role}" +
-            " Where user_id = #{id} ")
+    @Update("UPDATE portal_roles SET user_role = #{role} " +
+            "Where user_id = #{id} ")
     int updateRole(String role, UUID id);
 
     @Update("UPDATE portal_users SET status = #{stat} WHERE id = #{id}")

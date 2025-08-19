@@ -1,6 +1,8 @@
 package org.memmcol.portalonboardservice.model.user;
 
 
+import jakarta.persistence.Lob;
+
 import java.util.UUID;
 
 public class OnboardingOrganizationDTO {
@@ -18,6 +20,9 @@ public class OnboardingOrganizationDTO {
     private String email;
     private String password;
     private String phoneNumber;
+
+    @Lob
+    private byte[] image;
 
     public UUID getId() {
         return id;
@@ -121,5 +126,13 @@ public class OnboardingOrganizationDTO {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public byte[] getImage() {
+        return image;
+    }
+
+    public void setImage(byte[] image) {
+        this.image = image;
     }
 }

@@ -1,6 +1,7 @@
 package org.memmcol.portalonboardservice.model.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.Lob;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 
@@ -34,7 +35,7 @@ public class Organization implements Serializable {
 
     private Boolean status;
 
-    private String imagePath;
+    private String image;
 
     private UserModel operator;
 
@@ -45,8 +46,6 @@ public class Organization implements Serializable {
     private BigDecimal totalVending;
 
     private BigDecimal totalBilling;
-
-//    private String email;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -131,14 +130,6 @@ public class Organization implements Serializable {
         this.status = status;
     }
 
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -193,5 +184,13 @@ public class Organization implements Serializable {
 
     public void setTotalFeeder(Long totalFeeder) {
         this.totalFeeder = totalFeeder;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }

@@ -13,8 +13,8 @@ public interface OrganizationMapper {
 
     @Insert(""" 
             INSERT INTO organizations(
-                        business_name, postal_code, address, country, state, city, created_at, updated_at)
-                        VALUES(#{businessName},#{postalCode},#{address},#{country},#{state},#{city},#{createdAt},#{updatedAt}
+                        business_name, postal_code, address, country, state, city, created_at, updated_at, image)
+                        VALUES(#{businessName},#{postalCode},#{address},#{country},#{state},#{city},#{createdAt},#{updatedAt}, #{imagePath}
                    ) """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertOrganization(Organization organization);
@@ -95,6 +95,7 @@ public interface OrganizationMapper {
 
     @Select("SELECT * FROM organizations ORDER BY created_at DESC ")
     @Results({
+            @Result(property = "id", column = "id"),
             @Result(property = "id", column = "id"),
             @Result(property = "businessName", column = "business_name"),
             @Result(property = "postalCode", column = "postal_code"),

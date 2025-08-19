@@ -32,8 +32,6 @@ public class HazelcastConfig {
 		config.setClusterName(clusterName);
 		config.getNetworkConfig().setPort(networkPort);
 		config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(multicastEnabled);
-//        config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(true)
-//        .setMembersArrays.asList("192.168.1.100", "192.168.1.101"))
 
 		// Configure OTP Cache (Expires in 60 Seconds)
 		config.addMapConfig(new MapConfig("otpCache")

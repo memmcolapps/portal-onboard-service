@@ -30,7 +30,6 @@ public class Operator implements Serializable {
     private String password;
 
     private String lastActive;
-//    private String phoneNumber;
     private boolean status;
     private boolean active;
     private String role;
@@ -88,14 +87,6 @@ public class Operator implements Serializable {
     public void setPassword(String password) {
         this.password = password;
     }
-
-//    public String getPhoneNumber() {
-//        return phoneNumber;
-//    }
-//
-//    public void setPhoneNumber(String phoneNumber) {
-//        this.phoneNumber = phoneNumber;
-//    }
 
     public boolean isStatus() {
         return status;
