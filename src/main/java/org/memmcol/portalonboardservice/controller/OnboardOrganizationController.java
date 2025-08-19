@@ -63,8 +63,10 @@ public class OnboardOrganizationController {
         userModel.setPhoneNumber(request.get("phoneNumber"));
 
         try {
-            String fileUrl = fileStorageService.saveFile(file);
-            organization.setImage(fileUrl);
+            if(file != null){
+                String fileUrl = fileStorageService.saveFile(file);
+                organization.setImage(fileUrl);
+            }
 
             Map<String, Object> result = onboardOrganizationService.addOrganization(organization, userModel);
             return ResponseEntity.ok(result);
