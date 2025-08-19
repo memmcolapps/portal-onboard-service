@@ -45,7 +45,7 @@ public class OnboardOrganizationController {
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> createOrganization(
             @RequestParam Map<String, String> request,
-            @RequestParam("logo") MultipartFile file) {
+            @RequestParam(value = "logo", required = false) MultipartFile file) {
 
         Organization organization = new Organization();
         organization.setBusinessName(request.get("businessName"));

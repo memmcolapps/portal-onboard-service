@@ -306,7 +306,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 }
             }
 
-
             if (result.getImage() != null) {
                 // Convert relative path to full URL
                 String fullUrl = baseUrl + result.getImage();
