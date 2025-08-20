@@ -96,7 +96,7 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("business hub") ||
                     request.getType().equalsIgnoreCase("service center")){
                 nodeMapper.createRegionBhubServiceCenter(request);
-                id = request.getId();
+                id = request.getNodeId();
                 regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(id);
                 desc = regionBhubServiceCenter.getName() + "newly created";
             } else {
@@ -159,7 +159,7 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("feeder line") ||
                     request.getType().equalsIgnoreCase("substation")){
                 nodeMapper.createSubStationTransformerFeederLine(request);
-                id = request.getId();
+                id = request.getNodeId();
                 subStationTransformerFeederLine = nodeMapper.getSubStationTransformerFeederLine(id);
                 desc = subStationTransformerFeederLine.getName() + "newly created";
             } else {
@@ -193,7 +193,6 @@ public class NodeServiceImpl implements NodeService {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         AuditLog auditNotificationDTO = new AuditLog();
         RegionBhubServiceCenter regionBhubServiceCenter;
-        UUID id;
         try {
             String ipAddress = getClientIp(httpServletRequest);
             String userAgent = httpServletRequest.getHeader("User-Agent");
@@ -222,9 +221,8 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("business hub") ||
                     request.getType().equalsIgnoreCase("service center")) {
                 nodeMapper.updateRegionBhubServiceCenter(request);
-                id = request.getId();
-                regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(id);
-                desc = regionBhubServiceCenter.getName()  + "edited";
+                regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(request.getNodeId());
+                desc = regionBhubServiceCenter.getName()  + " edited";
             }  else {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
             }
@@ -285,8 +283,8 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("feeder line") ||
                     request.getType().equalsIgnoreCase("substation")){
                 nodeMapper.updateSubStationTransformerFeederLine(request);
-                id = request.getId();
-                subStationTransformerFeederLine = nodeMapper.getSubStationTransformerFeederLine(id);
+//                id = request.getId();
+                subStationTransformerFeederLine = nodeMapper.getSubStationTransformerFeederLine(request.getNodeId());
                 desc = subStationTransformerFeederLine.getName()  + "edited";
             } else {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
