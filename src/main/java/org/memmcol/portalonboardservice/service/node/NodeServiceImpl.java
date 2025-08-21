@@ -341,6 +341,7 @@ public class NodeServiceImpl implements NodeService {
             }
 
             for (Node node : flatList) {
+                System.out.println("node id: " + nodeId);
                 if (node.getId().equals(nodeId)) {
                     root = node; // this is the node we're querying for
                 }

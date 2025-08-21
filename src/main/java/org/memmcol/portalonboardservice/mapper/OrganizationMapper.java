@@ -228,6 +228,16 @@ public interface OrganizationMapper {
     })
     List<Node> getNodeWithChildren(UUID nodeId, UUID orgId);
 
+    @Select("SELECT * FROM nodes WHERE org_id = #{orgId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "parentId", column = "parent_id"),
+            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "nodeInfo", column = "id",
+                    many = @Many(select = "org.memmcol.portalonboardservice.mapper.NodeMapper.getHierarchyById"))
+    })
+    List<Node> getAllNode(UUID orgId);
+
 
     @Select("""
         SELECT

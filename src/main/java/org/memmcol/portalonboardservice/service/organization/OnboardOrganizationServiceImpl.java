@@ -1,7 +1,6 @@
 package org.memmcol.portalonboardservice.service.organization;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import org.memmcol.portalonboardservice.mapper.OrganizationMapper;
 import org.memmcol.portalonboardservice.mapper.UserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
@@ -18,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.math.BigDecimal;
@@ -180,7 +180,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             return response;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getOrganization() {
         try {
@@ -203,25 +203,49 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 }
 
                 // Build node tree...
-                List<Node> nodes = organizationMapper.getNodeWithChildren(org.getOperator().getNodeId(), org.getId());
+                List<Node> nodes = organizationMapper.getAllNode(org.getId());
+//                Map<UUID, Node> nodeMap = new HashMap<>();
+//                Node root = null;
+
+//                if(nodes == null || nodes.isEmpty()){
+//                    return ResponseMap.response(status.getSuccessCode(), status.getDesc(), nodes);
+//                }
                 Map<UUID, Node> nodeMap = new HashMap<>();
-                Node root = null;
+                List<Node> roots = new ArrayList<>();
 
+                // Map nodes by ID
                 for (Node node : nodes) {
-                    node.setNodesTree(new ArrayList<>());
                     nodeMap.put(node.getId(), node);
+                    node.setNodesTree(new ArrayList<>()); // Initialize children list
                 }
 
+                // Reconstruct the tree
                 for (Node node : nodes) {
-                    if (node.getId().equals(org.getOperator().getNodeId())) {
-                        root = node;
-                    }
-                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
-                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
+                    if (node.getParentId() == null) {
+                        roots.add(node); // Add root nodes to the list
+                    } else {
+                        Node parent = nodeMap.get(node.getParentId());
+                        if (parent != null) {
+                            parent.getNodesTree().add(node); // Add as a child to the parent
+                        }
                     }
                 }
 
-                org.getOperator().setNodes(root);
+//                for (Node node : nodes) {
+//                    node.setNodesTree(new ArrayList<>());
+//                    nodeMap.put(node.getId(), node);
+//                }
+//
+//                for (Node node : nodes) {
+//                    if (node.getId().equals(org.getOperator().getNodeId())) {
+//                        root = node;
+//                    }
+//                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+//                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
+//                    }
+//                }
+
+                org.getOperator().setNodes(roots);
 
                 // Get per-org metrics
                 Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
@@ -272,7 +296,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getOrganizationById(UUID id) {
         Map<String, Object> res;
@@ -291,32 +315,57 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             Long totalFeeder = organizationMapper.totalFeeder(result.getId());
 
-            List<Node> nodes = organizationMapper.getNodeWithChildren(result.getOperator().getNodeId(), result.getId());
+            List<Node> nodes = organizationMapper.getAllNode(id);
 
+//            Map<UUID, Node> nodeMap = new HashMap<>();
+//            Node root = null;
+
+            if(nodes == null || nodes.isEmpty()){
+                return ResponseMap.response(status.getSuccessCode(), status.getDesc(), nodes);
+            }
             Map<UUID, Node> nodeMap = new HashMap<>();
-            Node root = null;
+            List<Node> roots = new ArrayList<>();
 
+            // Map nodes by ID
             for (Node node : nodes) {
-                node.setNodesTree(new ArrayList<>());
                 nodeMap.put(node.getId(), node);
+                node.setNodesTree(new ArrayList<>()); // Initialize children list
             }
 
+            // Reconstruct the tree
             for (Node node : nodes) {
-                if (node.getId().equals(result.getOperator().getNodeId())) {
-                    root = node; // this is the node we're querying for
-                }
-                if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+                if (node.getParentId() == null) {
+                    roots.add(node); // Add root nodes to the list
+                } else {
                     Node parent = nodeMap.get(node.getParentId());
-                    parent.getNodesTree().add(node);
+                    if (parent != null) {
+                        parent.getNodesTree().add(node); // Add as a child to the parent
+                    }
                 }
             }
+
+//            for (Node node : nodes) {
+//                node.setNodesTree(new ArrayList<>());
+//                nodeMap.put(node.getId(), node);
+//            }
+//
+//            for (Node node : nodes) {
+////                System.out.p
+//                if (node.getId().equals(result.getOperator().getNodeId())) {
+//                    root = node; // this is the node we're querying for
+//                }
+//                if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+//                    Node parent = nodeMap.get(node.getParentId());
+//                    parent.getNodesTree().add(node);
+//                }
+//            }
 
             if (result.getImage() != null) {
                 // Convert relative path to full URL
                 String fullUrl = baseUrl + result.getImage();
                 result.setImage(fullUrl);
             }
-            result.getOperator().setNodes(root);
+            result.getOperator().setNodes(roots);
 
             result.setTotalCustomer(totalCustomer);
             result.setTotalFeeder(totalFeeder);

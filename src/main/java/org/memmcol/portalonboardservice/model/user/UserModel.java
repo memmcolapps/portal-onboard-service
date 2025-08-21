@@ -8,6 +8,7 @@ import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -42,7 +43,7 @@ public class UserModel implements Serializable {
 
     private Organization business;
 
-    private Node nodes;
+    private List<Node> nodes;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -159,13 +160,21 @@ public class UserModel implements Serializable {
         this.business = business;
     }
 
-    public Node getNodes() {
+    public List<Node> getNodes() {
         return nodes;
     }
 
-    public void setNodes(Node nodes) {
+    public void setNodes(List<Node> nodes) {
         this.nodes = nodes;
     }
+
+    //    public Node getNodes() {
+//        return nodes;
+//    }
+//
+//    public void setNodes(Node nodes) {
+//        this.nodes = nodes;
+//    }
 
     public Date getCreatedAt() {
         return createdAt;
