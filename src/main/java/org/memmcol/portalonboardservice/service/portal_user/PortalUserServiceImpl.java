@@ -34,7 +34,6 @@ import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
 
 @Service
-@Transactional
 public class PortalUserServiceImpl implements PortalUserService {
 
     private static final Logger log = LoggerFactory.getLogger(PortalUserServiceImpl.class);
@@ -73,6 +72,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         this.verifiedUsers = hazelcastInstance.getMap("verifiedUsers");
     }
 
+    @Transactional
     @Override
     public Map<String, Object> logout() {
         ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
@@ -114,6 +114,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> createOperator(Operator operator) {
 
@@ -173,7 +174,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
-
+    @Transactional
     @Override
     public Map<String, Object> updateOperator(Operator operator) {
 
@@ -227,6 +228,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> blockOperator(UUID id,boolean stat) {
 
@@ -269,6 +271,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getSingle(UUID id) {
 
@@ -296,6 +299,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getAll() {
 
@@ -321,11 +325,13 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> generateOtp(String username) {
         return handleGenerateOtp(username);
     }
 
+    @Transactional
     @Override
     public  Map<String, Object> verifyOtp(String email, String otp, String password, String retypePassword) {
         try {

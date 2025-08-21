@@ -28,14 +28,12 @@ import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserVa
 
 
 @Service
-@Transactional
 public class OnboardOrganizationServiceImpl implements OnboardOrganizationService {
 
 
     private final OrganizationMapper organizationMapper;
     private final ExceptionAuditRepository exceptionAuditRepository;
     private static final Logger log = LoggerFactory.getLogger(OnboardOrganizationServiceImpl.class);
-    private final UserMapper userMapper;
 
     @Autowired
     private ResponseProperties status;
@@ -55,9 +53,9 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                                           UserMapper userMapper) {
         this.organizationMapper = organizationMapper;
         this.exceptionAuditRepository = exceptionAuditRepository;
-        this.userMapper = userMapper;
     }
 
+    @Transactional
     @Override
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
@@ -129,7 +127,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
-    private int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
+    @Transactional
+    public int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
 
             userModel.setOrgId(organizationId);
             userModel.setNodeId(nodeId);
@@ -143,7 +142,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     }
 
-    private int createDefaultPermission(UUID organizationId) {
+    @Transactional
+    public int createDefaultPermission(UUID organizationId) {
             Permission permission = new Permission();
 
             permission.setView(true);
@@ -157,7 +157,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             return result;
     }
 
-    private int createDefaultGroup(UUID organizationId) {
+    @Transactional
+    public int createDefaultGroup(UUID organizationId) {
             Group group = new Group();
 
             group.setGroupTitle("User management");
@@ -168,6 +169,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             return result;
     }
 
+    @Transactional
     public int createDefaultGroupPermission(UUID organizationId) {
 
             Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
@@ -178,6 +180,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             return response;
     }
 
+    @Transactional
     @Override
     public Map<String, Object> getOrganization() {
         try {
@@ -269,8 +272,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> getOrganizationById(UUID id) {
+        Map<String, Object> res;
         try {
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
             BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
@@ -318,7 +323,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             result.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
             result.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
 
-            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), result);
+            res = ResponseMap.response(status.getSuccessCode(), status.getDesc(), result);
 
         } catch (Exception exception) {
             log.error("Error fetching organization {}", exception.getMessage(), exception);
@@ -332,8 +337,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             throw exception;
 
         }
+        return res;
     }
 
+    @Transactional
     @Override
     public Map<String, Object> updateOrganization(Organization organization,UserModel userModel) {
 

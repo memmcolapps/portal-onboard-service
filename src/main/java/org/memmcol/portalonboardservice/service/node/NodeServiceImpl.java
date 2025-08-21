@@ -26,7 +26,6 @@ import java.util.*;
 import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
 
-@Transactional
 @Service
 public class NodeServiceImpl implements NodeService {
     private static final Logger log = LoggerFactory.getLogger(NodeServiceImpl.class);
@@ -61,6 +60,7 @@ public class NodeServiceImpl implements NodeService {
         this.auditCache = hazelcastInstance.getMap("audit-Cache");
     }
 
+    @Transactional
     @Override
     public Map<String, Object> createRegionBhubServiceCenterNode(RegionBhubServiceCenter request) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -124,6 +124,7 @@ public class NodeServiceImpl implements NodeService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> createSubStationFeederLineTransformerNode(SubStationTransformerFeederLine request) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -188,6 +189,7 @@ public class NodeServiceImpl implements NodeService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> updateRegionBhubServiceCenterNode(RegionBhubServiceCenter request) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -249,6 +251,7 @@ public class NodeServiceImpl implements NodeService {
         }
     }
 
+    @Transactional
     @Override
     public Map<String, Object> updateSubStationFeederLineTransformerNode(SubStationTransformerFeederLine request) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -312,6 +315,7 @@ public class NodeServiceImpl implements NodeService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> singleNode(UUID nodeId, UUID orgId) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -360,6 +364,7 @@ public class NodeServiceImpl implements NodeService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getAllNodes(UUID orgId) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
