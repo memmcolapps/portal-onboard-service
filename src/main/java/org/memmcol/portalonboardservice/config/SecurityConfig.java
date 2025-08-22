@@ -31,6 +31,7 @@ public class  SecurityConfig {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
+
     @Autowired
     private PortalUserMapper operatorMapper;
 

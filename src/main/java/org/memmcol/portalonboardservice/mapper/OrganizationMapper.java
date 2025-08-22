@@ -14,7 +14,7 @@ public interface OrganizationMapper {
     @Insert(""" 
             INSERT INTO organizations(
                         business_name, postal_code, address, country, state, city, created_at, updated_at, image)
-                        VALUES(#{businessName},#{postalCode},#{address},#{country},#{state},#{city},#{createdAt},#{updatedAt}, #{imagePath}
+                        VALUES(#{businessName},#{postalCode},#{address},#{country},#{state},#{city},#{createdAt},#{updatedAt}, #{image}
                    ) """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertOrganization(Organization organization);
