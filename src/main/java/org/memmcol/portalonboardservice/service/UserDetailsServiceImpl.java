@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.user.CustomUserDetails;
 import org.memmcol.portalonboardservice.model.user.Operator;
-import org.memmcol.portalonboardservice.util.ResponseProperties;
+import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

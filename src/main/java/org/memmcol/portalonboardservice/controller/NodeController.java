@@ -4,7 +4,7 @@ import org.memmcol.portalonboardservice.model.node.*;
 import org.memmcol.portalonboardservice.service.node.NodeService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler.SQLServerException;
-import org.memmcol.portalonboardservice.util.ResponseProperties;
+import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

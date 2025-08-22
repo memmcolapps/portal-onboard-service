@@ -1,4 +1,4 @@
-package org.memmcol.portalonboardservice.util;
+package org.memmcol.portalonboardservice.components;
 
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.user.Operator;

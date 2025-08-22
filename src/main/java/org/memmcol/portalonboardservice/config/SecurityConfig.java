@@ -3,6 +3,8 @@ package org.memmcol.portalonboardservice.config;
 
 import com.hazelcast.core.HazelcastInstance;
 import lombok.RequiredArgsConstructor;
+import org.memmcol.portalonboardservice.components.CustomAccessDeniedHandler;
+import org.memmcol.portalonboardservice.components.CustomAuthorizationFilter;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,9 @@ public class  SecurityConfig {
 
 	@Autowired
 	private AuditRepository auditRepository;
+
+	@Autowired
+	private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Qualifier("hazelcastInstance")
     @Autowired private HazelcastInstance hazelcastInstance;
@@ -77,7 +82,9 @@ public class  SecurityConfig {
 				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile",
 						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN", "READ")
-				.anyRequest().authenticated());
+				.anyRequest().authenticated()).exceptionHandling(ex -> ex
+				.accessDeniedHandler(customAccessDeniedHandler)
+		);
 
 //		http.addFilter(customAuthenticationFilter);
 		http.addFilter(userAuthFilter);

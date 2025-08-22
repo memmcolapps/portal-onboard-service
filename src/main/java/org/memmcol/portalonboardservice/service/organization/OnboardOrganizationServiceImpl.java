@@ -11,7 +11,7 @@ import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
-import org.memmcol.portalonboardservice.util.ResponseProperties;
+import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
-import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
+import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 
 @Service

@@ -1,4 +1,4 @@
-package org.memmcol.portalonboardservice.util;
+package org.memmcol.portalonboardservice.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 

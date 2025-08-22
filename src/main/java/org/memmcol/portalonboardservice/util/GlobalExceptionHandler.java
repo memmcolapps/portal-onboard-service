@@ -25,6 +25,7 @@ import javax.security.sasl.AuthenticationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.SQLTransientConnectionException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -161,7 +162,8 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(DataAccessException.class)
 	public ResponseEntity<?> handleDataAccessException(DataAccessException ex) {
 		ex.printStackTrace();
-		String msg = "There's a problem with accessing some data [See server logs for more details]";
+//		String msg = "There's a problem with accessing some data [See server logs for more details]";
+		String msg = "Database error occurred. Please contact support. [See server logs for more details]";
 		errorMessage.put("responsecode", "112");
 		errorMessage.put("responsedesc", msg);
 		errorMessage.put("responsedata", "");
@@ -296,16 +298,6 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
 	}
 
-	@ExceptionHandler(CannotCreateTransactionException.class)
-	public ResponseEntity<?> handleCannotCreateTransactionException(CannotCreateTransactionException ex,
-																	WebRequest request) {
-		ex.printStackTrace();
-		String msg = "Unable to connect to the database. Please try again later";
-		errorMessage.put("responsecode", "126");
-		errorMessage.put("responsedesc", msg);
-		errorMessage.put("responsedata", "");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
-	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<?> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
@@ -332,6 +324,7 @@ public class GlobalExceptionHandler {
 		errorMessage.put("responsedata", "");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
 	}
+
 
 	@ExceptionHandler(LockedException.class)
 	public ResponseEntity<?> handleLockedException(LockedException ex) {
@@ -367,10 +360,20 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<?> handleAlreadyExists(ResourceAlreadyExistsException ex) {
 		ex.printStackTrace();
 //		String msg = "Already exists";
-		errorMessage.put("responsecode", "050");
+		errorMessage.put("responsecode", "129");
 		errorMessage.put("responsedesc", ex.getMessage());
 		errorMessage.put("responsedata", "");
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
+	}
+
+	// Handles when HikariCP can’t provide a connection in time
+	@ExceptionHandler(SQLTransientConnectionException.class)
+	public ResponseEntity<?> handleConnectionPoolExhaustion(SQLTransientConnectionException ex) {
+		ex.printStackTrace();
+		errorMessage.put("responsecode", "130");
+		errorMessage.put("responsedesc", "Database is busy, please try again later.");
+		errorMessage.put("responsedata", "");
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorMessage);
 	}
 
 	@ResponseStatus(HttpStatus.CONFLICT)

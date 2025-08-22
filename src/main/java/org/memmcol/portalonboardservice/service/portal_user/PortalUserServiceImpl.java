@@ -8,12 +8,11 @@ import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.user.Role;
-import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
-import org.memmcol.portalonboardservice.util.ResponseProperties;
+import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,10 +27,9 @@ import org.springframework.web.client.RestTemplate;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
-import static org.memmcol.portalonboardservice.util.handleValidUser.handleUserValidation;
+import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 @Service
 public class PortalUserServiceImpl implements PortalUserService {
