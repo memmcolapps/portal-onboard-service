@@ -51,13 +51,13 @@ public class NodeServiceImpl implements NodeService {
     @Autowired
     private HttpServletRequest httpServletRequest;
 
-    private final IMap<String, Object> nodeCache;
+    private final IMap<String, Node> nodeCache;
 
-    private final IMap<String, Object> auditCache;
+    private final IMap<String, AuditLog> auditCache;
 
     public NodeServiceImpl(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
-        this.nodeCache = hazelcastInstance.getMap("node-Cache");
-        this.auditCache = hazelcastInstance.getMap("audit-Cache");
+        this.nodeCache = hazelcastInstance.getMap("portalNodeCache");
+        this.auditCache = hazelcastInstance.getMap("portalAuditCache");
     }
 
     @Transactional

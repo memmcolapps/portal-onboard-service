@@ -56,18 +56,21 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Autowired private RestTemplate restTemplate;
 
-    private final IMap<String, Object> authCache;
+    private final IMap<String, Operator> authCache;
 
     private final IMap<String, String> otpCache;
 
     private final IMap<String, Boolean> verifiedUsers;
 
+    private final IMap<String, Boolean> portalOtpExpCache;
+
     private final Random random = new SecureRandom();
 
     public PortalUserServiceImpl(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
-        this.authCache = hazelcastInstance.getMap("authCache");
-        this.otpCache = hazelcastInstance.getMap("otpCache");
-        this.verifiedUsers = hazelcastInstance.getMap("verifiedUsers");
+        this.authCache = hazelcastInstance.getMap("portalAuthCache");
+        this.otpCache = hazelcastInstance.getMap("portalOtpCache");
+        this.verifiedUsers = hazelcastInstance.getMap("portalVerifiedUsers");
+        this.portalOtpExpCache = hazelcastInstance.getMap("portalOtpExpCache");
     }
 
     @Transactional
@@ -127,9 +130,15 @@ public class PortalUserServiceImpl implements PortalUserService {
             String email = operator.getEmail();
 
             Operator existingOperator = portalUserMapper.findByEmail(email);
-            if (existingOperator != null) {
+
+            boolean user = authCache.containsKey(existingOperator.getId().toString());
+            if(user){
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
             }
+//
+//            if (existingOperator != null) {
+//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
+//            }
 
             String password = passwordEncoder.encode(operator.getPassword());
             operator.setPassword(password);
@@ -156,6 +165,9 @@ public class PortalUserServiceImpl implements PortalUserService {
             auditNotificationDTO.setOperator(operator1);
             auditRepository.save(auditNotificationDTO);
 
+            authCache.put(operator1.getId().toString(), operator1);
+
+//            handleAddCache(operator1);
             return ResponseMap.response(status.getSuccessCode(),
                     "Operator "+status.getRegDesc(),
                     ""
@@ -429,6 +441,22 @@ public class PortalUserServiceImpl implements PortalUserService {
 
 
     private void blacklistToken(String token, int expirySeconds) {
-        authCache.put(token, true, expirySeconds, TimeUnit.SECONDS);
+        portalOtpExpCache.put(token, true, expirySeconds, TimeUnit.SECONDS);
     }
+
+//    private void handleAddCache(Operator operator) {
+////        bandCache.remove(band.getId().toString()+"_"+band.getOrgId());
+////        tariffCache.clear();
+//        for (String key : auditCache.keySet()) {
+//            if (key.startsWith("grid_flex_audit_log_page_")) {
+//                auditCache.remove(key);
+//            }
+//        }
+//        for (String key : bandCache.keySet()) {
+//            if (key.startsWith("bands_"+band.getOrgId())) {
+//                bandCache.remove(key);
+//            }
+//        }
+//        bandCache.put(band.getId().toString()+"_"+band.getOrgId(), band);  // Cache updated or deleted entity
+//    }
 }

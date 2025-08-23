@@ -1,5 +1,7 @@
 package org.memmcol.portalonboardservice.service.organization;
 
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
 import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.mapper.OrganizationMapper;
 import org.memmcol.portalonboardservice.mapper.UserMapper;
@@ -15,6 +17,11 @@ import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,15 +54,22 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CacheManager cacheManager;
+
+    private final IMap<String, Organization> organizationCache;
+
     // Other mappers can be added as needed
     public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
                                           ExceptionAuditRepository exceptionAuditRepository,
-                                          UserMapper userMapper) {
+                                          HazelcastInstance hazelcastInstance) {
         this.organizationMapper = organizationMapper;
         this.exceptionAuditRepository = exceptionAuditRepository;
+        this.organizationCache = hazelcastInstance.getMap("organizationCache");
     }
 
     @Transactional
+//    @CacheEvict(value = "organizationCache", key = "'allOrgs'")
     @Override
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
@@ -65,6 +79,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             String ipAddress = getClientIp(httpServletRequest);
             String userAgent = httpServletRequest.getHeader("User-Agent");
             Operator operator = handleUserValidation();
+
             // Save to database
             organizationMapper.insertOrganization(organization);
             UUID orgId = organization.getId();
@@ -85,22 +100,20 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
             }
 
-            // Create Group
-            result = createDefaultGroup(orgId);
-            if (result == 0) {
+            // Permissions, groups, user creation
+            if (createDefaultPermission(orgId) == 0)
+                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
+            if (createDefaultGroup(orgId) == 0)
                 throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
-            }
-            // Create Group Permissions
-            result = createDefaultGroupPermission(orgId);
-            if (result == 0) {
+            if (createDefaultGroupPermission(orgId) == 0)
                 throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
-            }
-            // Create Default User
-            result = createDefaultUser(orgId, rootNodeId, userModel);
-            if (result == 0) {
+            if (createDefaultUser(orgId, rootNodeId, userModel) == 0)
                 throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
-            }
+
             Organization res = organizationMapper.getOrganizationById(organization.getId());
+
+            // Save into Hazelcast cache (persists via MapStore)
+//            organizationCache.put(res.getId().toString(), res);
             auditNotificationDTO.setCreator(operator);
             auditNotificationDTO.setIpAddress(ipAddress);
             auditNotificationDTO.setUserAgent(userAgent);
@@ -133,7 +146,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             userModel.setOrgId(organizationId);
             userModel.setNodeId(nodeId);
             userModel.setStatus(true);
-            userModel.setActive(true);
+            userModel.setActive(false);
+            userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
             int result;
             result = organizationMapper.insertUser(userModel);
             UUID id = userModel.getId();
@@ -181,6 +195,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "organizationCache", key = "'allOrgs'")
     @Override
     public Map<String, Object> getOrganization() {
         try {
@@ -204,12 +219,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
                 // Build node tree...
                 List<Node> nodes = organizationMapper.getAllNode(org.getId());
-//                Map<UUID, Node> nodeMap = new HashMap<>();
-//                Node root = null;
 
-//                if(nodes == null || nodes.isEmpty()){
-//                    return ResponseMap.response(status.getSuccessCode(), status.getDesc(), nodes);
-//                }
                 Map<UUID, Node> nodeMap = new HashMap<>();
                 List<Node> roots = new ArrayList<>();
 
@@ -230,20 +240,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                         }
                     }
                 }
-
-//                for (Node node : nodes) {
-//                    node.setNodesTree(new ArrayList<>());
-//                    nodeMap.put(node.getId(), node);
-//                }
-//
-//                for (Node node : nodes) {
-//                    if (node.getId().equals(org.getOperator().getNodeId())) {
-//                        root = node;
-//                    }
-//                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
-//                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
-//                    }
-//                }
 
                 org.getOperator().setNodes(roots);
 
@@ -281,7 +277,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             response.put("overallBilling", overallBilling);
             response.put("overallFeeder", overallFeeders);
             response.put("organizations", organizations);
-
+//            organizationCache.put("allOrgs", response);
             return ResponseMap.response(status.getSuccessCode(), "Organizations "+status.getDesc(), response);
 
         } catch (Exception exception) {
@@ -296,16 +292,38 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
-    @Transactional(readOnly = true)
+    //                for (Node node : nodes) {
+//                    node.setNodesTree(new ArrayList<>());
+//                    nodeMap.put(node.getId(), node);
+//                }
+//
+//                for (Node node : nodes) {
+//                    if (node.getId().equals(org.getOperator().getNodeId())) {
+//                        root = node;
+//                    }
+//                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
+//                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
+//                    }
+//                }
+
+//    @Transactional(readOnly = true)
+//    @Cacheable(value = "organizationCache", key = "#orgId")
     @Override
-    public Map<String, Object> getOrganizationById(UUID id) {
-        Map<String, Object> res;
+    public Map<String, Object> getOrganizationById(UUID orgId) {
+//        Map<String, Object> res;
         try {
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
             BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
             BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
-            Organization result = organizationMapper.getOrganizationById(id);
+//            // 1. Check cache first
+//            Organization res = organizationCache.get(orgId.toString());
+//            if (res != null) {
+//                log.info("Cache hit for Organization {}", orgId);
+//                return ResponseMap.response(status.getSuccessCode(), status.getDesc(), res);
+//            }
+
+            Organization result = organizationMapper.getOrganizationById(orgId);
 
             if (result == null) {
                 throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
@@ -315,7 +333,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             Long totalFeeder = organizationMapper.totalFeeder(result.getId());
 
-            List<Node> nodes = organizationMapper.getAllNode(id);
+            List<Node> nodes = organizationMapper.getAllNode(orgId);
 
 //            Map<UUID, Node> nodeMap = new HashMap<>();
 //            Node root = null;
@@ -372,7 +390,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             result.setTotalVending(orgVendingTotal != null ? orgVendingTotal : BigDecimal.ZERO);
             result.setTotalBilling(orgBillingTotal != null ? orgBillingTotal : BigDecimal.ZERO);
 
-            res = ResponseMap.response(status.getSuccessCode(), status.getDesc(), result);
+//            organizationCache.put(result.getId().toString(), result);
+
+            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), result);
+
 
         } catch (Exception exception) {
             log.error("Error fetching organization {}", exception.getMessage(), exception);
@@ -386,9 +407,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             throw exception;
 
         }
-        return res;
+
     }
 
+//    @CacheEvict(value = "organizationCache", key = "'allOrgs'")
     @Transactional
     @Override
     public Map<String, Object> updateOrganization(Organization organization,UserModel userModel) {
@@ -399,6 +421,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             String ipAddress = getClientIp(httpServletRequest);
             String userAgent = httpServletRequest.getHeader("User-Agent");
             Operator operator = handleUserValidation();
+
             Organization res = organizationMapper.getOrganizationById(organization.getId());
 
             if (res == null) {
@@ -414,6 +437,21 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
+//
+//            // Update the allOrgs cache manually
+//            Cache cache = cacheManager.getCache("organizationCache");
+//            if (cache != null) {
+//                Map<String, Object> cachedAllOrgs = cache.get("allOrgs", Map.class);
+//                if (cachedAllOrgs != null) {
+//                    List<Organization> orgs = (List<Organization>) cachedAllOrgs.get("organizations");
+//                    if (orgs != null) {
+//                        orgs.replaceAll(o -> o.getId().equals(organization.getId()) ? organization : o);
+//                        cachedAllOrgs.put("organizations", orgs);
+//                        cache.put("allOrgs", cachedAllOrgs);
+//                    }
+//                }
+//            }
+
             auditNotificationDTO.setCreator(operator);
             auditNotificationDTO.setIpAddress(ipAddress);
             auditNotificationDTO.setUserAgent(userAgent);

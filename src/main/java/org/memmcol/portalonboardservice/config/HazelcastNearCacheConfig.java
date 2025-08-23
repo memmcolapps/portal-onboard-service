@@ -47,7 +47,7 @@ public class HazelcastNearCacheConfig {
 				.setDirectory(director).setStoreInitialDelaySeconds(storeInitialDelaySeconds)
 				.setStoreIntervalSeconds(setStoreIntervalSeconds);
 
-		return new NearCacheConfig().setName("authCache").setInMemoryFormat(InMemoryFormat.OBJECT)
+		return new NearCacheConfig().setName("portalAuthCache").setInMemoryFormat(InMemoryFormat.OBJECT)
 				.setSerializeKeys(serializeKey).setInvalidateOnChange(invalidateOnChange)
 //				.setTimeToLiveSeconds(userCacheTimeToLiveSeconds)
 				.setMaxIdleSeconds(maxIdleTime)

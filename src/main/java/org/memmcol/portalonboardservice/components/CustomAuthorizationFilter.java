@@ -32,10 +32,10 @@ import java.util.stream.Stream;
 public class CustomAuthorizationFilter extends OncePerRequestFilter {
 
 //	@Autowired
-	private final IMap<String, Object> authCache;
+	private final IMap<String, Boolean> portalOtpExpCache;
 
     public CustomAuthorizationFilter(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
-        this.authCache = hazelcastInstance.getMap("authCache");
+        this.portalOtpExpCache = hazelcastInstance.getMap("portalOtpExpCache");
     }
 //	private AuthCache authCache;
 
@@ -54,7 +54,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 				try {
 					String token = authorizationHeader.substring("Bearer ".length());
 					// Check if token is blacklisted
-					if (Boolean.TRUE.equals(authCache.get(token))) {
+					if (Boolean.TRUE.equals(portalOtpExpCache.get(token))) {
 						handleException(response, new Exception("Token is blacklisted"),
 								"Token is blacklisted", HttpServletResponse.SC_UNAUTHORIZED);
 						return;
