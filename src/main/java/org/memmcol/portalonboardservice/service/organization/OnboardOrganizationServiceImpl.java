@@ -54,8 +54,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private CacheManager cacheManager;
+//    @Autowired
+//    private CacheManager cacheManager;
 
     private final IMap<String, Organization> organizationCache;
 
