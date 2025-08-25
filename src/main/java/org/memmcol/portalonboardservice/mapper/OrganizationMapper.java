@@ -96,9 +96,11 @@ public interface OrganizationMapper {
     @Select("SELECT * FROM organizations ORDER BY created_at DESC ")
     @Results({
             @Result(property = "id", column = "id"),
-            @Result(property = "id", column = "id"),
+            @Result(property = "userId", column = "user_id"),
             @Result(property = "businessName", column = "business_name"),
             @Result(property = "postalCode", column = "postal_code"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator"))
     })
@@ -186,7 +188,9 @@ public interface OrganizationMapper {
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
-                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator"))
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator")),
+//            @Result(property = "nodes", column = "id",
+//                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getNode"))
     })
     Organization getOrganizationById(@Param("id") UUID id);
 

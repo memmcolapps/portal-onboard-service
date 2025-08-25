@@ -41,9 +41,9 @@ public class UserModel implements Serializable {
 
     private GroupWithPermissionsDTO groups;
 
-    private Organization business;
+//    private Organization business;
 
-    private List<Node> nodes;
+//    private Node nodes;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -152,23 +152,23 @@ public class UserModel implements Serializable {
         this.groups = groups;
     }
 
-    public Organization getBusiness() {
-        return business;
-    }
+//    public Organization getBusiness() {
+//        return business;
+//    }
+//
+//    public void setBusiness(Organization business) {
+//        this.business = business;
+//    }
 
-    public void setBusiness(Organization business) {
-        this.business = business;
-    }
+//    public List<Node> getNodes() {
+//        return nodes;
+//    }
+//
+//    public void setNodes(List<Node> nodes) {
+//        this.nodes = nodes;
+//    }
 
-    public List<Node> getNodes() {
-        return nodes;
-    }
-
-    public void setNodes(List<Node> nodes) {
-        this.nodes = nodes;
-    }
-
-    //    public Node getNodes() {
+//        public Node getNodes() {
 //        return nodes;
 //    }
 //

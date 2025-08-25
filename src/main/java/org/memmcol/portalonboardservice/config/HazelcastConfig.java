@@ -3,8 +3,8 @@ package org.memmcol.portalonboardservice.config;
 import com.hazelcast.config.*;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import org.memmcol.portalonboardservice.util.NodeCacheMapStore;
-import org.memmcol.portalonboardservice.util.OrganizationCacheMapStore;
+//import org.memmcol.portalonboardservice.util.NodeCacheMapStore;
+//import org.memmcol.portalonboardservice.util.OrganizationCacheMapStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -73,17 +73,17 @@ public class HazelcastConfig {
 				.setBackupCount(1));
 
 		// File-based MapStore for portalNodeCache
-		MapStoreConfig portalNodeStoreConfig = new MapStoreConfig()
-				.setImplementation(new NodeCacheMapStore())
-				.setWriteDelaySeconds(0); // write-through persistence
-
-		config.addMapConfig(new MapConfig("portalNodeCache")
-				.setEvictionConfig(new EvictionConfig()
-						.setEvictionPolicy(EvictionPolicy.LRU)
-						.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
-						.setSize(1000))
-				.setBackupCount(1)
-				.setMapStoreConfig(portalNodeStoreConfig));
+//		MapStoreConfig portalNodeStoreConfig = new MapStoreConfig()
+//				.setImplementation(new NodeCacheMapStore())
+//				.setWriteDelaySeconds(0); // write-through persistence
+//
+//		config.addMapConfig(new MapConfig("portalNodeCache")
+//				.setEvictionConfig(new EvictionConfig()
+//						.setEvictionPolicy(EvictionPolicy.LRU)
+//						.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
+//						.setSize(1000))
+//				.setBackupCount(1)
+//				.setMapStoreConfig(portalNodeStoreConfig));
 
 //		config.addMapConfig(new MapConfig("portalNodeCache")
 ////				.setTimeToLiveSeconds(86400)
@@ -102,17 +102,17 @@ public class HazelcastConfig {
 				.setBackupCount(1));
 
 		// File-based MapStore for portalNodeCache
-		MapStoreConfig organizationStoreConfig = new MapStoreConfig()
-				.setImplementation(new OrganizationCacheMapStore())
-				.setWriteDelaySeconds(0); // write-through persistence
-
-		config.addMapConfig(new MapConfig("organizationCache")
-				.setEvictionConfig(new EvictionConfig()
-						.setEvictionPolicy(EvictionPolicy.LRU)
-						.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
-						.setSize(1000))
-				.setBackupCount(1)
-				.setMapStoreConfig(organizationStoreConfig));
+//		MapStoreConfig organizationStoreConfig = new MapStoreConfig()
+//				.setImplementation(new OrganizationCacheMapStore())
+//				.setWriteDelaySeconds(0); // write-through persistence
+//
+//		config.addMapConfig(new MapConfig("organizationCache")
+//				.setEvictionConfig(new EvictionConfig()
+//						.setEvictionPolicy(EvictionPolicy.LRU)
+//						.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
+//						.setSize(1000))
+//				.setBackupCount(1)
+//				.setMapStoreConfig(organizationStoreConfig));
 		// Set up Near Cache
 		config.getMapConfig("portalNearCache").setNearCacheConfig(nearCacheConfig);
 

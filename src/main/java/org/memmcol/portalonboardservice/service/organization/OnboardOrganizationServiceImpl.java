@@ -69,7 +69,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     }
 
     @Transactional
-//    @CacheEvict(value = "organizationCache", key = "'allOrgs'")
     @Override
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
@@ -92,13 +91,6 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             organizationMapper.insertNodes(rootNode);
             UUID rootNodeId = rootNode.getId();
-
-            // Create Permissions
-            int result;
-            result = createDefaultPermission(orgId);
-            if (result == 0) {
-                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
-            }
 
             // Permissions, groups, user creation
             if (createDefaultPermission(orgId) == 0)
@@ -185,7 +177,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     @Transactional
     public int createDefaultGroupPermission(UUID organizationId) {
-
+        System.out.println("oorId: "+organizationId);
             Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
             Group group = organizationMapper.getGroupByOrgId(organizationId);
 
@@ -195,7 +187,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "organizationCache", key = "'allOrgs'")
+//    @Cacheable(value = "organizationCache", key = "'allOrgs'")
     @Override
     public Map<String, Object> getOrganization() {
         try {
@@ -221,29 +213,23 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 List<Node> nodes = organizationMapper.getAllNode(org.getId());
 
                 Map<UUID, Node> nodeMap = new HashMap<>();
-                List<Node> roots = new ArrayList<>();
+                Node root = null;
 
-                // Map nodes by ID
                 for (Node node : nodes) {
+                    node.setNodesTree(new ArrayList<>());
                     nodeMap.put(node.getId(), node);
-                    node.setNodesTree(new ArrayList<>()); // Initialize children list
                 }
 
-                // Reconstruct the tree
                 for (Node node : nodes) {
-                    if (node.getParentId() == null) {
-                        roots.add(node); // Add root nodes to the list
-                    } else {
+                    if (node.getId().equals(org.getOperator().getNodeId())) {
+                        root = node; // this is the node we're querying for
+                    }
+                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
                         Node parent = nodeMap.get(node.getParentId());
-                        if (parent != null) {
-                            parent.getNodesTree().add(node); // Add as a child to the parent
-                        }
+                        parent.getNodesTree().add(node);
                     }
                 }
-
-                org.getOperator().setNodes(roots);
-
-                // Get per-org metrics
+                org.setNodes(root);
                 Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
                 Long orgFeederCount = organizationMapper.totalFeeder(org.getId());
                 BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
@@ -292,21 +278,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
-    //                for (Node node : nodes) {
-//                    node.setNodesTree(new ArrayList<>());
-//                    nodeMap.put(node.getId(), node);
-//                }
-//
-//                for (Node node : nodes) {
-//                    if (node.getId().equals(org.getOperator().getNodeId())) {
-//                        root = node;
-//                    }
-//                    if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
-//                        nodeMap.get(node.getParentId()).getNodesTree().add(node);
-//                    }
-//                }
-
-//    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
 //    @Cacheable(value = "organizationCache", key = "#orgId")
     @Override
     public Map<String, Object> getOrganizationById(UUID orgId) {
@@ -335,55 +307,30 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             List<Node> nodes = organizationMapper.getAllNode(orgId);
 
-//            Map<UUID, Node> nodeMap = new HashMap<>();
-//            Node root = null;
-
-            if(nodes == null || nodes.isEmpty()){
-                return ResponseMap.response(status.getSuccessCode(), status.getDesc(), nodes);
-            }
             Map<UUID, Node> nodeMap = new HashMap<>();
-            List<Node> roots = new ArrayList<>();
+            Node root = null;
 
-            // Map nodes by ID
             for (Node node : nodes) {
+                node.setNodesTree(new ArrayList<>());
                 nodeMap.put(node.getId(), node);
-                node.setNodesTree(new ArrayList<>()); // Initialize children list
             }
 
-            // Reconstruct the tree
             for (Node node : nodes) {
-                if (node.getParentId() == null) {
-                    roots.add(node); // Add root nodes to the list
-                } else {
+                if (node.getId().equals(result.getOperator().getNodeId())) {
+                    root = node; // this is the node we're querying for
+                }
+                if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
                     Node parent = nodeMap.get(node.getParentId());
-                    if (parent != null) {
-                        parent.getNodesTree().add(node); // Add as a child to the parent
-                    }
+                    parent.getNodesTree().add(node);
                 }
             }
-
-//            for (Node node : nodes) {
-//                node.setNodesTree(new ArrayList<>());
-//                nodeMap.put(node.getId(), node);
-//            }
-//
-//            for (Node node : nodes) {
-////                System.out.p
-//                if (node.getId().equals(result.getOperator().getNodeId())) {
-//                    root = node; // this is the node we're querying for
-//                }
-//                if (node.getParentId() != null && nodeMap.containsKey(node.getParentId())) {
-//                    Node parent = nodeMap.get(node.getParentId());
-//                    parent.getNodesTree().add(node);
-//                }
-//            }
 
             if (result.getImage() != null) {
                 // Convert relative path to full URL
                 String fullUrl = baseUrl + result.getImage();
                 result.setImage(fullUrl);
             }
-            result.getOperator().setNodes(roots);
+            result.setNodes(root);
 
             result.setTotalCustomer(totalCustomer);
             result.setTotalFeeder(totalFeeder);

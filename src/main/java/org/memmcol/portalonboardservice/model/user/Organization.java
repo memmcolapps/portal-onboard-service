@@ -3,6 +3,7 @@ package org.memmcol.portalonboardservice.model.user;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Lob;
 import lombok.Data;
+import org.memmcol.portalonboardservice.model.node.Node;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
@@ -38,6 +39,8 @@ public class Organization implements Serializable {
     private String image;
 
     private UserModel operator;
+
+    private Node nodes;
 
     private Long totalCustomer;
 
@@ -192,5 +195,13 @@ public class Organization implements Serializable {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public Node getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(Node nodes) {
+        this.nodes = nodes;
     }
 }
