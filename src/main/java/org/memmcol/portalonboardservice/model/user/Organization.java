@@ -1,6 +1,7 @@
 package org.memmcol.portalonboardservice.model.user;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.Lob;
 import lombok.Data;
 import org.memmcol.portalonboardservice.model.node.Node;
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 public class Organization implements Serializable {
     static final long serialVersionUID = 1L;

@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.*;
 import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.node.NodeInfo;
 import org.memmcol.portalonboardservice.model.user.*;
+import org.memmcol.portalonboardservice.model.user.Module;
 
 import java.util.List;
 import java.util.UUID;
@@ -58,6 +59,9 @@ public interface OrganizationMapper {
     @Update("UPDATE organizations SET user_id = #{id} WHERE id = #{organizationId}")
     void updateOrg(UUID id, UUID organizationId);
 
+    @Insert("INSERT INTO user_groups (user_id, group_id, org_id) VALUES (#{id}, #{groupId}, #{orgId})")
+    int insertUserGroup(UUID id, UUID orgId, UUID groupId);
+
     @Select("SELECT count(*) From Customers")
     int countCustomers();
 
@@ -75,11 +79,18 @@ public interface OrganizationMapper {
     int insertPermission(Permission permission);
 
     @Insert("""
-            INSERT INTO Groups(title, org_id,created_at,updated_at)
+            INSERT INTO Groups(title, org_id, created_at, updated_at)
             VALUES(#{groupTitle},#{orgId},#{createdAt},#{updatedAt})
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertGroup(Group group);
+
+    @Insert("INSERT INTO modules (name, access, org_id, group_id) VALUES (#{name}, #{access}, #{orgId}, #{groupId})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertModule(Module module);
+
+    @Insert("INSERT INTO submodules (name, access, org_id, module_id) VALUES (#{name}, #{access}, #{orgId}, #{moduleId})")
+    int insertSubModule(SubModule subModule);
 
     @Insert("""
             INSERT INTO group_permissions(group_id, permission_id, org_id)
@@ -281,4 +292,5 @@ public interface OrganizationMapper {
 
     @Update("UPDATE organizations SET status = #{suspend} WHERE id = #{id}")
     void suspendOrganization(UUID id, Boolean suspend);
+
 }

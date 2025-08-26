@@ -9,6 +9,7 @@ import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.Node;
 import org.memmcol.portalonboardservice.model.user.*;
+import org.memmcol.portalonboardservice.model.user.Module;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
@@ -17,6 +18,7 @@ import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -62,7 +64,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     // Other mappers can be added as needed
     public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
                                           ExceptionAuditRepository exceptionAuditRepository,
-                                          HazelcastInstance hazelcastInstance) {
+                                          @Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
         this.organizationMapper = organizationMapper;
         this.exceptionAuditRepository = exceptionAuditRepository;
         this.organizationCache = hazelcastInstance.getMap("organizationCache");
@@ -92,15 +94,61 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             organizationMapper.insertNodes(rootNode);
             UUID rootNodeId = rootNode.getId();
 
-            // Permissions, groups, user creation
-            if (createDefaultPermission(orgId) == 0)
-                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
-            if (createDefaultGroup(orgId) == 0)
-                throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
-            if (createDefaultGroupPermission(orgId) == 0)
-                throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
-            if (createDefaultUser(orgId, rootNodeId, userModel) == 0)
-                throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
+            Permission permission = new Permission();
+
+            permission.setView(true);
+            permission.setEdit(true);
+            permission.setApprove(true);
+            permission.setDisable(true);
+            permission.setOrgId(orgId);
+
+            int result;
+            result = organizationMapper.insertPermission(permission);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
+
+            Group group = new Group();
+
+            group.setGroupTitle("User management");
+            group.setOrgId(orgId);
+
+            result = organizationMapper.insertGroup(group);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
+
+            Module module = new Module();
+            module.setAccess(true);
+            module.setName("User management");
+            module.setGroupId(group.getId());
+            module.setOrgId(orgId);
+
+            result = organizationMapper.insertModule(module);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create module");
+
+            SubModule subModule = new SubModule();
+            subModule.setAccess(true);
+            subModule.setName("User management");
+            subModule.setModuleId(module.getId());
+            subModule.setOrgId(orgId);
+            result = organizationMapper.insertSubModule(subModule);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create submodule");
+
+            result = organizationMapper.insertGroupPermission(group.getId(), permission.getId(), orgId);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
+
+            userModel.setOrgId(orgId);
+            userModel.setNodeId(rootNodeId);
+            userModel.setStatus(true);
+            userModel.setActive(false);
+            userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
+            result = organizationMapper.insertUser(userModel);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
+//            UUID id = userModel.getId();
+
+            result = organizationMapper.insertUserGroup(userModel.getId(), orgId, group.getId());
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create user group");
+
+            organizationMapper.updateOrg(userModel.getId(), orgId);
+            if(result == 0) throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
+
 
             Organization res = organizationMapper.getOrganizationById(organization.getId());
 
@@ -132,59 +180,71 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
-    @Transactional
-    public int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
+    // Permissions, groups, user creation
+//            if (createDefaultPermission(orgId) == 0)
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
+//            if (createDefaultGroup(orgId) == 0)
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
+//            if (createDefaultUserGroup(orgId) == 0)
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to create user group");
+//            if (createDefaultGroupPermission(orgId) == 0)
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
+//            if (createDefaultUser(orgId, rootNodeId, userModel) == 0)
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
 
-            userModel.setOrgId(organizationId);
-            userModel.setNodeId(nodeId);
-            userModel.setStatus(true);
-            userModel.setActive(false);
-            userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
-            int result;
-            result = organizationMapper.insertUser(userModel);
-            UUID id = userModel.getId();
-            organizationMapper.updateOrg(id, organizationId);
-            return result;
+//    @Transactional
+//    public int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
+//
+//            userModel.setOrgId(organizationId);
+//            userModel.setNodeId(nodeId);
+//            userModel.setStatus(true);
+//            userModel.setActive(false);
+//            userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
+//            int result;
+//            result = organizationMapper.insertUser(userModel);
+//            UUID id = userModel.getId();
+//            organizationMapper.updateOrg(id, organizationId);
+//            return result;
+//
+//    }
 
-    }
+//    @Transactional
+//    public int createDefaultPermission(UUID organizationId) {
+//            Permission permission = new Permission();
+//
+//            permission.setView(true);
+//            permission.setEdit(true);
+//            permission.setApprove(true);
+//            permission.setDisable(true);
+//            permission.setOrgId(organizationId);
+//
+//            int result;
+//            result = organizationMapper.insertPermission(permission);
+//            return result;
+//    }
 
-    @Transactional
-    public int createDefaultPermission(UUID organizationId) {
-            Permission permission = new Permission();
+//    @Transactional
+//    public int createDefaultGroup(UUID organizationId) {
+//            Group group = new Group();
+//
+//            group.setGroupTitle("User management");
+//            group.setOrgId(organizationId);
+//
+//            int result;
+//            result = organizationMapper.insertGroup(group);
+//            return result;
+//    }
 
-            permission.setView(true);
-            permission.setEdit(true);
-            permission.setApprove(true);
-            permission.setDisable(true);
-            permission.setOrgId(organizationId);
-
-            int result;
-            result = organizationMapper.insertPermission(permission);
-            return result;
-    }
-
-    @Transactional
-    public int createDefaultGroup(UUID organizationId) {
-            Group group = new Group();
-
-            group.setGroupTitle("User management");
-            group.setOrgId(organizationId);
-
-            int result;
-            result = organizationMapper.insertGroup(group);
-            return result;
-    }
-
-    @Transactional
-    public int createDefaultGroupPermission(UUID organizationId) {
-        System.out.println("oorId: "+organizationId);
-            Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
-            Group group = organizationMapper.getGroupByOrgId(organizationId);
-
-            int response;
-            response = organizationMapper.insertGroupPermission(group.getId(), permission.getId(), organizationId);
-            return response;
-    }
+//    @Transactional
+//    public int createDefaultGroupPermission(UUID organizationId) {
+//        System.out.println("oorId: "+organizationId);
+//            Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
+//            Group group = organizationMapper.getGroupByOrgId(organizationId);
+//
+//            int response;
+//            response = organizationMapper.insertGroupPermission(group.getId(), permission.getId(), organizationId);
+//            return response;
+//    }
 
     @Transactional(readOnly = true)
 //    @Cacheable(value = "organizationCache", key = "'allOrgs'")

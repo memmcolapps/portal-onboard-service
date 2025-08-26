@@ -163,7 +163,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<?> handleDataAccessException(DataAccessException ex) {
 		ex.printStackTrace();
 //		String msg = "There's a problem with accessing some data [See server logs for more details]";
-		String msg = "Database error occurred. Please contact support. [See server logs for more details]";
+		String msg = "Database error occurred. [See server logs for more details]";
 		errorMessage.put("responsecode", "112");
 		errorMessage.put("responsedesc", msg);
 		errorMessage.put("responsedata", "");
