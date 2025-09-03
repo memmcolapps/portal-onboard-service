@@ -43,9 +43,33 @@ public interface PortalUserMapper {
             @Result(property = "updatedAt", column = "Updated_at"),
             @Result(property = "roles", column = "id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
-
     })
     Operator getSinglePortalUser(UUID id);
+
+    @Select("<script>" +
+            "SELECT * FROM portal_users" +
+            "<where>" +
+            "   <choose>" +
+            "       <when test='email != null'>email = #{email}</when>" +
+            "       <when test='role != null'>id IN (SELECT user_id FROM portal_roles WHERE user_role = #{role})</when>" +
+            "       <when test='status != null'>status = #{status}</when>" +
+            "       <otherwise>1=0</otherwise>" +
+            "   </choose>" +
+            "</where>" +
+            "</script>")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "roles", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
+    })
+    List<Operator> getPortalUserByEmailOrRoleOrStatus(
+            @Param("email") String email,
+            @Param("role") String role,
+            @Param("status") Boolean status
+    );
 
     @Select("SELECT * FROM portal_roles WHERE user_id = #{userId}")
     @Results({
@@ -111,4 +135,13 @@ public interface PortalUserMapper {
 
     @Update("UPDATE portal_users SET password = #{password} WHERE Email = #{email}")
     int resetPassword(String email, String password);
+
+    @Select("SELECT COUNT(*) FROM portal_users")
+    Long adminCount();
+
+    @Select("SELECT COUNT(*) FROM portal_users Where status = #{stat}")
+    Long activeOrSuspendedAdminCount(boolean stat);
+
+    @Select("SELECT COUNT(*) FROM portal_users Where active = #{active}")
+    Long inActiveAdminCount(boolean active);
 }

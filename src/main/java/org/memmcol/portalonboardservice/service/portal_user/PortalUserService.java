@@ -17,9 +17,11 @@ public interface PortalUserService {
 
     Map<String, Object> blockOperator(UUID id, boolean status);
 
-    Map<String, Object> getSingle(UUID id);
+    Map<String, Object> getSingle(String email, String role, boolean status);
 
     Map<String, Object> generateOtp(String username);
 
     Map<String, Object> verifyOtp(String username, String otp, String password, String retypePassword);
+
+    Map<String, Object> getRecentActivity();
 }
