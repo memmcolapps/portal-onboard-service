@@ -1,6 +1,7 @@
 package org.memmcol.portalonboardservice.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.service.portal_user.PortalUserService;
 import org.memmcol.portalonboardservice.service.portal_user.PortalUserServiceImpl;
@@ -23,8 +24,12 @@ public class PortalUserController {
 
     @Autowired
     private GlobalExceptionHandler exception;
+
     @Autowired
     private PortalUserServiceImpl portalUserServiceImpl;
+
+    @Autowired
+    private ResponseProperties status;
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
@@ -77,9 +82,21 @@ public class PortalUserController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> getSingle(@RequestParam UUID id) {
+    public ResponseEntity<?> getSingle(@RequestParam(required = false) String email,
+                                       @RequestParam(required = false) String role,
+                                       @RequestParam(required = false) boolean status) {
         try {
-            Map<String, Object> result = service.getSingle(id);
+            Map<String, Object> result = service.getSingle(email, role, status);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @GetMapping("/recent/activity")
+    public ResponseEntity<?> getRecentActivity() {
+        try {
+            Map<String, Object> result = service.getRecentActivity();
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

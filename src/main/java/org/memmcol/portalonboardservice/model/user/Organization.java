@@ -23,8 +23,6 @@ public class Organization implements Serializable {
 
     private String businessName;
 
-//    private String businessType;
-
     private String postalCode;
 
     private String address;

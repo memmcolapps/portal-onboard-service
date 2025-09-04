@@ -43,6 +43,7 @@ public class Operator implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updatedAt;
 
+
     public Operator() {
         this.createdAt = new Date();
         this.updatedAt = new Date();

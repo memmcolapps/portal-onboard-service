@@ -283,13 +283,25 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Map<String, Object> getSingle(UUID id) {
+    public Map<String, Object> getSingle(String email, String role, boolean stat) {
 
         try {
-            Operator result = portalUserMapper.getSinglePortalUser(id);
-            if (result == null) {
+            List<Operator> operator = portalUserMapper.getPortalUserByEmailOrRoleOrStatus(email,role,stat);
+            if (operator == null) {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
             }
+
+            Long totalPortalUsers = portalUserMapper.adminCount();
+            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
+            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
+            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalPortalUsers", totalPortalUsers);
+            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
+            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
+            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
+            result.put("operators", operator);
 
             return ResponseMap.response(status.getSuccessCode(),
                     status.getDesc(),
@@ -312,26 +324,64 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getAll() {
-
         try {
             List<Operator> operators = portalUserMapper.getAllPortalUser();
+            int totalPortalUsers = operators.size();
+
+            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
+            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
+            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalPortalUsers", totalPortalUsers);
+            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
+            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
+            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
+            result.put("operators", operators);
 
             return ResponseMap.response(
                     status.getSuccessCode(),
                     "Operators fetched successfully",
-                    operators
+                    result
             );
-        } catch (Exception exception){
-
+        } catch (Exception exception) {
             log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
 
+            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
             errorLog.setDescription("Error occurred while fetching operator");
             errorLog.setError_message(exception.getMessage());
             errorLog.setError(exception.toString());
             exceptionAuditRepository.save(errorLog);
 
-            throw exception;
+            throw new RuntimeException("Failed to fetch operators", exception);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Map<String, Object> getRecentActivity(){
+        try {
+
+            Operator operatorAction = handleUserValidation();
+            UUID currentOperator = operatorAction.getId();
+
+            List<AuditLog> result = auditRepository.findTop5ByCreator_IdOrderByCreatedAtDesc(currentOperator);
+
+            return ResponseMap.response(
+                    status.getSuccessCode(),
+                    "Operators recent activities fetched successfully",
+                    result
+            );
+        } catch (Exception exception) {
+            log.error("Error occurred while fetching operator recent activities : {}", exception.getMessage(), exception);
+
+            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
+            errorLog.setDescription("Error occurred while fetching operator recent activities");
+            errorLog.setError_message(exception.getMessage());
+            errorLog.setError(exception.toString());
+            exceptionAuditRepository.save(errorLog);
+
+            throw new RuntimeException("Failed to fetch operators recent activities", exception);
         }
     }
 
