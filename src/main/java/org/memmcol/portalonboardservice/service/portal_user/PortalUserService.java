@@ -17,7 +17,7 @@ public interface PortalUserService {
 
     Map<String, Object> blockOperator(UUID id, boolean status);
 
-    Map<String, Object> getSingle(String email, String role, boolean status);
+    Map<String, Object> getSingle();
 
     Map<String, Object> generateOtp(String username);
 

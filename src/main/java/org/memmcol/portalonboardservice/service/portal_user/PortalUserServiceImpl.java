@@ -283,25 +283,29 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Map<String, Object> getSingle(String email, String role, boolean stat) {
+    public Map<String, Object> getSingle() {
 
         try {
-            List<Operator> operator = portalUserMapper.getPortalUserByEmailOrRoleOrStatus(email,role,stat);
-            if (operator == null) {
-                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
-            }
+            Operator operatorAction = handleUserValidation();
+            UUID currentOperator = operatorAction.getId();
 
-            Long totalPortalUsers = portalUserMapper.adminCount();
-            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
-            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
-            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("totalPortalUsers", totalPortalUsers);
-            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
-            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
-            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
-            result.put("operators", operator);
+            Operator result = portalUserMapper.getSinglePortalUser(currentOperator);
+//            List<Operator> operator = portalUserMapper.getPortalUserByEmailOrRoleOrStatus(email,role,stat);
+//            if (operator == null) {
+//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
+//            }
+//
+//            Long totalPortalUsers = portalUserMapper.adminCount();
+//            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
+//            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
+//            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
+//
+//            Map<String, Object> result = new HashMap<>();
+//            result.put("totalPortalUsers", totalPortalUsers);
+//            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
+//            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
+//            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
+//            result.put("operators", operator);
 
             return ResponseMap.response(status.getSuccessCode(),
                     status.getDesc(),

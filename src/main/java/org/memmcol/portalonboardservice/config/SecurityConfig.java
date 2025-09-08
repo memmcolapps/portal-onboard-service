@@ -76,7 +76,7 @@ public class  SecurityConfig {
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus",
-						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password").permitAll()
+						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password", "/gfPortal/analytic/service/all").permitAll()
 				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
 				 "/gfPortal/auth/service/create","/gfPortal/auth/block","/gfPortal/auth/service/all")
 				.hasAnyAuthority("WRITE","SUPER_ADMIN")
