@@ -43,93 +43,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     @Autowired
     private ExceptionAuditRepository exceptionAuditRepository;
 
-//
-//    @Override
-//    public Map<String, Object> getAnalytics(Integer year, Integer month, int day) {
-//        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-//
-//        try {
-//            // Default to current date if not provided
-//            LocalDate today = LocalDate.now(ZoneOffset.UTC);
-//            int resolvedYear = (year != null) ? year : today.getYear();
-//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
-//            YearMonth ym = YearMonth.of(resolvedYear, resolvedMonth);
-//
-//            LocalDate startDate;
-//            LocalDate endDate;
-//
-//            if (day != 0) {
-//                // User wants analytics for a specific day
-//                LocalDate targetDay = LocalDate.of(resolvedYear, resolvedMonth, day);
-//                startDate = targetDay;
-//                endDate = targetDay;
-//            } else {
-//                // Analytics for full month
-//                startDate = ym.atDay(1);
-//                endDate = ym.atEndOfMonth();
-//            }
-//
-//            // Fetch utility companies
-//            List<Organization> organizations = analyticsMapper.getAllOrganizations();
-//            long activeCount = organizations.stream().filter(Organization::getStatus).count();
-//
-//            // Fetch daily reports within range
-//            List<UptimeReport> dailyReports = reportRepository
-//                    .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
-//                            "DAILY", startDate, endDate, SERVICES
-//                    );
-//
-//            // Fetch monthly reports directly from DB
-//            List<UptimeReport> monthlyReports = reportRepository
-//                    .findByReportTypeAndMonthAndServiceNameIn(
-//                            "MONTHLY", ym.toString(), SERVICES
-//                    );
-//
-////            // Fetch monthly reports (only if querying by full month)
-////            List<UptimeReport> monthlyReports = (day == null)
-////                    ? reportRepository.findByReportTypeAndMonthAndServiceNameIn(
-////                    "MONTHLY", ym.toString(), SERVICES
-////            ) : Collections.emptyList();
-//
-//            // Aggregate uptime/downtime across both services
-//            long totalUp = dailyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
-//            long totalDown = dailyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
-//            long total = totalUp + totalDown;
-//
-//            Map<String, Object> aggregated = new HashMap<>();
-//            aggregated.put("services", SERVICES);
-//            aggregated.put("uptimePercent", total == 0 ? 0 : (totalUp * 100.0 / total));
-//            aggregated.put("downtimePercent", total == 0 ? 0 : (totalDown * 100.0 / total));
-//            aggregated.put("uptimeMinutes", totalUp);
-//            aggregated.put("downtimeMinutes", totalDown);
-//
-//            // Final response
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("dailyReports", dailyReports);
-//            response.put("monthlyReports", monthlyReports);
-//            response.put("aggregatedSummary", aggregated);
-//            response.put("totalUtilityCompany", organizations.size());
-//            response.put("activeUtilityCompany", activeCount);
-//            response.put("incidentReport", 0);
-//            response.put("averageRecoveryTime", 0);
-//
-//            return ResponseMap.response(status.getSuccessCode(),
-//                    "Analytics summary fetched successfully", response);
-//
-//        } catch (Exception exception) {
-//            log.error("Error occurred while fetching analytics [ACTION]: {}", exception.getMessage().trim(), exception);
-//            ExceptionErrorLogs errorLogs = new ExceptionErrorLogs();
-//            errorLogs.setDescription("Error occurred while trying to fetch analytics summary");
-//            errorLogs.setError_message(exception.getMessage().trim());
-//            errorLogs.setError(exception.toString().trim());
-//            exceptionAuditRepository.save(errorLogs);
-//            throw exception;
-//        }
-//    }
-
-
-
-
     @Override
     public Map<String, Object> getAnalytics(int year, int month) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
@@ -146,7 +59,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             // Fetch daily reports directly from DB
             List<UptimeReport> dailyReports = reportRepository
                     .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
-                            "DAILY", startDate, endDate, SERVICES
+                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
                     );
 
             // Fetch monthly reports directly from DB
@@ -178,7 +91,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             monthlyAggregated.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
             monthlyAggregated.put("uptimeMinutes", monthlyTotalUp);
             monthlyAggregated.put("downtimeMinutes", monthlyTotalDown);
-
 
             // Final response
             Map<String, Object> response = new HashMap<>();
