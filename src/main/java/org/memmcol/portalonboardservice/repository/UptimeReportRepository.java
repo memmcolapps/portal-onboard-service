@@ -8,7 +8,7 @@ import java.time.YearMonth;
 import java.util.List;
 
 public interface UptimeReportRepository extends MongoRepository<UptimeReport, String> {
-    List<UptimeReport> findByReportTypeAndCreatedAtBetweenAndServiceNameIn(String reportType, LocalDate startDate, LocalDate endDate, List<String> services);
+    List<UptimeReport> findByReportTypeAndCreatedAtBetweenAndServiceNameIn(String reportType, String startDate, String endDate, List<String> services);
 
     List<UptimeReport> findByReportTypeAndMonthAndServiceNameIn(String reportType, String ym, List<String> services);
 }
