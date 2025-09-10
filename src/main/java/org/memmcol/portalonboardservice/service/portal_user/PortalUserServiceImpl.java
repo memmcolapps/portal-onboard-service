@@ -212,7 +212,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             String userRole = operator.getRole();
             if (userRole != null && (currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("SUPER_ADMIN")
-                    || currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("WRITE"))) {
+                    || currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("ADMIN"))) {
                 portalUserMapper.updateRole(userRole, id);
             }
             Operator operator1 = portalUserMapper.findByEmail(currentUser.getEmail());
@@ -327,21 +327,43 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Map<String, Object> getAll() {
+    public Map<String, Object> getAll(String role, Boolean state) {
         try {
-            List<Operator> operators = portalUserMapper.getAllPortalUser();
-            int totalPortalUsers = operators.size();
 
-            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
-            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
-            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
+            List<Operator> operators = portalUserMapper.getAllPortalUser();
+
+            // Apply filtering by role and state
+            List<Operator> filteredUsers = operators.stream()
+                    .filter(o -> {
+                        // Filter by role
+                        if (!role.equalsIgnoreCase("all")) {
+                            String userRole = o.getRoles().get(0).getUserRole(); // Assuming first role is the main role
+                            if (!userRole.equalsIgnoreCase(role)) {
+                                return false;
+                            }
+                        }
+
+                        // Filter by state (assuming o.isState() returns boolean)
+                        if (state != null && o.isStatus() != state) {
+                            return false;
+                        }
+
+                        return true;
+                    })
+                    .toList();
+
+            long totalPortalUsers = operators.size();
+
+            long  portalInActiveAdmin = operators.stream().filter(o -> !o.isActive()).count();
+            long portalActiveAdmin = operators.stream().filter(o -> o.isActive()).count();
+            long portalSuspendedAdmin = operators.stream().filter(o -> !o.isStatus()).count();
 
             Map<String, Object> result = new HashMap<>();
             result.put("totalPortalUsers", totalPortalUsers);
-            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
-            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
-            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
-            result.put("operators", operators);
+            result.put("totalActiveAdmins", portalActiveAdmin);
+            result.put("totalSuspendedAdmins", portalSuspendedAdmin);
+            result.put("totalInActiveAdmins", portalInActiveAdmin);
+            result.put("operators", filteredUsers); // return filtered list
 
             return ResponseMap.response(
                     status.getSuccessCode(),
