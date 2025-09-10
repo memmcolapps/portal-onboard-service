@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public interface PortalUserService {
 
-    Map<String, Object> getAll();
+    Map<String, Object> getAll(String role, Boolean status);
 
     Map<String, Object> logout();
 

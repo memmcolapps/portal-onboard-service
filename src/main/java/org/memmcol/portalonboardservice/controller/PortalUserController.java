@@ -83,9 +83,6 @@ public class PortalUserController {
 
     @GetMapping("/profile")
     public ResponseEntity<?> getSingle(
-//            @RequestParam(required = false) String email,
-//                                       @RequestParam(required = false) String role,
-//                                       @RequestParam(required = false) boolean status
     ) {
         try {
             Map<String, Object> result = service.getSingle();
@@ -128,9 +125,11 @@ public class PortalUserController {
 
 
     @GetMapping("/all")
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(
+            @RequestParam(required = true, defaultValue = "all") String role,
+            @RequestParam(required = false) Boolean status) {
         try {
-            Map<String, Object> result = service.getAll();
+            Map<String, Object> result = service.getAll(role, status);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
