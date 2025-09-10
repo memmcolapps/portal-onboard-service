@@ -16,22 +16,23 @@ public class AuditLogDto {
     private String userAgent;
     private String ipAddress;
     private String reason;
+    private String role;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date timeStamp;
 
-    public AuditLogDto(String id, String type, String username, String email, String groupPermission, String activity,
+    public AuditLogDto(String id, String type, String username, String email, String role, String activity,
                        String userAgent, String ipAddress, Date timeStamp, String reason) {
         this.id = id;
         this.type = type;
         this.username = username;
         this.email = email;
-        this.groupPermission = groupPermission;
         this.activity = activity;
         this.userAgent = userAgent;
         this.ipAddress = ipAddress;
         this.timeStamp = timeStamp;
         this.reason = reason;
+        this.role = role;
     }
 
     public AuditLogDto() {}
@@ -79,5 +80,13 @@ public class AuditLogDto {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public String getRole(){
+        return role;
+    }
+
+    public void setRole(String role){
+        this.role = role;
     }
 }
