@@ -129,12 +129,17 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             String email = operator.getEmail();
 
-            Operator existingOperator = portalUserMapper.findByEmail(email);
+            System.out.println("email::: "+email);
 
-            boolean user = authCache.containsKey(existingOperator.getId().toString());
-            if(user){
+            Operator existingOperator = portalUserMapper.findByEmail(email);
+            if(existingOperator != null) {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
             }
+
+//            boolean user = authCache.containsKey(existingOperator.getId().toString());
+//            if(user){
+//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
+//            }
 //
 //            if (existingOperator != null) {
 //                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
