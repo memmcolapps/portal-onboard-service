@@ -78,10 +78,10 @@ public class  SecurityConfig {
 				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus",
 						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password", "/gfPortal/analytic/service/all").permitAll()
 				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
-				 "/gfPortal/auth/service/create","/gfPortal/auth/block","/gfPortal/auth/service/all", "/gfPortal/auth/service/recent/activity")
+				 "/gfPortal/auth/service/create","/gfPortal/auth/block","/gfPortal/auth/service/all", "/gfPortal/auth/service/recent/activity", "/gfPortal/audit-log/service")
 				.hasAnyAuthority("ADMIN","SUPER_ADMIN", "DEVELOPER")
 				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile",
-						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single")
+						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single", "/gfPortal/audit-log/service")
 				.hasAnyAuthority("ADMIN", "SUPER_ADMIN", "DEVELOPER", "SUPPORT")
 				.anyRequest().authenticated()).exceptionHandling(ex -> ex
 				.accessDeniedHandler(customAccessDeniedHandler)

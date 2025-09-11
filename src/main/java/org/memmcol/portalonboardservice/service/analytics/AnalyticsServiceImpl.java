@@ -19,10 +19,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AnalyticsServiceImpl implements AnalyticsService{
@@ -56,54 +54,110 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             List<Organization> organizations = analyticsMapper.getAllOrganizations();
             long activeCount = organizations.stream().filter(Organization::getStatus).count();
 
-            // Fetch daily reports directly from DB
+            // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
                     .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
                             "DAILY", startDate.toString(), endDate.toString(), SERVICES
                     );
 
-            // Fetch monthly reports directly from DB
+            // Fetch monthly reports
             List<UptimeReport> monthlyReports = reportRepository
                     .findByReportTypeAndMonthAndServiceNameIn(
                             "MONTHLY", ym.toString(), SERVICES
                     );
 
-            // Aggregate uptime/downtime across both services for this day
+            // Daily Summaries (grouped by createdAt)
+            Map<String, List<UptimeReport>> reportsByDate = dailyReports.stream()
+                    .collect(Collectors.groupingBy(UptimeReport::getCreatedAt));
+
+            List<Map<String, Object>> dailySummaries = new ArrayList<>();
+            for (Map.Entry<String, List<UptimeReport>> entry : reportsByDate.entrySet()) {
+                String date = entry.getKey();
+                List<UptimeReport> reportsForDay = entry.getValue();
+
+                long up = reportsForDay.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+                long down = reportsForDay.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+                long total = up + down;
+
+                Map<String, Object> summary = new HashMap<>();
+                summary.put("date", date);
+                summary.put("services", reportsForDay.stream().map(UptimeReport::getServiceName).toList());
+                summary.put("uptimeMinutes", up);
+                summary.put("downtimeMinutes", down);
+                summary.put("uptimePercent", total == 0 ? 0 : (up * 100.0 / total));
+                summary.put("downtimePercent", total == 0 ? 0 : (down * 100.0 / total));
+
+                dailySummaries.add(summary);
+            }
+
+            // Overall Daily Summary
             long totalUp = dailyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
             long totalDown = dailyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
             long total = totalUp + totalDown;
 
-            // Aggregate uptime/downtime across both services for this day
+            Map<String, Object> dailySummary = new HashMap<>();
+            dailySummary.put("services", SERVICES);
+            dailySummary.put("uptimePercent", total == 0 ? 0 : (totalUp * 100.0 / total));
+            dailySummary.put("downtimePercent", total == 0 ? 0 : (totalDown * 100.0 / total));
+            dailySummary.put("uptimeMinutes", totalUp);
+            dailySummary.put("downtimeMinutes", totalDown);
+
+            // Monthly Summaries (group by month string)
+            Map<String, List<UptimeReport>> reportsByMonth = monthlyReports.stream()
+                    .collect(Collectors.groupingBy(UptimeReport::getMonth));
+
+            List<Map<String, Object>> monthlySummaries = new ArrayList<>();
+            for (Map.Entry<String, List<UptimeReport>> entry : reportsByMonth.entrySet()) {
+                String monthStr = entry.getKey();
+                List<UptimeReport> reportsForMonth = entry.getValue();
+
+                long up = reportsForMonth.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+                long down = reportsForMonth.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+                long totalM = up + down;
+
+                Map<String, Object> summary = new HashMap<>();
+                summary.put("month", monthStr);
+                summary.put("services", reportsForMonth.stream().map(UptimeReport::getServiceName).distinct().toList());
+                summary.put("uptimeMinutes", up);
+                summary.put("downtimeMinutes", down);
+                summary.put("uptimePercent", totalM == 0 ? 0 : (up * 100.0 / totalM));
+                summary.put("downtimePercent", totalM == 0 ? 0 : (down * 100.0 / totalM));
+
+                monthlySummaries.add(summary);
+            }
+
+            // Total Monthly Summary (aggregate across all months)
             long monthlyTotalUp = monthlyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
             long monthlyTotalDown = monthlyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
             long monthlyTotal = monthlyTotalUp + monthlyTotalDown;
 
-            Map<String, Object> aggregated = new HashMap<>();
-            aggregated.put("services", SERVICES);
-            aggregated.put("uptimePercent", total == 0 ? 0 : (totalUp * 100.0 / total));
-            aggregated.put("downtimePercent", total == 0 ? 0 : (totalDown * 100.0 / total));
-            aggregated.put("uptimeMinutes", totalUp);
-            aggregated.put("downtimeMinutes", totalDown);
+            Map<String, Object> totalMonthlySummary = new HashMap<>();
+            totalMonthlySummary.put("services", monthlyReports.stream()
+                    .map(UptimeReport::getServiceName).distinct().toList());
+            totalMonthlySummary.put("uptimeMinutes", monthlyTotalUp);
+            totalMonthlySummary.put("downtimeMinutes", monthlyTotalDown);
+            totalMonthlySummary.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
+            totalMonthlySummary.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
 
-            Map<String, Object> monthlyAggregated = new HashMap<>();
-            monthlyAggregated.put("services", SERVICES);
-            monthlyAggregated.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
-            monthlyAggregated.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
-            monthlyAggregated.put("uptimeMinutes", monthlyTotalUp);
-            monthlyAggregated.put("downtimeMinutes", monthlyTotalDown);
-
-            // Final response
+            // Build Final Response
             Map<String, Object> response = new HashMap<>();
-            response.put("dailyReports", dailyReports);
-            response.put("dailySummary", aggregated);
-            response.put("monthlyReports", monthlyReports);
-            response.put("monthlySummary", monthlyAggregated);
+            response.put("dailyReports", dailyReports);            // raw daily reports
+            response.put("dailySummaries", dailySummaries);        // per-day summaries
+            response.put("totalDailySummary", dailySummary);       // overall daily
+            response.put("monthlyReports", monthlyReports);        // raw monthly reports
+            response.put("monthlySummaries", monthlySummaries);    // per-month summaries
+            response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
             response.put("totalUtilityCompany", organizations.size());
             response.put("activeUtilityCompany", activeCount);
-            response.put("incidentReport", 0); // TODO: compute if needed
-            response.put("averageRecoveryTime", 0); // TODO: compute if needed
+            response.put("incidentReport", 0); // TODO
+            response.put("averageRecoveryTime", 0); // TODO
 
-            return ResponseMap.response(status.getSuccessCode(), "Analytics summary fetched successfully", response);
+            return ResponseMap.response(
+                    status.getSuccessCode(),
+                    "Analytics summary fetched successfully",
+                    response
+            );
+
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
             exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
@@ -113,5 +167,182 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             throw exception;
         }
     }
+
+
+
+
+//    @Override
+//    public Map<String, Object> getAnalytics(int year, int month) {
+//        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+//
+//        YearMonth ym = YearMonth.of(year, month);
+//        LocalDate startDate = ym.atDay(1);
+//        LocalDate endDate = ym.atEndOfMonth();
+//
+//        try {
+//            // Fetch utility companies
+//            List<Organization> organizations = analyticsMapper.getAllOrganizations();
+//            long activeCount = organizations.stream().filter(Organization::getStatus).count();
+//
+//            // Fetch daily reports from DB
+//            List<UptimeReport> dailyReports = reportRepository
+//                    .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
+//                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
+//                    );
+//
+//            // Fetch monthly reports from DB
+//            List<UptimeReport> monthlyReports = reportRepository
+//                    .findByReportTypeAndMonthAndServiceNameIn(
+//                            "MONTHLY", ym.toString(), SERVICES
+//                    );
+//
+//            // 🔹 Build daily summaries (grouped by createdAt)
+//            Map<String, List<UptimeReport>> reportsByDate = dailyReports.stream()
+//                    .collect(Collectors.groupingBy(UptimeReport::getCreatedAt));
+//
+//            List<Map<String, Object>> dailySummaries = new ArrayList<>();
+//            for (Map.Entry<String, List<UptimeReport>> entry : reportsByDate.entrySet()) {
+//                String date = entry.getKey();
+//                List<UptimeReport> reportsForDay = entry.getValue();
+//
+//                long up = reportsForDay.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+//                long down = reportsForDay.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+//                long total = up + down;
+//
+//                Map<String, Object> summary = new HashMap<>();
+//                summary.put("date", date);
+//                summary.put("services", reportsForDay.stream().map(UptimeReport::getServiceName).toList());
+//                summary.put("uptimeMinutes", up);
+//                summary.put("downtimeMinutes", down);
+//                summary.put("uptimePercent", total == 0 ? 0 : (up * 100.0 / total));
+//                summary.put("downtimePercent", total == 0 ? 0 : (down * 100.0 / total));
+//
+//                dailySummaries.add(summary);
+//            }
+//
+//            // 🔹 Overall daily summary
+//            long totalUp = dailyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+//            long totalDown = dailyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+//            long total = totalUp + totalDown;
+//
+//            Map<String, Object> dailySummary = new HashMap<>();
+//            dailySummary.put("services", SERVICES);
+//            dailySummary.put("uptimePercent", total == 0 ? 0 : (totalUp * 100.0 / total));
+//            dailySummary.put("downtimePercent", total == 0 ? 0 : (totalDown * 100.0 / total));
+//            dailySummary.put("uptimeMinutes", totalUp);
+//            dailySummary.put("downtimeMinutes", totalDown);
+//
+//            // 🔹 Overall monthly summary
+//            long monthlyTotalUp = monthlyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+//            long monthlyTotalDown = monthlyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+//            long monthlyTotal = monthlyTotalUp + monthlyTotalDown;
+//
+//            Map<String, Object> monthlySummary = new HashMap<>();
+//            monthlySummary.put("services", SERVICES);
+//            monthlySummary.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
+//            monthlySummary.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
+//            monthlySummary.put("uptimeMinutes", monthlyTotalUp);
+//            monthlySummary.put("downtimeMinutes", monthlyTotalDown);
+//
+//            // 🔹 Build final response
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("dailyReports", dailyReports);        // raw daily reports
+//            response.put("dailySummaries", dailySummaries);    // NEW: per-day summaries
+//            response.put("totalDailySummary", dailySummary);        // overall daily summary
+//            response.put("monthlyReports", monthlyReports);    // raw monthly reports
+//            response.put("totalMonthlySummary", monthlySummary);    // overall monthly summary
+//            response.put("totalUtilityCompany", organizations.size());
+//            response.put("activeUtilityCompany", activeCount);
+//            response.put("incidentReport", 0); // TODO
+//            response.put("averageRecoveryTime", 0); // TODO
+//
+//            return ResponseMap.response(
+//                    status.getSuccessCode(),
+//                    "Analytics summary fetched successfully",
+//                    response
+//            );
+//
+//        } catch (Exception exception) {
+//            log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
+//            exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
+//            exceptionErrorLogs.setError_message(exception.getMessage().trim());
+//            exceptionErrorLogs.setError(exception.toString().trim());
+//            exceptionAuditRepository.save(exceptionErrorLogs);
+//            throw exception;
+//        }
+//    }
+
+
+    ////
+//    @Override
+//    public Map<String, Object> getAnalytics(int year, int month) {
+//        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+//
+//        YearMonth ym = YearMonth.of(year, month);
+//        LocalDate startDate = ym.atDay(1);
+//        LocalDate endDate = ym.atEndOfMonth();
+//
+//        try {
+//            // Fetch utility companies
+//            List<Organization> organizations = analyticsMapper.getAllOrganizations();
+//            long activeCount = organizations.stream().filter(Organization::getStatus).count();
+//
+//            // Fetch daily reports directly from DB
+//            List<UptimeReport> dailyReports = reportRepository
+//                    .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
+//                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
+//                    );
+//
+//            // Fetch monthly reports directly from DB
+//            List<UptimeReport> monthlyReports = reportRepository
+//                    .findByReportTypeAndMonthAndServiceNameIn(
+//                            "MONTHLY", ym.toString(), SERVICES
+//                    );
+//
+//            // Aggregate uptime/downtime across both services for this day
+//            long totalUp = dailyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+//            long totalDown = dailyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+//            long total = totalUp + totalDown;
+//
+//            // Aggregate uptime/downtime across both services for this day
+//            long monthlyTotalUp = monthlyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
+//            long monthlyTotalDown = monthlyReports.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
+//            long monthlyTotal = monthlyTotalUp + monthlyTotalDown;
+//
+//            Map<String, Object> aggregated = new HashMap<>();
+//            aggregated.put("services", SERVICES);
+//            aggregated.put("uptimePercent", total == 0 ? 0 : (totalUp * 100.0 / total));
+//            aggregated.put("downtimePercent", total == 0 ? 0 : (totalDown * 100.0 / total));
+//            aggregated.put("uptimeMinutes", totalUp);
+//            aggregated.put("downtimeMinutes", totalDown);
+//
+//            Map<String, Object> monthlyAggregated = new HashMap<>();
+//            monthlyAggregated.put("services", SERVICES);
+//            monthlyAggregated.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
+//            monthlyAggregated.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
+//            monthlyAggregated.put("uptimeMinutes", monthlyTotalUp);
+//            monthlyAggregated.put("downtimeMinutes", monthlyTotalDown);
+//
+//            // Final response
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("dailyReports", dailyReports);
+//            response.put("dailySummary", aggregated);
+//            response.put("monthlyReports", monthlyReports);
+//            response.put("monthlySummary", monthlyAggregated);
+//            response.put("totalUtilityCompany", organizations.size());
+//            response.put("activeUtilityCompany", activeCount);
+//            response.put("incidentReport", 0); // TODO: compute if needed
+//            response.put("averageRecoveryTime", 0); // TODO: compute if needed
+//
+//            return ResponseMap.response(status.getSuccessCode(), "Analytics summary fetched successfully", response);
+//        } catch (Exception exception) {
+//            log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
+//            exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
+//            exceptionErrorLogs.setError_message(exception.getMessage().trim());
+//            exceptionErrorLogs.setError(exception.toString().trim());
+//            exceptionAuditRepository.save(exceptionErrorLogs);
+//            throw exception;
+//        }
+//    }
 
 }
