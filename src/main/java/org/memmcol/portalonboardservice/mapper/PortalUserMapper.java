@@ -13,8 +13,8 @@ public interface PortalUserMapper {
 
     @Insert("""
         Insert Into portal_users(
-        firstname, lastname, email, status, active, department, password, created_at, updated_at)
-        VALUES(#{firstname},#{lastname},#{email},#{status},#{active},#{department},#{password},#{createdAt},#{updatedAt})
+        firstname, lastname, email, status, active, department, password, phone_no, created_at, updated_at)
+        VALUES(#{firstname},#{lastname},#{email},#{status},#{active},#{department},#{password}, #{phoneNo}, #{createdAt},#{updatedAt})
     """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void createPortalUser(Operator operator);
@@ -39,6 +39,7 @@ public interface PortalUserMapper {
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "phoneNo", column = "phone_no"),
             @Result(property = "createdAt", column = "Created_at"),
             @Result(property = "updatedAt", column = "Updated_at"),
             @Result(property = "roles", column = "id",
@@ -60,6 +61,7 @@ public interface PortalUserMapper {
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "phoneNo", column = "phone_no"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "roles", column = "id",
@@ -83,6 +85,7 @@ public interface PortalUserMapper {
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "phoneNo", column = "phone_no"),
             @Result(property = "createdAt", column = "Created_at"),
             @Result(property = "updatedAt", column = "Updated_at"),
             @Result(property = "roles", column = "id",
@@ -98,7 +101,7 @@ public interface PortalUserMapper {
             "WHERE o.Email = #{email}")
     @Results({
             @Result(property = "id", column = "id"),
-//            @Result(property = "phoneNumber", column = "phone_number"),
+            @Result(property = "phoneNo", column = "phone_no"),
             @Result(property = "lastActive", column = "last_active"),
             @Result(property = "roles", column = "id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
@@ -114,6 +117,7 @@ public interface PortalUserMapper {
             "  <if test='firstname != null'> firstname = #{firstname},</if>"+
             "  <if test='lastname != null'> lastname = #{lastname},</if>"+
             "  <if test='department != null'> department = #{department},</if>"+
+            " <if test='phoneNo != null'> phone_no = #{phoneNo},</if>"+
             "  updated_at = #{updatedAt}"+
             " WHERE id = #{id}"+
             "</script>"
@@ -136,12 +140,4 @@ public interface PortalUserMapper {
     @Update("UPDATE portal_users SET password = #{password} WHERE Email = #{email}")
     int resetPassword(String email, String password);
 
-    @Select("SELECT COUNT(*) FROM portal_users")
-    Long adminCount();
-
-    @Select("SELECT COUNT(*) FROM portal_users Where status = #{stat}")
-    Long activeOrSuspendedAdminCount(boolean stat);
-
-    @Select("SELECT COUNT(*) FROM portal_users Where active = #{active}")
-    Long inActiveAdminCount(boolean active);
 }

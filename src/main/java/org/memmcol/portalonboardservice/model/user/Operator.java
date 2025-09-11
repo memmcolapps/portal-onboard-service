@@ -25,6 +25,7 @@ public class Operator implements Serializable {
     private String lastname;
     private String department;
     private String email;
+    private String phoneNo;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
@@ -151,6 +152,14 @@ public class Operator implements Serializable {
 
     public String getRole() {
         return role;
+    }
+
+    public String getPhoneNo() {
+        return phoneNo;
+    }
+
+    public void setPhoneNo(String phoneNo) {
+        this.phoneNo = phoneNo;
     }
 }
 

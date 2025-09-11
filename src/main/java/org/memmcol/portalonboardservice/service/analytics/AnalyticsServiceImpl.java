@@ -152,8 +152,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("incidentReport", 0); // TODO
             response.put("averageRecoveryTime", 0); // TODO
 
-            return ResponseMap.response(
-                    status.getSuccessCode(),
+            return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",
                     response
             );
