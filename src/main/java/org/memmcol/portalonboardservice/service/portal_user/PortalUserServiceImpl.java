@@ -129,21 +129,10 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             String email = operator.getEmail();
 
-            System.out.println("email::: "+email);
-
             Operator existingOperator = portalUserMapper.findByEmail(email);
             if(existingOperator != null) {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
             }
-
-//            boolean user = authCache.containsKey(existingOperator.getId().toString());
-//            if(user){
-//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
-//            }
-//
-//            if (existingOperator != null) {
-//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
-//            }
 
             String password = passwordEncoder.encode(operator.getPassword());
             operator.setPassword(password);
@@ -295,22 +284,6 @@ public class PortalUserServiceImpl implements PortalUserService {
             UUID currentOperator = operatorAction.getId();
 
             Operator result = portalUserMapper.getSinglePortalUser(currentOperator);
-//            List<Operator> operator = portalUserMapper.getPortalUserByEmailOrRoleOrStatus(email,role,stat);
-//            if (operator == null) {
-//                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator not found");
-//            }
-//
-//            Long totalPortalUsers = portalUserMapper.adminCount();
-//            Long portalInActiveAdmin = portalUserMapper.inActiveAdminCount(false);
-//            Long portalActiveAdmin = portalUserMapper.activeOrSuspendedAdminCount(true);
-//            Long portalSuspendedAdmin = portalUserMapper.activeOrSuspendedAdminCount(false);
-//
-//            Map<String, Object> result = new HashMap<>();
-//            result.put("totalPortalUsers", totalPortalUsers);
-//            result.put("totalActiveAdmins", portalActiveAdmin != null ? portalActiveAdmin : 0L);
-//            result.put("totalSuspendedAdmins", portalSuspendedAdmin != null ? portalSuspendedAdmin : 0L);
-//            result.put("totalInActiveAdmins", portalInActiveAdmin != null ? portalInActiveAdmin : 0L);
-//            result.put("operators", operator);
 
             return ResponseMap.response(status.getSuccessCode(),
                     status.getDesc(),
@@ -541,3 +514,5 @@ public class PortalUserServiceImpl implements PortalUserService {
 //        bandCache.put(band.getId().toString()+"_"+band.getOrgId(), band);  // Cache updated or deleted entity
 //    }
 }
+
+
