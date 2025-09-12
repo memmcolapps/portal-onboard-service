@@ -242,7 +242,11 @@ public class PortalUserServiceImpl implements PortalUserService {
         try {
             String ipAddress = getClientIp(httpServletRequest);
             String userAgent = httpServletRequest.getHeader("User-Agent");
-            Operator operatorAction = handleUserValidation();
+            Operator user = handleUserValidation();
+
+            if(id == user.getId()) {
+                throw new GlobalExceptionHandler.NotFoundException("You cannot activate or deactivate yourself");
+            }
 
             Operator result = portalUserMapper.getSinglePortalUser(id);
             if (result == null) {
@@ -254,7 +258,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             String desc = operator.isStatus() ? "Operator activated" : "Operator deactivated";
 
-            auditNotificationDTO.setCreator(operatorAction);
+            auditNotificationDTO.setCreator(user);
             auditNotificationDTO.setUserAgent(userAgent);
             auditNotificationDTO.setIpAddress(ipAddress);
             auditNotificationDTO.setType("operator");
