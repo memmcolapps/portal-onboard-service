@@ -4,10 +4,7 @@ import org.memmcol.portalonboardservice.service.analytics.AnalyticsService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -41,39 +38,47 @@ public class AnalyticsController {
         }
     }
 
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboardAnalytics(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
+        try {
+            // Default to current date if params missing
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            int resolvedYear = (year != null) ? year : today.getYear();
+            int resolvedMonth = (month != null) ? month : today.getMonthValue();
 
-//    @GetMapping("/all")
-//    public ResponseEntity<?> getAnalytics(
-//            @RequestParam(required = false) Integer year,
-//            @RequestParam(required = false) Integer month) {
-//        try {
-//            // Default values if not provided
-//            YearMonth current = YearMonth.now(ZoneOffset.UTC);
-//            int resolvedYear = (year != null) ? year : current.getYear();
-//            int resolvedMonth = (month != null) ? month : current.getMonthValue();
-//
-//            Map<String, Object> result = service.getAnalytics(resolvedYear, resolvedMonth);
-//
-//            return ResponseEntity.ok(result);
-//        } catch (GlobalExceptionHandler.SQLServerException e) {
-//            return handleException(e);
-//        }
-//    }
+            Map<String, Object> result = service.getDashboardAnalytics(resolvedYear, resolvedMonth);
 
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
 
-    ///
-//    @GetMapping("/all")
-//    ResponseEntity<?> getAnalytics(@RequestParam int year,
-//                                   @RequestParam int month) {
-//        try {
-//            Map<String, Object> result = service.getAnalytics(year, month);
-//
-//            return ResponseEntity.ok(result);
-//        } catch (GlobalExceptionHandler.SQLServerException e) {
-//            return handleException(e);
-//        }
-//    }
-//
+    @GetMapping("/incident/report")
+    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false) String type) {
+        try {
+            Map<String, Object> result = service.getIncidentReport(type);
+
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PostMapping("/incident/report/resolve")
+    public ResponseEntity<?> getIncidentReportResolve(@RequestParam(required = false) Boolean status) {
+        try {
+            Map<String, Object> result = service.getIncidentReportResolve(status);
+
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
     private ResponseEntity<Map<String, Object>> handleException(GlobalExceptionHandler.SQLServerException e) {
         return (ResponseEntity<Map<String, Object>>) exception.handleSQLServerException(e);
     }
