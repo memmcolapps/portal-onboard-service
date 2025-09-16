@@ -6,6 +6,7 @@ import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.model.user.UserModel;
 
 import java.util.List;
+import java.util.UUID;
 
 @Mapper
 public interface AnalyticsMapper {
@@ -17,32 +18,34 @@ public interface AnalyticsMapper {
     long getTotalCustomer();
 
 
-    @Select("SELECT * FROM incident_report")
+    @Select("SELECT * FROM incident_report WHERE status = #{status}")
     @Results({
             @Result(property = "id", column = "id"),
+//            @Result(property = "userId", column = "user_id"),
+//            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "createdAt", column = "created_at"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "organization", column = "org_id",
-                    one = @One(select = "org.memmcol.gridflexbackendservice.mapper.AnalyticsMapper.getOrganization")),
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
             @Result(property = "user", column = "user_id",
-                    one = @One(select = "org.memmcol.gridflexbackendservice.mapper.AnalyticsMapper.getUser"))
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
     })
-    IncidentReport getIncidentReport(String type);
+    List<IncidentReport> getIncidentReport(Boolean status);
 
     @Select("SELECT business_name FROM organizations WHERE id = #{org_id}")
     @Results({
             @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
             @Result(property = "businessName", column = "business_name"),
     })
-    Organization getOrganization(String org_id);
+    Organization getOrganization(UUID org_id);
 
-    @Select("SELECT first_name, last_name FROM users WHERE id = #{org_id}")
-    @Results({
-            @Result(property = "id", column = "id"),
-            @Result(property = "firstName", column = "first_name"),
-            @Result(property = "lastName", column = "last_name"),
-    })
-    UserModel getUser(String org_id);
+    @Select("SELECT firstname, lastname FROM users WHERE id = #{org_id}")
+    UserModel getUser(UUID org_id);
 
-    @Select("UPDATE incident_report SET status = #{status}")
-    IncidentReport getIncidentReportResolve(Boolean state);
+    @Select("UPDATE incident_report SET status = #{status} WHERE id = #{id}")
+    IncidentReport getIncidentReportResolve(Boolean status, UUID id);
+
+    @Select("SELECT * FROM incident_report")
+    List<IncidentReport> incidentReportResolveAnalytics();
 }

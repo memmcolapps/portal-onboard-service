@@ -11,6 +11,8 @@ public class IncidentReport implements Serializable {
 
     @Id
     private UUID id;
+//    private UUID orgId;
+//    private UUID userId;
     private String message;
     private String createdAt;
     private Organization organization;
@@ -24,6 +26,22 @@ public class IncidentReport implements Serializable {
     public void setId(UUID id) {
         this.id = id;
     }
+
+//    public UUID getOrgId() {
+//        return orgId;
+//    }
+//
+//    public void setOrgId(UUID orgId) {
+//        this.orgId = orgId;
+//    }
+//
+//    public UUID getUserId() {
+//        return userId;
+//    }
+
+//    public void setUserId(UUID userId) {
+//        this.userId = userId;
+//    }
 
     public String getMessage() {
         return message;

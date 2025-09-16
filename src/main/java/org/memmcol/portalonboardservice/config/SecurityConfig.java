@@ -82,7 +82,8 @@ public class  SecurityConfig {
 						"/gfPortal/auth/service/single", "/gfPortal/auth/service/create","/gfPortal/auth/service/change-status","/gfPortal/auth/service/all",
 						"/gfPortal/auth/service/recent/activity", "/gfPortal/audit-log/service/all", "/gfPortal/node/service/create/node/region-bhub-service-center",
 						"/gfPortal/node/service/update/node/region-bhub-service-center", "/gfPortal/node/service/create/node/substation-transformer-feeder-line",
-						"/gfPortal/node/service/update/node/substation-transformer-feeder-line", "/gfPortal/node/service/single", "/gfPortal/node/service/all")
+						"/gfPortal/node/service/update/node/substation-transformer-feeder-line", "/gfPortal/node/service/single", "/gfPortal/node/service/all",
+						"/gfPortal/analytic/service/dashboard", "/gfPortal/analytic/service/incident/report", "/gfPortal/analytic/service/incident/report/resolve")
 				.hasAnyAuthority("ADMIN","SUPER_ADMIN", "DEVELOPER", "SUPPORT")
 //				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile",
 //						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single", "/gfPortal/audit-log/service")

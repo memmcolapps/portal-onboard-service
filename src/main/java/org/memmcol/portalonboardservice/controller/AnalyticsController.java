@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/gfPortal/analytic/service")
@@ -58,9 +59,9 @@ public class AnalyticsController {
     }
 
     @GetMapping("/incident/report")
-    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false) String type) {
+    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false, defaultValue = "false") Boolean status) {
         try {
-            Map<String, Object> result = service.getIncidentReport(type);
+            Map<String, Object> result = service.getIncidentReport(status);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
@@ -68,10 +69,12 @@ public class AnalyticsController {
         }
     }
 
-    @PostMapping("/incident/report/resolve")
-    public ResponseEntity<?> getIncidentReportResolve(@RequestParam(required = false) Boolean status) {
+    @PatchMapping("/incident/report/resolve")
+    public ResponseEntity<?> getIncidentReportResolve(
+            @RequestParam(required = true) UUID id,
+            @RequestParam(required = true) Boolean status) {
         try {
-            Map<String, Object> result = service.getIncidentReportResolve(status);
+            Map<String, Object> result = service.getIncidentReportResolve(id, status);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {

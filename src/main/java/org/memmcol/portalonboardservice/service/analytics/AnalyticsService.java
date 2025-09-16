@@ -1,6 +1,7 @@
 package org.memmcol.portalonboardservice.service.analytics;
 
 import java.util.Map;
+import java.util.UUID;
 
 public interface AnalyticsService {
 //    Map<String, Object> getAnalytics(int resolvedYear, int resolvedMonth, Integer resolvedDay);
@@ -9,7 +10,7 @@ public interface AnalyticsService {
 
     Map<String, Object> getDashboardAnalytics(int resolvedYear, int resolvedMonth);
 
-    Map<String, Object> getIncidentReport(String type);
+    Map<String, Object> getIncidentReport(Boolean status);
 
-    Map<String, Object> getIncidentReportResolve(Boolean status);
+    Map<String, Object> getIncidentReportResolve(UUID id, Boolean status);
 }

@@ -184,6 +184,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             List<Organization> organizations = analyticsMapper.getAllOrganizations();
             long totalCustomers = analyticsMapper.getTotalCustomer();
 
+            List<IncidentReport> incidentReport = analyticsMapper.incidentReportResolveAnalytics();
+
+            long totalResolved = incidentReport.stream().filter(IncidentReport::getStatus).count();
+
+            long totalUnresolved = incidentReport.size() - totalResolved;
+
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
                     .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
@@ -279,8 +285,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
             response.put("totalUtilityCompany", organizations.size());
             response.put("totalCustomers", totalCustomers);
-            response.put("totalResolvedIncident", 0); // TODO
-            response.put("totalUnresolvedIncident", 0); // TODO
+            response.put("totalResolvedIncident", totalResolved); // TODO
+            response.put("totalUnresolvedIncident", totalUnresolved); // TODO
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",
@@ -298,10 +304,10 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     }
 
     @Override
-    public Map<String, Object> getIncidentReport(String type) {
+    public Map<String, Object> getIncidentReport(Boolean state) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
-            IncidentReport response = analyticsMapper.getIncidentReport(type);
+            List<IncidentReport> response = analyticsMapper.getIncidentReport(state);
             return ResponseMap.response(status.getSuccessCode(),
                     "Incident reports fetched successfully", response
             );
@@ -317,10 +323,10 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     }
 
     @Override
-    public Map<String, Object> getIncidentReportResolve(Boolean state) {
+    public Map<String, Object> getIncidentReportResolve(UUID id, Boolean state) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
-            IncidentReport response = analyticsMapper.getIncidentReportResolve(state);
+            IncidentReport response = analyticsMapper.getIncidentReportResolve(state, id);
             return ResponseMap.response(status.getSuccessCode(),
                     "Incident reports resolved successfully", response
             );
