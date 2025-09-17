@@ -80,7 +80,7 @@ public class ContactServiceImpl implements ContactService{
             Operator operatorAction = handleUserValidation();
             UUID currentOperator = operatorAction.getId();
 
-            ReadMessages cMsg = contactMessageMapper.getReadMessagesByMessageId(msgId);
+            ReadMessages cMsg = contactMessageMapper.getReadMessagesByMessageIdAndUserId(currentOperator, msgId);
             if (cMsg == null) {
                 ReadMessages readMessages = new ReadMessages();
 
@@ -89,7 +89,6 @@ public class ContactServiceImpl implements ContactService{
                 readMessages.setStatus(true);
                 contactMessageMapper.insertReadMessage(readMessages);
             }
-
             return ResponseMap.response(
                     status.getSuccessCode(), "Message marked read successfully", "");
 
