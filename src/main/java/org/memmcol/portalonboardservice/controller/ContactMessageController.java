@@ -24,7 +24,7 @@ public class ContactMessageController {
     @Autowired
     private GlobalExceptionHandler exception;
 
-    @PostMapping("/enquiries")
+    @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> insertContactMessage(
             @RequestBody ContactMessage contactMessage) {
         try {
@@ -46,7 +46,7 @@ public class ContactMessageController {
         }
     }
 
-    @GetMapping("/search")
+    @GetMapping("/get")
     public ResponseEntity<Map<String, Object>> searchMessages(
             @RequestParam(required = false) String organizationName,
             @RequestParam(required = false) String organizationSize,
@@ -56,7 +56,7 @@ public class ContactMessageController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false) String searchTerm,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "100") int size) {
         try {
             ContactMessageSearchCriteria criteria = new ContactMessageSearchCriteria();
             criteria.setOrganizationName(organizationName);

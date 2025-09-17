@@ -56,9 +56,7 @@ public class ContactServiceImpl implements ContactService{
             contactMessageMapper.insertContactMessage(message);
 
             return ResponseMap.response(
-                    status.getSuccessCode(),
-                    (message.getOrganizationName() + " Message Sent "),
-                    "");
+                    status.getSuccessCode(), "Message sent successfully", "");
 
         }catch (Exception exception) {
             log.error("Error sending message: {}", exception.getMessage(), exception);
@@ -93,9 +91,7 @@ public class ContactServiceImpl implements ContactService{
             }
 
             return ResponseMap.response(
-                    status.getSuccessCode(),
-                    "Message marked Read",
-                    "");
+                    status.getSuccessCode(), "Message marked read successfully", "");
 
         }catch (Exception exception) {
             log.error("Error mark read message: {}", exception.getMessage(), exception);
@@ -142,7 +138,7 @@ public class ContactServiceImpl implements ContactService{
             responseData.put("size", size);
             responseData.put("totalPages", size == 0 ? 1 : (int) Math.ceil((double) totalCount / size));
 
-            return ResponseMap.response(status.getSuccessCode(), "Messages retrieved successfully", responseData);
+            return ResponseMap.response(status.getSuccessCode(), status.getDesc(), responseData);
 
         } catch (Exception exception) {
             log.error("Error searching messages: {}", exception.getMessage(), exception);

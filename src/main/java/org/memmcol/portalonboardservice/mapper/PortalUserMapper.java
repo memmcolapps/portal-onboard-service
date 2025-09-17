@@ -94,7 +94,6 @@ public interface PortalUserMapper {
     })
     List<Operator> getAllPortalUser();
 
-
     @Select("SELECT o.*, r.* " +
             "FROM portal_users o " +
             "INNER JOIN portal_roles r ON o.id = r.user_id " +
