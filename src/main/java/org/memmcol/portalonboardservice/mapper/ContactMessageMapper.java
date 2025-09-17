@@ -25,8 +25,8 @@ public interface ContactMessageMapper {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertReadMessage(ReadMessages readMessages);
 
-    @Select("SELECT * FROM contact_message_reads WHERE message_id = #{messageId} LIMIT 1")
-    ReadMessages getReadMessagesByMessageId(@Param("messageId") UUID messageId);
+    @Select("SELECT * FROM contact_message_reads WHERE portal_user_id = #{userId} And message_id = #{messageId} LIMIT 1")
+    ReadMessages getReadMessagesByMessageIdAndUserId(@Param("userId") UUID userId,@Param("messageId")  UUID messageId);
 
     @Select("""
     <script>
