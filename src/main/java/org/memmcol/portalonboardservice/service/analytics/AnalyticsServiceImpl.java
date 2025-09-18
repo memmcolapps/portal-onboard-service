@@ -207,6 +207,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                             "MONTHLY", String.valueOf(year), SERVICES
                     );
 
+            List<IncidentReport> resp = analyticsMapper.getIncidentReport(false);
+
             // Daily Summaries (grouped by createdAt)
             Map<String, List<UptimeReport>> reportsByDate = dailyReports.stream()
                     .collect(Collectors.groupingBy(UptimeReport::getCreatedAt));
@@ -298,6 +300,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("totalCustomers", totalCustomers);
             response.put("totalResolvedIncident", totalResolved); // TODO
             response.put("totalUnresolvedIncident", totalUnresolved); // TODO
+            response.put("incidentReports", resp); // TODO
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",

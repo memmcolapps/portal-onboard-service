@@ -21,8 +21,6 @@ public interface AnalyticsMapper {
     @Select("SELECT * FROM incident_report WHERE status = #{status}")
     @Results({
             @Result(property = "id", column = "id"),
-//            @Result(property = "userId", column = "user_id"),
-//            @Result(property = "orgId", column = "org_id"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "organization", column = "org_id",
