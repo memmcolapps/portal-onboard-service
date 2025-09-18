@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,8 +67,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             // Fetch monthly reports
             List<UptimeReport> monthlyReports = reportRepository
-                    .findByReportTypeAndMonthAndServiceNameIn(
-                            "MONTHLY", ym.toString(), SERVICES
+                    .findByReportTypeAndMonthStartingWithAndServiceNameIn(
+                            "MONTHLY", String.valueOf(year), SERVICES
                     );
 
             // Daily Summaries (grouped by createdAt)
@@ -119,8 +120,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                 long down = reportsForMonth.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
                 long totalM = up + down;
 
+                // Parse monthStr -> YearMonth
+                YearMonth reportYm = YearMonth.parse(monthStr);
+
                 Map<String, Object> summary = new HashMap<>();
                 summary.put("month", monthStr);
+                summary.put("monthDisplay", reportYm.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH));// per-month summaries// per-month summaries
                 summary.put("services", reportsForMonth.stream().map(UptimeReport::getServiceName).distinct().toList());
                 summary.put("uptimeMinutes", up);
                 summary.put("downtimeMinutes", down);
@@ -149,7 +154,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("dailySummaries", dailySummaries);        // per-day summaries
             response.put("totalDailySummary", dailySummary);       // overall daily
             response.put("monthlyReports", monthlyReports);        // raw monthly reports
-            response.put("monthlySummaries", monthlySummaries);    // per-month summaries
+            response.put("monthlySummaries", monthlySummaries);
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
             response.put("totalUtilityCompany", organizations.size());
             response.put("activeUtilityCompany", activeCount);
@@ -198,8 +203,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             // Fetch monthly reports
             List<UptimeReport> monthlyReports = reportRepository
-                    .findByReportTypeAndMonthAndServiceNameIn(
-                            "MONTHLY", ym.toString(), SERVICES
+                    .findByReportTypeAndMonthStartingWithAndServiceNameIn(
+                            "MONTHLY", String.valueOf(year), SERVICES
                     );
 
             // Daily Summaries (grouped by createdAt)
@@ -251,8 +256,14 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                 long down = reportsForMonth.stream().mapToLong(UptimeReport::getDowntimeMinutes).sum();
                 long totalM = up + down;
 
+                // Parse monthStr -> YearMonth
+                YearMonth reportYm = YearMonth.parse(monthStr);
+
+                System.out.println(reportYm.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH));
+
                 Map<String, Object> summary = new HashMap<>();
                 summary.put("month", monthStr);
+                summary.put("monthDisplay", reportYm.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH));// per-month summaries// per-month summaries
                 summary.put("services", reportsForMonth.stream().map(UptimeReport::getServiceName).distinct().toList());
                 summary.put("uptimeMinutes", up);
                 summary.put("downtimeMinutes", down);
@@ -281,7 +292,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("dailySummaries", dailySummaries);        // per-day summaries
             response.put("totalDailySummary", dailySummary);       // overall daily
             response.put("monthlyReports", monthlyReports);        // raw monthly reports
-            response.put("monthlySummaries", monthlySummaries);    // per-month summaries
+            response.put("monthlySummaries", monthlySummaries);
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
             response.put("totalUtilityCompany", organizations.size());
             response.put("totalCustomers", totalCustomers);
