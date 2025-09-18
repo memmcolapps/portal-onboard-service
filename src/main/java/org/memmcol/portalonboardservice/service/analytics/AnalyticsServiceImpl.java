@@ -25,7 +25,6 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 @Service
 public class AnalyticsServiceImpl implements AnalyticsService{
@@ -207,8 +206,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                             "MONTHLY", String.valueOf(year), SERVICES
                     );
 
-            List<IncidentReport> resp = analyticsMapper.getIncidentReport(false);
-
             // Daily Summaries (grouped by createdAt)
             Map<String, List<UptimeReport>> reportsByDate = dailyReports.stream()
                     .collect(Collectors.groupingBy(UptimeReport::getCreatedAt));
@@ -261,8 +258,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                 // Parse monthStr -> YearMonth
                 YearMonth reportYm = YearMonth.parse(monthStr);
 
-                System.out.println(reportYm.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH));
-
                 Map<String, Object> summary = new HashMap<>();
                 summary.put("month", monthStr);
                 summary.put("monthDisplay", reportYm.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH));// per-month summaries// per-month summaries
@@ -274,6 +269,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
                 monthlySummaries.add(summary);
             }
+
+            // Sort summaries chronologically
+            monthlySummaries.sort(Comparator.comparing(m -> YearMonth.parse((String) m.get("month"))));
+
+            // Remove helper key (yearMonth) before sending to frontend
+            monthlySummaries.forEach(m -> m.remove("yearMonth"));
 
             // Total Monthly Summary (aggregate across all months)
             long monthlyTotalUp = monthlyReports.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
@@ -300,7 +301,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("totalCustomers", totalCustomers);
             response.put("totalResolvedIncident", totalResolved); // TODO
             response.put("totalUnresolvedIncident", totalUnresolved); // TODO
-            response.put("incidentReports", resp); // TODO
+            response.put("incidentReports", incidentReport); // TODO
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",
@@ -321,9 +322,21 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     public Map<String, Object> getIncidentReport(Boolean state) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
-            List<IncidentReport> response = analyticsMapper.getIncidentReport(state);
+            List<IncidentReport> allReports = analyticsMapper.getIncidentReport();
+
+            List<IncidentReport> filteredReports;
+            if (state == null) {
+                // No filter → return all
+                filteredReports = allReports;
+            } else {
+                // Filter by status
+                filteredReports = allReports.stream()
+                        .filter(i -> state.equals(i.getStatus()))
+                        .toList();
+            }
+
             return ResponseMap.response(status.getSuccessCode(),
-                    "Incident reports fetched successfully", response
+                    "Incident reports fetched successfully", filteredReports
             );
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
@@ -333,8 +346,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             exceptionAuditRepository.save(exceptionErrorLogs);
             throw exception;
         }
-
     }
+
 
     @Override
     public Map<String, Object> getIncidentReportResolve(UUID id, Boolean state) {

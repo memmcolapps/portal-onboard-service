@@ -18,7 +18,7 @@ public interface AnalyticsMapper {
     long getTotalCustomer();
 
 
-    @Select("SELECT * FROM incident_report WHERE status = #{status}")
+    @Select("SELECT * FROM incident_report ORDER BY created_at DESC ")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
@@ -28,7 +28,7 @@ public interface AnalyticsMapper {
             @Result(property = "user", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
     })
-    List<IncidentReport> getIncidentReport(Boolean status);
+    List<IncidentReport> getIncidentReport();
 
     @Select("SELECT business_name FROM organizations WHERE id = #{org_id}")
     @Results({
@@ -44,6 +44,15 @@ public interface AnalyticsMapper {
     @Select("UPDATE incident_report SET status = #{status} WHERE id = #{id}")
     IncidentReport getIncidentReportResolve(Boolean status, UUID id);
 
-    @Select("SELECT * FROM incident_report")
+    @Select("SELECT * FROM incident_report ORDER BY created_at DESC LIMIT 5")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "organization", column = "org_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
+            @Result(property = "user", column = "user_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
+    })
     List<IncidentReport> incidentReportResolveAnalytics();
 }

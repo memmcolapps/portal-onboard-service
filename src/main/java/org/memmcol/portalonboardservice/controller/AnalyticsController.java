@@ -59,7 +59,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/incident/report")
-    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false, defaultValue = "false") Boolean status) {
+    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false) Boolean status) {
         try {
             Map<String, Object> result = service.getIncidentReport(status);
 
