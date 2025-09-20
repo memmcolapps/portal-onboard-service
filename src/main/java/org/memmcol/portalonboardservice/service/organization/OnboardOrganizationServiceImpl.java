@@ -414,14 +414,5 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         log.setHttpMethod(metadata.get("httpMethod"));
         return log;
     }
-//
-//    private void addChangeIfDifferent(String fieldName, String oldValue, String newValue,
-//                                      Map<String, Map<String, String>> changes) {
-//        if (!Objects.equals(oldValue, newValue)) {
-//            changes.put(fieldName, Map.of(
-//                    "old", oldValue != null ? oldValue : "null",
-//                    "new", newValue != null ? newValue : "null"
-//            ));
-//        }
-//    }
+
 }

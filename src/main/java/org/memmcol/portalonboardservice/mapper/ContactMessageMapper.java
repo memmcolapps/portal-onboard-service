@@ -16,7 +16,7 @@ public interface ContactMessageMapper {
     VALUES (#{organizationName},#{organizationSize},#{email},#{phoneNo},#{message},#{createdAt})       
     """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
-    void insertContactMessage(ContactMessage contactMessage);
+    int insertContactMessage(ContactMessage contactMessage);
 
     @Insert("""
     INSERT INTO contact_message_reads(message_id, portal_user_id, status, read_at)

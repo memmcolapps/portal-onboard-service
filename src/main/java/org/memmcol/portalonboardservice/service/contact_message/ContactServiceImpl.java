@@ -13,6 +13,7 @@ import org.memmcol.portalonboardservice.model.user.ReadMessages;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.service.organization.OnboardOrganizationServiceImpl;
+import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +55,11 @@ public class ContactServiceImpl implements ContactService{
     @Transactional
     @Override
     public Map<String, Object> addMessage(ContactMessage message) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
         try {
-            contactMessageMapper.insertContactMessage(message);
+            int cm = contactMessageMapper.insertContactMessage(message);
+            if(cm == 0){
+                throw new GlobalExceptionHandler.NotFoundException("Contact message inserted failed");
+            }
 
             return ResponseMap.response(
                     status.getSuccessCode(), "Message sent successfully", "");
@@ -73,7 +75,6 @@ public class ContactServiceImpl implements ContactService{
     @Transactional
     @Override
     public Map<String, Object> addReadMessage(UUID msgId) {
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
         try {
 
             Operator operatorAction = handleUserValidation();
