@@ -41,11 +41,6 @@ public class ContactServiceImpl implements ContactService{
     @Autowired
     private GenericHandler genericHandler;
 
-    @Autowired
-    private AuditRepository auditRepository;
-
-    private PortalUserMapper portalUserMapper;
-
     public ContactServiceImpl(ContactMessageMapper contactMessageMapper,
                               ExceptionAuditRepository exceptionAuditRepository) {
         this.contactMessageMapper = contactMessageMapper;
