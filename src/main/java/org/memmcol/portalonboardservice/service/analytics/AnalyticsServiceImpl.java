@@ -318,7 +318,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Override
     public Map<String, Object> getIncidentReport(Boolean state) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
             List<IncidentReport> allReports = analyticsMapper.getIncidentReport();
 

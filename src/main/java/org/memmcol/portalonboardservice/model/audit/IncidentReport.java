@@ -11,13 +11,13 @@ public class IncidentReport implements Serializable {
 
     @Id
     private UUID id;
-//    private UUID orgId;
-//    private UUID userId;
+    private String type;
     private String message;
-    private String createdAt;
-    private Organization organization;
     private Boolean status;
     private UserModel user;
+    private String createdAt;
+    private String updatedAt;
+    private Organization organization;
 
     public UUID getId() {
         return id;
@@ -27,21 +27,13 @@ public class IncidentReport implements Serializable {
         this.id = id;
     }
 
-//    public UUID getOrgId() {
-//        return orgId;
-//    }
-//
-//    public void setOrgId(UUID orgId) {
-//        this.orgId = orgId;
-//    }
-//
-//    public UUID getUserId() {
-//        return userId;
-//    }
+    public String getType() {
+        return type;
+    }
 
-//    public void setUserId(UUID userId) {
-//        this.userId = userId;
-//    }
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getMessage() {
         return message;
@@ -49,14 +41,6 @@ public class IncidentReport implements Serializable {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public String getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(String createdAt) {
-        this.createdAt = createdAt;
     }
 
     public Boolean getStatus() {
@@ -73,6 +57,22 @@ public class IncidentReport implements Serializable {
 
     public void setUser(UserModel user) {
         this.user = user;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(String updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public Organization getOrganization() {
