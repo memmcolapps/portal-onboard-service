@@ -3,12 +3,14 @@ package org.memmcol.portalonboardservice.service.node;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import jakarta.servlet.http.HttpServletRequest;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.NodeMapper;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.*;
+import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
@@ -22,8 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-
-import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 @Service
@@ -33,9 +33,6 @@ public class NodeServiceImpl implements NodeService {
     @Autowired
     private NodeMapper nodeMapper;
 
-//    @Autowired
-//    private UserMapper userMapper;
-
     @Autowired
     private ResponseProperties status;
 
@@ -43,7 +40,7 @@ public class NodeServiceImpl implements NodeService {
     private AuditRepository auditRepository;
 
     @Autowired
-    private PortalUserMapper operatorMapper;
+    private GenericHandler genericHandler;
 
     @Autowired
     private ExceptionAuditRepository exceptionAuditRepository;
@@ -63,13 +60,10 @@ public class NodeServiceImpl implements NodeService {
     @Transactional
     @Override
     public Map<String, Object> createRegionBhubServiceCenterNode(RegionBhubServiceCenter request) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         RegionBhubServiceCenter regionBhubServiceCenter;
         UUID id;
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             String desc;
             Operator um = handleUserValidation();
 
@@ -89,7 +83,6 @@ public class NodeServiceImpl implements NodeService {
             UUID parentNodeId = node.getParentId();
 
             request.setNodeId(nodeId);
-//            request.setOrgId(um.getOrgId());
             request.setParentId(parentNodeId);
 
             if(request.getType().equalsIgnoreCase("region") ||
@@ -102,24 +95,17 @@ public class NodeServiceImpl implements NodeService {
             } else {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
             }
-            handleClearCache(node);
+//            RegionBhubServiceCenter regionBhubServiceCenter1 = nodeMapper.getRegionBhubServiceCenter(request.getId());
+//            handleClearCache(node);
 
-            auditNotificationDTO.setCreator(um);
-            auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType(request.getType().equals("region") ? "region" : request.getType().equals("service center") ? "service center" : "business hub");
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setRegionBhubServiceCenter(regionBhubServiceCenter);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("region") ? "region" : request.getType().equals("service center") ? "service center" : "business hub", regionBhubServiceCenter, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ regionBhubServiceCenter.getName() +"' "+ status.getRegDesc(), "");
 
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to creating region node");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "creating region node");
             throw exception;
         }
     }
@@ -127,14 +113,12 @@ public class NodeServiceImpl implements NodeService {
     @Transactional
     @Override
     public Map<String, Object> createSubStationFeederLineTransformerNode(SubStationTransformerFeederLine request) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
+
         SubStationTransformerFeederLine subStationTransformerFeederLine;
         UUID id;
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
             String desc;
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator um = handleUserValidation();
 
             Node node = new Node();
@@ -153,7 +137,6 @@ public class NodeServiceImpl implements NodeService {
             UUID parentNodeId = node.getParentId();
 
             request.setNodeId(nodeId);
-//            request.setOrgId(um.getOrgId());
             request.setParentId(parentNodeId);
 
             if(request.getType().equalsIgnoreCase("dss") ||
@@ -166,25 +149,16 @@ public class NodeServiceImpl implements NodeService {
             } else {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
             }
+//            handleClearCache(node);
 
-            handleClearCache(node);
-
-            auditNotificationDTO.setCreator(um);
-            auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType(request.getType().equals("dss") ? "dss" : request.getType().equals("feeder line") ? "feeder line" : "substation");
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setSubStationTransformerFeederLine(subStationTransformerFeederLine);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("dss") ? "dss" : request.getType().equals("feeder line") ? "feeder line" : "substation", subStationTransformerFeederLine, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ subStationTransformerFeederLine.getName() +"' "+ status.getRegDesc(), "");
 
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to creating region node");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "creating substation, feeder line & dss");
             throw exception;
         }
     }
@@ -192,12 +166,9 @@ public class NodeServiceImpl implements NodeService {
     @Transactional
     @Override
     public Map<String, Object> updateRegionBhubServiceCenterNode(RegionBhubServiceCenter request) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         RegionBhubServiceCenter regionBhubServiceCenter;
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             String desc;
             Operator um = handleUserValidation();
 
@@ -217,7 +188,6 @@ public class NodeServiceImpl implements NodeService {
             UUID nodeId = node.getId();
 
             request.setNodeId(nodeId);
-//            request.setOrgId(um.getOrgId());
 
             if(request.getType().equalsIgnoreCase("region") ||
                     request.getType().equalsIgnoreCase("business hub") ||
@@ -229,24 +199,15 @@ public class NodeServiceImpl implements NodeService {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
             }
 
-            handleClearCache(node);
-
-            auditNotificationDTO.setCreator(um);
-            auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType(request.getType().equals("region") ? "Region" : request.getType().equals("service center") ? "Service center" : "Business hub");
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setRegionBhubServiceCenter(regionBhubServiceCenter);
-            auditRepository.save(auditNotificationDTO);
+//            handleClearCache(node);
+            AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("region") ? "Region" : request.getType().equals("service center") ? "Service center" : "Business hub", regionBhubServiceCenter, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ regionBhubServiceCenter.getName() +"' "+ status.getUpdateDesc(), "");
 
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to creating region node");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "editing region, business hub line or service center");
             throw exception;
         }
     }
@@ -254,13 +215,10 @@ public class NodeServiceImpl implements NodeService {
     @Transactional
     @Override
     public Map<String, Object> updateSubStationFeederLineTransformerNode(SubStationTransformerFeederLine request) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         SubStationTransformerFeederLine subStationTransformerFeederLine;
         UUID id;
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             String desc;
             Operator um = handleUserValidation();
 
@@ -280,7 +238,6 @@ public class NodeServiceImpl implements NodeService {
             UUID nodeId = node.getId();
 
             request.setNodeId(nodeId);
-//            request.setOrgId(um.getOrgId());
 
             if(request.getType().equalsIgnoreCase("dss") ||
                     request.getType().equalsIgnoreCase("feeder line") ||
@@ -293,24 +250,17 @@ public class NodeServiceImpl implements NodeService {
                 throw new GlobalExceptionHandler.NotFoundException("Request type " +" ("+ request.getType()+" )"+ " not found");
             }
 
-            handleClearCache(node);
+//            handleClearCache(node);
 
-            auditNotificationDTO.setCreator(um);
-            auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType(request.getType().equalsIgnoreCase("dss") ? "dss" : request.getType().equalsIgnoreCase("feeder line") ? "Feeder line" : "Substation");
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setSubStationTransformerFeederLine(subStationTransformerFeederLine);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(um, desc, request.getType().equalsIgnoreCase("dss") ? "dss" : request.getType().equalsIgnoreCase("feeder line") ? "Feeder line" : "Substation", subStationTransformerFeederLine, metadata);
+            auditRepository.save(auditLog);
+
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ subStationTransformerFeederLine.getName() +"' "+ status.getUpdateDesc(), "");
 
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to creating region node");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "editing substation, feeder line or dss");
             throw exception;
         }
     }
@@ -318,7 +268,6 @@ public class NodeServiceImpl implements NodeService {
     @Transactional(readOnly = true)
     @Override
     public Map<String, Object> singleNode(UUID nodeId, UUID orgId) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
             Operator um = handleUserValidation();
 //
@@ -357,10 +306,7 @@ public class NodeServiceImpl implements NodeService {
 
         } catch (Exception exception) {
             log.error("Error occurred while fetching node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to fetch single node with children");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "fetching single node");
             throw exception;
         }
     }
@@ -368,8 +314,6 @@ public class NodeServiceImpl implements NodeService {
     @Transactional(readOnly = true)
     @Override
     public Map<String, Object> getAllNodes(UUID orgId) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         try {
 
             Operator um = handleUserValidation();
@@ -413,10 +357,7 @@ public class NodeServiceImpl implements NodeService {
             return ResponseMap.response(status.getSuccessCode(),  "Node "+status.getDesc(), roots);
         } catch (Exception exception) {
             log.error("Error occurred while updated node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to creating region node");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "fetching nodes");
             throw exception;
         }
     }
@@ -448,6 +389,20 @@ public class NodeServiceImpl implements NodeService {
                 nodeCache.remove(key);
             }
         }
+    }
+
+    private AuditLog buildAuditLog(Operator creator, String description, String type, Object createdEntity, Map<String, String> metadata) {
+        AuditLog log = new AuditLog();
+        log.setCreator(creator);
+        log.setDescription(description);
+        log.setType(type);
+        log.setRegionBhubServiceCenter(createdEntity instanceof RegionBhubServiceCenter ? (RegionBhubServiceCenter) createdEntity : null);
+        log.setSubStationTransformerFeederLine(createdEntity instanceof SubStationTransformerFeederLine ? (SubStationTransformerFeederLine) createdEntity : null);
+        log.setIpAddress(metadata.get("ipAddress"));
+        log.setUserAgent(metadata.get("userAgent"));
+        log.setEndPoint(metadata.get("endpoint"));
+        log.setHttpMethod(metadata.get("httpMethod"));
+        return log;
     }
 
 }

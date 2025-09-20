@@ -1,5 +1,6 @@
 package org.memmcol.portalonboardservice.service.contact_message;
 
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.mapper.ContactMessageMapper;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
@@ -37,6 +38,9 @@ public class ContactServiceImpl implements ContactService{
     private ResponseProperties status;
 
     @Autowired
+    private GenericHandler genericHandler;
+
+    @Autowired
     private AuditRepository auditRepository;
 
     private PortalUserMapper portalUserMapper;
@@ -60,12 +64,7 @@ public class ContactServiceImpl implements ContactService{
 
         }catch (Exception exception) {
             log.error("Error sending message: {}", exception.getMessage(), exception);
-
-            // Log exception to audit system
-            errorLog.setDescription("Error sending message");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "sending message");
             throw exception;
 
         }
@@ -94,12 +93,7 @@ public class ContactServiceImpl implements ContactService{
 
         }catch (Exception exception) {
             log.error("Error mark read message: {}", exception.getMessage(), exception);
-
-            // Log exception to audit system
-            errorLog.setDescription("Error mark read message");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "reading message");
             throw exception;
 
         }
@@ -141,13 +135,7 @@ public class ContactServiceImpl implements ContactService{
 
         } catch (Exception exception) {
             log.error("Error searching messages: {}", exception.getMessage(), exception);
-
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-            errorLog.setDescription("Error searching messages");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
+            genericHandler.logAndSaveException(exception, "fetching messages");
             throw exception;
         }
     }

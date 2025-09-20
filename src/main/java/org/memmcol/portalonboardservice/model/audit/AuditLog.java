@@ -38,6 +38,9 @@ public class AuditLog {
 
     private RegionBhubServiceCenter regionBhubServiceCenter;
 
+    private String endPoint;
+
+    private String httpMethod;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
@@ -140,5 +143,21 @@ public class AuditLog {
 
     public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getEndPoint() {
+        return endPoint;
+    }
+
+    public void setEndPoint(String endPoint) {
+        this.endPoint = endPoint;
+    }
+
+    public String getHttpMethod() {
+        return httpMethod;
+    }
+
+    public void setHttpMethod(String httpMethod) {
+        this.httpMethod = httpMethod;
     }
 }

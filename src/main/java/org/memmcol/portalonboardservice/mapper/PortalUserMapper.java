@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.*;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.user.Role;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -130,8 +131,8 @@ public interface PortalUserMapper {
     @Update("UPDATE portal_users SET status = #{stat} WHERE id = #{id}")
     int blockAndUnblockOperator(UUID id, boolean stat);
 
-    @Update("UPDATE portal_users SET Active = true WHERE Email = #{email}")
-    void updateLoginState(String email);
+    @Update("UPDATE portal_users SET Active = true, last_active = #{now} WHERE Email = #{email}")
+    void updateLoginState(String email, LocalDateTime now);
 
     @Update("UPDATE portal_users SET Active = false, updated_at = NOW() WHERE Email = #{email}")
     void updateLogoutState(String email);

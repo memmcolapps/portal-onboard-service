@@ -1,13 +1,11 @@
 package org.memmcol.portalonboardservice.service.analytics;
 
-import com.mongodb.lang.Nullable;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.mapper.AnalyticsMapper;
-import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.audit.IncidentReport;
 import org.memmcol.portalonboardservice.model.audit.UptimeReport;
-import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.repository.UptimeReportRepository;
@@ -41,6 +39,9 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Autowired
     private AnalyticsMapper analyticsMapper;
+
+    @Autowired
+    private GenericHandler genericHandler;
 
     @Autowired
     private ExceptionAuditRepository exceptionAuditRepository;
@@ -310,10 +311,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "fetching dashboard analytics");
             throw exception;
         }
     }
@@ -340,10 +338,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             );
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "fetching incident report");
             throw exception;
         }
     }
@@ -351,7 +346,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Override
     public Map<String, Object> getIncidentReportResolve(UUID id, Boolean state) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
         try {
             IncidentReport response = analyticsMapper.getIncidentReportResolve(state, id);
             return ResponseMap.response(status.getSuccessCode(),
@@ -359,13 +353,11 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             );
         } catch (Exception exception) {
             log.error("Error occurred while creating node [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while trying to fetch analytics summary");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "resolving incident report");
             throw exception;
         }
     }
+
 
 
 }

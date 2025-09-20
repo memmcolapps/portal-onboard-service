@@ -3,11 +3,13 @@ package org.memmcol.portalonboardservice.service.organization;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import jakarta.servlet.http.HttpServletRequest;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.OrganizationMapper;
-import org.memmcol.portalonboardservice.mapper.UserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.node.Node;
+import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
+import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
 import org.memmcol.portalonboardservice.model.user.*;
 import org.memmcol.portalonboardservice.model.user.Module;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
@@ -19,11 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +29,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.math.BigDecimal;
 import java.util.*;
 
-import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 
@@ -59,6 +55,9 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 //    @Autowired
 //    private CacheManager cacheManager;
 
+    @Autowired
+    private GenericHandler genericHandler;
+
     private final IMap<String, Organization> organizationCache;
 
     // Other mappers can be added as needed
@@ -74,11 +73,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Override
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operator = handleUserValidation();
 
             // Save to database
@@ -154,13 +150,15 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             // Save into Hazelcast cache (persists via MapStore)
 //            organizationCache.put(res.getId().toString(), res);
-            auditNotificationDTO.setCreator(operator);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setDescription("Organization created");
-            auditNotificationDTO.setType("organization");
-            auditNotificationDTO.setOrganization(res);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(operator, "Organization created", "organization", res, metadata);
+            auditRepository.save(auditLog);
+//            auditNotificationDTO.setCreator(operator);
+//            auditNotificationDTO.setIpAddress(ipAddress);
+//            auditNotificationDTO.setUserAgent(userAgent);
+//            auditNotificationDTO.setDescription("Organization created");
+//            auditNotificationDTO.setType("organization");
+//            auditNotificationDTO.setOrganization(res);
+//            auditRepository.save(auditNotificationDTO);
 
             return ResponseMap.response(
                     status.getSuccessCode(),
@@ -169,82 +167,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
         } catch (Exception exception) {
             log.error("Error creating organization: {}", exception.getMessage(), exception);
-
-            // Log exception to audit system
-            errorLog.setDescription("Error creating organization");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "creating organization");
             throw exception;
 
         }
     }
 
-    // Permissions, groups, user creation
-//            if (createDefaultPermission(orgId) == 0)
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to create permission");
-//            if (createDefaultGroup(orgId) == 0)
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to create group");
-//            if (createDefaultUserGroup(orgId) == 0)
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to create user group");
-//            if (createDefaultGroupPermission(orgId) == 0)
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to create group permission");
-//            if (createDefaultUser(orgId, rootNodeId, userModel) == 0)
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to create user");
-
-//    @Transactional
-//    public int createDefaultUser(UUID organizationId, UUID nodeId, UserModel userModel) {
-//
-//            userModel.setOrgId(organizationId);
-//            userModel.setNodeId(nodeId);
-//            userModel.setStatus(true);
-//            userModel.setActive(false);
-//            userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
-//            int result;
-//            result = organizationMapper.insertUser(userModel);
-//            UUID id = userModel.getId();
-//            organizationMapper.updateOrg(id, organizationId);
-//            return result;
-//
-//    }
-
-//    @Transactional
-//    public int createDefaultPermission(UUID organizationId) {
-//            Permission permission = new Permission();
-//
-//            permission.setView(true);
-//            permission.setEdit(true);
-//            permission.setApprove(true);
-//            permission.setDisable(true);
-//            permission.setOrgId(organizationId);
-//
-//            int result;
-//            result = organizationMapper.insertPermission(permission);
-//            return result;
-//    }
-
-//    @Transactional
-//    public int createDefaultGroup(UUID organizationId) {
-//            Group group = new Group();
-//
-//            group.setGroupTitle("User management");
-//            group.setOrgId(organizationId);
-//
-//            int result;
-//            result = organizationMapper.insertGroup(group);
-//            return result;
-//    }
-
-//    @Transactional
-//    public int createDefaultGroupPermission(UUID organizationId) {
-//        System.out.println("oorId: "+organizationId);
-//            Permission permission = organizationMapper.getPermissionByOrgId(organizationId);
-//            Group group = organizationMapper.getGroupByOrgId(organizationId);
-//
-//            int response;
-//            response = organizationMapper.insertGroupPermission(group.getId(), permission.getId(), organizationId);
-//            return response;
-//    }
 
     @Transactional(readOnly = true)
 //    @Cacheable(value = "organizationCache", key = "'allOrgs'")
@@ -328,12 +256,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
         } catch (Exception exception) {
             log.error("Error fetching organizations {}", exception.getMessage(), exception);
-
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-            errorLog.setDescription("Error fetching organizations");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "fetching organization");
             throw exception;
         }
     }
@@ -404,13 +327,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
         } catch (Exception exception) {
             log.error("Error fetching organization {}", exception.getMessage(), exception);
-
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-            errorLog.setDescription("Error fetching organization");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
+            genericHandler.logAndSaveException(exception, "fetching organization");
             throw exception;
 
         }
@@ -421,12 +338,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Transactional
     @Override
     public Map<String, Object> updateOrganization(Organization organization,UserModel userModel) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operator = handleUserValidation();
 
             Organization res = organizationMapper.getOrganizationById(organization.getId());
@@ -444,28 +357,9 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
-//
-//            // Update the allOrgs cache manually
-//            Cache cache = cacheManager.getCache("organizationCache");
-//            if (cache != null) {
-//                Map<String, Object> cachedAllOrgs = cache.get("allOrgs", Map.class);
-//                if (cachedAllOrgs != null) {
-//                    List<Organization> orgs = (List<Organization>) cachedAllOrgs.get("organizations");
-//                    if (orgs != null) {
-//                        orgs.replaceAll(o -> o.getId().equals(organization.getId()) ? organization : o);
-//                        cachedAllOrgs.put("organizations", orgs);
-//                        cache.put("allOrgs", cachedAllOrgs);
-//                    }
-//                }
-//            }
 
-            auditNotificationDTO.setCreator(operator);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setDescription("Organization edited");
-            auditNotificationDTO.setType("organization");
-            auditNotificationDTO.setOrganization(res);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(operator, "Organization edited", "organization", res, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Organization "+status.getUpdateDesc(),
@@ -473,12 +367,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
         } catch (Exception exception) {
             log.error("Error updating organization: {}", exception.getMessage(), exception);
-
-            // Log error details
-            errorLog.setDescription("Error updating organization");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "editing organization");
             throw exception;
         }
 
@@ -486,12 +375,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     @Override
     public Map<String, Object> suspendOrganization(UUID id, Boolean suspend) {
-
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operator = handleUserValidation();
             Organization res = organizationMapper.getOrganizationById(id);
 
@@ -505,32 +390,38 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             String desc = response.getStatus() ? "Organization activated" : "Organization suspended";
 
-            auditNotificationDTO.setCreator(operator);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setDescription(desc);
-            auditNotificationDTO.setType("organization");
-            auditNotificationDTO.setOrganization(res);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(operator, desc, "organization", res, metadata);
+            auditRepository.save(auditLog);
             return ResponseMap.response(status.getSuccessCode(), desc + " successfully", "");
 
         } catch (Exception exception) {
             log.error("Error updating organization: {}", exception.getMessage(), exception);
-            errorLog.setDescription("Error updating organization");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "changing organization status");
             throw exception;
         }
     }
 
-    private void addChangeIfDifferent(String fieldName, String oldValue, String newValue,
-                                      Map<String, Map<String, String>> changes) {
-        if (!Objects.equals(oldValue, newValue)) {
-            changes.put(fieldName, Map.of(
-                    "old", oldValue != null ? oldValue : "null",
-                    "new", newValue != null ? newValue : "null"
-            ));
-        }
+
+    private AuditLog buildAuditLog(Operator creator, String description, String type, Organization createdEntity, Map<String, String> metadata) {
+        AuditLog log = new AuditLog();
+        log.setCreator(creator);
+        log.setDescription(description);
+        log.setType(type);
+        log.setOrganization(createdEntity);
+        log.setIpAddress(metadata.get("ipAddress"));
+        log.setUserAgent(metadata.get("userAgent"));
+        log.setEndPoint(metadata.get("endpoint"));
+        log.setHttpMethod(metadata.get("httpMethod"));
+        return log;
     }
+//
+//    private void addChangeIfDifferent(String fieldName, String oldValue, String newValue,
+//                                      Map<String, Map<String, String>> changes) {
+//        if (!Objects.equals(oldValue, newValue)) {
+//            changes.put(fieldName, Map.of(
+//                    "old", oldValue != null ? oldValue : "null",
+//                    "new", newValue != null ? newValue : "null"
+//            ));
+//        }
+//    }
 }

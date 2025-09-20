@@ -11,7 +11,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
+import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
+import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
 import org.memmcol.portalonboardservice.model.user.CustomUserDetails;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.user.Operator;
@@ -29,12 +32,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 
 
 @RequiredArgsConstructor
@@ -50,6 +53,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
 	private IMap<String, Boolean> authCache;
 
+	private GenericHandler genericHandler;
+
 //	private HazelcastInstance hazelcastInstance;
 	// Define the required headers
 	private static final String ADMIN_HEADER_KEY = "custom";
@@ -61,12 +66,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 	public CustomAuthenticationFilter(
 			AuthenticationManager authenticationManager,
 			PortalUserMapper operatorMapper,
-			AuditRepository auditRepository, HazelcastInstance hazelcastInstance) {
+			AuditRepository auditRepository, HazelcastInstance hazelcastInstance, GenericHandler genericHandler) {
 		this.authenticationManager = authenticationManager;
 		this.operatorMapper = operatorMapper;
 		this.auditRepository = auditRepository;
 		this.auditCache = hazelcastInstance.getMap("auditCache");
 		this.authCache = hazelcastInstance.getMap("authCache");
+		this.genericHandler = genericHandler;
 	}
 
 	@Override
@@ -94,9 +100,10 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 			Authentication authentication) throws IOException, ServletException {
 		CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
 //		User user = (User) authentication.getPrincipal();// Add a custom header with the JWT token
-		AuditLog auditNotificationDTO = new AuditLog();
-		String ipAddress = getClientIp(request);
-		String userAgent = request.getHeader("User-Agent");
+//		AuditLog auditNotificationDTO = new AuditLog();
+//		String ipAddress = getClientIp(request);
+		Map<String, String> metadata = genericHandler.extractRequestMetadata(request);
+//		String userAgent = request.getHeader("User-Agent");
 		Algorithm algorithm = Algorithm.HMAC256("secret".getBytes()); //Encrypt/Sign the token
 		String access_token = JWT.create()
 				.withSubject(userPrincipal.getUsername())
@@ -109,18 +116,20 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
 		Operator operator = operatorMapper.findByAuthEmail(userPrincipal.getUsername());
 		operator.setPassword("");
-		auditNotificationDTO.setCreator(operator);
-		auditNotificationDTO.setIpAddress(ipAddress);
-		auditNotificationDTO.setUserAgent(userAgent);
-		auditNotificationDTO.setDescription("Logged in");
-		auditNotificationDTO.setType("auth");
+		AuditLog auditLog = buildAuditLog(operator, "Logged in", "auth", null, metadata);
+		auditRepository.save(auditLog);
+//		auditNotificationDTO.setCreator(operator);
+//		auditNotificationDTO.setIpAddress(ipAddress);
+//		auditNotificationDTO.setUserAgent(userAgent);
+//		auditNotificationDTO.setDescription("Logged in");
+//		auditNotificationDTO.setType("auth");
 		for (String key : auditCache.keySet()) {
 			if (key.startsWith("audit_log_page_")) {
 				auditCache.remove(key);
 			}
 		}
 //		authCache.remove("dashboard");
-		auditRepository.save(auditNotificationDTO);
+//		auditRepository.save(auditNotificationDTO);
 		Map<String, Object> resp = new HashMap<>();
 		Map<String, Object> token = new HashMap<>();
 		resp.put("responsecode", "001");
@@ -128,7 +137,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 		token.put("user_info", operator);
 		token.put("access_token", access_token);
 		resp.put("responsedata", token);
-		operatorMapper.updateLoginState(userPrincipal.getUsername());
+		operatorMapper.updateLoginState(userPrincipal.getUsername(), LocalDateTime.now(ZoneId.of("Africa/Lagos")));
 		// Set content type to JSON
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -155,6 +164,18 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 	    // Write the error message to the response body
 	    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 	    new ObjectMapper().writeValue(response.getOutputStream(), errorMessage);
+	}
+
+	private AuditLog buildAuditLog(Operator creator, String description, String type, Object createdEntity, Map<String, String> metadata) {
+		AuditLog log = new AuditLog();
+		log.setCreator(creator);
+		log.setDescription(description);
+		log.setType(type);
+		log.setIpAddress(metadata.get("ipAddress"));
+		log.setUserAgent(metadata.get("userAgent"));
+		log.setEndPoint(metadata.get("endpoint"));
+		log.setHttpMethod(metadata.get("httpMethod"));
+		return log;
 	}
 
 }

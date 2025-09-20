@@ -1,5 +1,6 @@
 package org.memmcol.portalonboardservice.service.auditlog;
 
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.AuditLogDto;
@@ -37,7 +38,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     private ResponseProperties status;
 
     @Autowired
-    private ExceptionAuditRepository exceptionAuditRepository;
+    private GenericHandler genericHandler;
 
     public AuditLogServiceImpl(AuditRepository auditRepository) {
         this.auditRepository = auditRepository;
@@ -96,12 +97,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
         } catch (Exception exception) {
             log.error("Error occurred while fetching audit logs: {}", exception.getMessage().trim(), exception);
-
-            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
-            exceptionErrorLogs.setDescription("Error occurred while fetching audit logs");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "fetching audit");
 
             throw exception;
         }

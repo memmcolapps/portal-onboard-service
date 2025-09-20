@@ -3,6 +3,7 @@ package org.memmcol.portalonboardservice.service.portal_user;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import jakarta.servlet.http.HttpServletRequest;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
@@ -28,7 +29,6 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.memmcol.portalonboardservice.util.GenericHandler.getClientIp;
 import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 @Service
@@ -50,6 +50,9 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private GenericHandler genericHandler;
 
     @Autowired
     private PortalUserMapper portalUserMapper;
@@ -76,11 +79,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Transactional
     @Override
     public Map<String, Object> logout() {
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-        AuditLog auditNotificationDTO = new AuditLog();
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
 
             // Extract raw token without decoding
             String authorizationHeader = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
@@ -96,21 +96,15 @@ public class PortalUserServiceImpl implements PortalUserService {
             // Blacklist the raw token
             blacklistToken(rawToken, 1800);
 
-            auditNotificationDTO.setCreator(operator);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setDescription("Logged out");
-            auditNotificationDTO.setType("auth");
-            auditRepository.save(auditNotificationDTO);
+
+            AuditLog auditLog = buildAuditLog(operator, "Logged out", "auth", null, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(), "Logged out successfully", "");
 
         } catch (Exception exception) {
             log.error("Error occurred while logout: {}", exception.getMessage(), exception);
-            errorLog.setDescription("Error occurred while logout");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "logging out operator");
             throw exception;
         }
     }
@@ -118,13 +112,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Transactional
     @Override
     public Map<String, Object> createOperator(Operator operator) {
-
-        AuditLog auditNotificationDTO = new AuditLog();
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operatorAction = handleUserValidation();
 
             String email = operator.getEmail();
@@ -151,13 +140,9 @@ public class PortalUserServiceImpl implements PortalUserService {
                 throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Failed to create Role");
             }
             Operator operator1 = portalUserMapper.findByEmail(email);
-            auditNotificationDTO.setCreator(operatorAction);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setDescription("Operator newly created");
-            auditNotificationDTO.setType("operator");
-            auditNotificationDTO.setOperator(operator1);
-            auditRepository.save(auditNotificationDTO);
+
+            AuditLog auditLog = buildAuditLog(operatorAction, "Operator newly created", "operator", operator1, metadata);
+            auditRepository.save(auditLog);
 
             authCache.put(operator1.getId().toString(), operator1);
 
@@ -169,10 +154,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
         } catch (Exception exception){
             log.error("Error occurred while creating operator: {}", exception.getMessage(), exception);
-            errorLog.setDescription("Error occurred while creating operator");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "creating operator");
 
             throw exception;
         }
@@ -182,12 +164,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Override
     public Map<String, Object> updateOperator(Operator operator) {
 
-        AuditLog auditNotificationDTO = new AuditLog();
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator currentUser = handleUserValidation();
 
             UUID id =  operator.getId();
@@ -210,23 +188,14 @@ public class PortalUserServiceImpl implements PortalUserService {
                 portalUserMapper.updateRole(userRole, id);
             }
             Operator operator1 = portalUserMapper.findByEmail(currentUser.getEmail());
-
-            auditNotificationDTO.setCreator(currentUser);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setDescription("Operator updated");
-            auditNotificationDTO.setType("operator");
-            auditNotificationDTO.setOperator(operator1);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(currentUser, "Edited operator", "operator", operator1, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(), "Operator "+status.getUpdateDesc(), "");
         } catch (Exception exception){
 
             log.error("Error occurred while updating operator: {}", exception.getMessage(), exception);
-            errorLog.setDescription("Error occurred while updating operator");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "editing operator");
 
             throw exception;
         }
@@ -236,12 +205,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Override
     public Map<String, Object> blockOperator(UUID id,boolean stat) {
 
-        AuditLog auditNotificationDTO = new AuditLog();
-        ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-
         try {
-            String ipAddress = getClientIp(httpServletRequest);
-            String userAgent = httpServletRequest.getHeader("User-Agent");
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator user = handleUserValidation();
 
             if(id == user.getId()) {
@@ -258,22 +223,14 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             String desc = operator.isStatus() ? "Operator activated" : "Operator deactivated";
 
-            auditNotificationDTO.setCreator(user);
-            auditNotificationDTO.setUserAgent(userAgent);
-            auditNotificationDTO.setIpAddress(ipAddress);
-            auditNotificationDTO.setType("operator");
-            auditNotificationDTO.setOperator(operator);
-            auditNotificationDTO.setDescription(desc);
-            auditRepository.save(auditNotificationDTO);
+            AuditLog auditLog = buildAuditLog(user, desc, "operator", operator, metadata);
+            auditRepository.save(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(), desc+" successfully", "");
 
         }catch (Exception exception){
             log.error("Error occurred while blocking operator: {}", exception.getMessage(), exception);
-            errorLog.setDescription("Error occurred while blocking operator");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "changing state operator");
 
             throw exception;
         }
@@ -296,12 +253,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
         }catch (Exception exception){
             log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-
-            errorLog.setDescription("Error occurred while fetching operator");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "fetching operator");
 
             throw exception;
         }
@@ -354,14 +306,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             );
         } catch (Exception exception) {
             log.error("Error occurred while fetching operator: {}", exception.getMessage(), exception);
-
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-            errorLog.setDescription("Error occurred while fetching operator");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
-
-            throw new RuntimeException("Failed to fetch operators", exception);
+            genericHandler.logAndSaveException(exception, "fetching operator");
+            throw exception;
         }
     }
 
@@ -383,13 +329,9 @@ public class PortalUserServiceImpl implements PortalUserService {
         } catch (Exception exception) {
             log.error("Error occurred while fetching operator recent activities : {}", exception.getMessage(), exception);
 
-            ExceptionErrorLogs errorLog = new ExceptionErrorLogs();
-            errorLog.setDescription("Error occurred while fetching operator recent activities");
-            errorLog.setError_message(exception.getMessage());
-            errorLog.setError(exception.toString());
-            exceptionAuditRepository.save(errorLog);
+            genericHandler.logAndSaveException(exception, "fetching activity");
 
-            throw new RuntimeException("Failed to fetch operators recent activities", exception);
+            throw exception;
         }
     }
 
@@ -425,10 +367,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         } catch (Exception exception){
             ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
             log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while verifying OTP");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "verifying otp");
             throw exception;
         }
     }
@@ -448,10 +387,7 @@ public class PortalUserServiceImpl implements PortalUserService {
         } catch (RestClientException emailException) {
             ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
             log.error("Failed to send OTP email to {}: {}", username, emailException.getMessage().trim(), emailException);
-            exceptionErrorLogs.setDescription("Error occurred while generating OTP");
-            exceptionErrorLogs.setError_message(emailException.getMessage().trim());
-            exceptionErrorLogs.setError(emailException.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(emailException, "sending email");
             throw emailException;
         }
 
@@ -462,8 +398,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     public Map<String, Object> handleForgetPassword(Operator user, String password) {
         AuditLog AuditLog = new AuditLog();
-        String ipAddress = getClientIp(httpServletRequest);
-        String userAgent = httpServletRequest.getHeader("User-Agent");
+        Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
         try {
 
             if (!verifiedUsers.containsKey(user.getEmail())) {
@@ -478,21 +413,13 @@ public class PortalUserServiceImpl implements PortalUserService {
             // Remove OTP verification from cache after successful password reset
             verifiedUsers.remove(user.getEmail());
 //			handleCacheUpdate(isOperator);
-            AuditLog.setCreator(user);
-            AuditLog.setUserAgent(userAgent);
-            AuditLog.setIpAddress(ipAddress);
-            AuditLog.setDescription("Reset password");
-            AuditLog.setType("auth");
-            auditRepository.save(AuditLog);
+            AuditLog auditLog = buildAuditLog(user, "Reset password", "auth", null, metadata);
+            auditRepository.save(auditLog);
             return ResponseMap.response(status.getSuccessCode(), "Password " + status.getUpdateDesc(), "");
 
         } catch (Exception exception) {
-            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
             log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
-            exceptionErrorLogs.setDescription("Error occurred while changing operator password");
-            exceptionErrorLogs.setError_message(exception.getMessage().trim());
-            exceptionErrorLogs.setError(exception.toString().trim());
-            exceptionAuditRepository.save(exceptionErrorLogs);
+            genericHandler.logAndSaveException(exception, "changing password");
             throw exception;
         }
     }
@@ -501,22 +428,18 @@ public class PortalUserServiceImpl implements PortalUserService {
     private void blacklistToken(String token, int expirySeconds) {
         portalOtpExpCache.put(token, true, expirySeconds, TimeUnit.SECONDS);
     }
-
-//    private void handleAddCache(Operator operator) {
-////        bandCache.remove(band.getId().toString()+"_"+band.getOrgId());
-////        tariffCache.clear();
-//        for (String key : auditCache.keySet()) {
-//            if (key.startsWith("grid_flex_audit_log_page_")) {
-//                auditCache.remove(key);
-//            }
-//        }
-//        for (String key : bandCache.keySet()) {
-//            if (key.startsWith("bands_"+band.getOrgId())) {
-//                bandCache.remove(key);
-//            }
-//        }
-//        bandCache.put(band.getId().toString()+"_"+band.getOrgId(), band);  // Cache updated or deleted entity
-//    }
+    private AuditLog buildAuditLog(Operator creator, String description, String type, Object createdEntity, Map<String, String> metadata) {
+        AuditLog log = new AuditLog();
+        log.setCreator(creator);
+        log.setDescription(description);
+        log.setType(type);
+        log.setOperator(createdEntity instanceof Operator ? (Operator) createdEntity : null);
+        log.setIpAddress(metadata.get("ipAddress"));
+        log.setUserAgent(metadata.get("userAgent"));
+        log.setEndPoint(metadata.get("endpoint"));
+        log.setHttpMethod(metadata.get("httpMethod"));
+        return log;
+    }
 }
 
 

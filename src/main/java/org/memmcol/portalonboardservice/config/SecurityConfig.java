@@ -5,6 +5,7 @@ import com.hazelcast.core.HazelcastInstance;
 import lombok.RequiredArgsConstructor;
 import org.memmcol.portalonboardservice.components.CustomAccessDeniedHandler;
 import org.memmcol.portalonboardservice.components.CustomAuthorizationFilter;
+import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,9 @@ public class  SecurityConfig {
 	@Autowired
 	private CustomAccessDeniedHandler customAccessDeniedHandler;
 
+	@Autowired
+	private GenericHandler genericHandler;
+
     @Qualifier("hazelcastInstance")
     @Autowired private HazelcastInstance hazelcastInstance;
 //	private final IMap<String, Boolean> authCache;
@@ -60,7 +64,7 @@ public class  SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 		CustomAuthenticationFilter userAuthFilter = new CustomAuthenticationFilter(
-				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance);
+				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance, genericHandler);
 		userAuthFilter.setFilterProcessesUrl("/gfPortal/auth/service/login");
 
 //		CustomAuthenticationFilter adminAuthFilter = new CustomAuthenticationFilter(
