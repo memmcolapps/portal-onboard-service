@@ -79,7 +79,7 @@ public class  SecurityConfig {
 
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
-				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus",
+				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus", "/gfPortal/service/message/create",
 						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password", "/gfPortal/analytic/service/all").permitAll()
 				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
 						"/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile", "/gfPortal/auth/service/update",
@@ -88,7 +88,7 @@ public class  SecurityConfig {
 						"/gfPortal/node/service/update/node/region-bhub-service-center", "/gfPortal/node/service/create/node/substation-transformer-feeder-line",
 						"/gfPortal/node/service/update/node/substation-transformer-feeder-line", "/gfPortal/node/service/single", "/gfPortal/node/service/all",
 						"/gfPortal/analytic/service/dashboard", "/gfPortal/analytic/service/incident/report", "/gfPortal/analytic/service/incident/report/resolve",
-						"/gfPortal/service/message/enquiries", "/gfPortal/service/message/read", "/gfPortal/service/message/get")
+						"/gfPortal/service/message/read", "/gfPortal/service/message/get")
 				.hasAnyAuthority("ADMIN","SUPER_ADMIN", "DEVELOPER", "SUPPORT")
 //				.requestMatchers("/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile",
 //						"/gfPortal/auth/service/logout", "/gfPortal/auth/service/update", "/gfPortal/auth/service/single", "/gfPortal/audit-log/service")
