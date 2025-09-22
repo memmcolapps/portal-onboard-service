@@ -15,6 +15,8 @@ public class AuditLogDto {
     private String activity;
     private String userAgent;
     private String ipAddress;
+    private String endpoint;
+    private String httpMethod;
     private String reason;
     private String role;
 
@@ -22,7 +24,7 @@ public class AuditLogDto {
     private Date timeStamp;
 
     public AuditLogDto(String id, String type, String username, String email, String role, String activity,
-                       String userAgent, String ipAddress, Date timeStamp, String reason) {
+                       String userAgent, String ipAddress, Date timeStamp, String reason, String endpoint,String httpMethod) {
         this.id = id;
         this.type = type;
         this.username = username;
@@ -33,6 +35,8 @@ public class AuditLogDto {
         this.timeStamp = timeStamp;
         this.reason = reason;
         this.role = role;
+        this.endpoint = endpoint;
+        this.httpMethod = httpMethod;
     }
 
     public AuditLogDto() {}
@@ -88,5 +92,21 @@ public class AuditLogDto {
 
     public void setRole(String role){
         this.role = role;
+    }
+
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public String getHttpMethod() {
+        return httpMethod;
+    }
+
+    public void setHttpMethod(String httpMethod) {
+        this.httpMethod = httpMethod;
     }
 }
