@@ -178,7 +178,6 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Override
     public Map<String, Object> getDashboardAnalytics(int year, int month) {
-        ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
 
         YearMonth ym = YearMonth.of(year, month);
         LocalDate startDate = ym.atDay(1);

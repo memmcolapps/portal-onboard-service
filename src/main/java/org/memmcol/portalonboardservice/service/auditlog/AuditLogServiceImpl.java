@@ -65,8 +65,8 @@ public class AuditLogServiceImpl implements AuditLogService {
                                 log.getIpAddress(),
                                 log.getCreatedAt(),
                                 log.getReason(),
-                                log.getHttpMethod(),
-                                log.getEndPoint()
+                                log.getEndPoint(),
+                                log.getHttpMethod()
                         ))
                         .collect(Collectors.toList());
                 response.put("data", result);
@@ -88,8 +88,9 @@ public class AuditLogServiceImpl implements AuditLogService {
                                 log.getIpAddress(),
                                 log.getCreatedAt(),
                                 log.getReason(),
-                                log.getHttpMethod(),
-                                log.getEndPoint()
+                                log.getEndPoint(),
+                                log.getHttpMethod()
+
                         ))
                         .collect(Collectors.toList());
                 response.put("data", result);
