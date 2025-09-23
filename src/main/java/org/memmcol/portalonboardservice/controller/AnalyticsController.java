@@ -59,9 +59,12 @@ public class AnalyticsController {
     }
 
     @GetMapping("/incident/report")
-    public ResponseEntity<?> getIncidentReport(@RequestParam(required = false) Boolean status) {
+    public ResponseEntity<?> getIncidentReport(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "0") int size,
+            @RequestParam(required = false) Boolean status) {
         try {
-            Map<String, Object> result = service.getIncidentReport(status);
+            Map<String, Object> result = service.getIncidentReport(status, page, size);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
