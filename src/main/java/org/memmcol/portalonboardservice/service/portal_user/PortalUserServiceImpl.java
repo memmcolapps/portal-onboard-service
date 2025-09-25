@@ -376,7 +376,7 @@ public class PortalUserServiceImpl implements PortalUserService {
     private Map<String, Object>  handleGenerateOtp(String username) {
         String otp = String.format("%04d", random.nextInt(10000));
 
-        String emailServiceUrl = "http://localhost:8081/smarte/email/api/send";
+        String emailServiceUrl = "http://localhost:8084/api/send";
 
         try {
             restTemplate.postForEntity(emailServiceUrl, Map.of(
