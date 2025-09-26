@@ -21,7 +21,9 @@ public interface PortalUserService {
 
     Map<String, Object> generateOtp(String username);
 
-    Map<String, Object> verifyOtp(String username, String otp, String password, String retypePassword);
+    Map<String, Object> verifyOtp(String username, String otp, String password);
 
     Map<String, Object> getRecentActivity();
+
+    Map<String, Object> changePassword(String username, String oldPassword, String password);
 }

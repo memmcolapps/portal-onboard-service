@@ -140,4 +140,6 @@ public interface PortalUserMapper {
     @Update("UPDATE portal_users SET password = #{password} WHERE Email = #{email}")
     int resetPassword(String email, String password);
 
+    @Update("UPDATE portal_users SET password = #{oldPwd} WHERE id = #{id}")
+    int changePassword(String email, String oldPwd, UUID id);
 }

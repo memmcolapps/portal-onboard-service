@@ -114,9 +114,19 @@ public class PortalUserController {
     }
 
     @PostMapping("/forget-password")
-    public ResponseEntity<?> verifyOtp(@RequestParam String username, @RequestParam String password, @RequestParam String retype_password, @RequestParam String otp) {
+    public ResponseEntity<?> verifyOtp(@RequestParam String username, @RequestParam String password, @RequestParam String otp) {
         try {
-            Map<String, Object> result = service.verifyOtp(username, otp, password, retype_password);
+            Map<String, Object> result = service.verifyOtp(username, otp, password);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> verifyChangePassword(@RequestParam String username, @RequestParam String oldPassword, @RequestParam String password) {
+        try {
+            Map<String, Object> result = service.changePassword(username, oldPassword, password);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

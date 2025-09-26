@@ -37,9 +37,6 @@ public class PortalUserServiceImpl implements PortalUserService {
     private static final Logger log = LoggerFactory.getLogger(PortalUserServiceImpl.class);
 
     @Autowired
-    private ExceptionAuditRepository exceptionAuditRepository;
-
-    @Autowired
     private HttpServletRequest httpServletRequest;
 
     @Autowired
@@ -59,20 +56,20 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Autowired private RestTemplate restTemplate;
 
-    private final IMap<String, Operator> authCache;
+    private final IMap<String, Operator> portalAuthCache;
 
-    private final IMap<String, String> otpCache;
+    private final IMap<String, String> portalOtpCache;
 
-    private final IMap<String, Boolean> verifiedUsers;
+    private final IMap<String, Boolean> portalVerifiedUsers;
 
     private final IMap<String, Boolean> portalOtpExpCache;
 
     private final Random random = new SecureRandom();
 
     public PortalUserServiceImpl(@Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
-        this.authCache = hazelcastInstance.getMap("portalAuthCache");
-        this.otpCache = hazelcastInstance.getMap("portalOtpCache");
-        this.verifiedUsers = hazelcastInstance.getMap("portalVerifiedUsers");
+        this.portalAuthCache = hazelcastInstance.getMap("portalAuthCache");
+        this.portalOtpCache = hazelcastInstance.getMap("portalOtpCache");
+        this.portalVerifiedUsers = hazelcastInstance.getMap("portalVerifiedUsers");
         this.portalOtpExpCache = hazelcastInstance.getMap("portalOtpExpCache");
     }
 
@@ -144,7 +141,7 @@ public class PortalUserServiceImpl implements PortalUserService {
             AuditLog auditLog = buildAuditLog(operatorAction, "Operator newly created", "operator", operator1, metadata);
             auditRepository.save(auditLog);
 
-            authCache.put(operator1.getId().toString(), operator1);
+            portalAuthCache.put(operator1.getId().toString(), operator1);
 
 //            handleAddCache(operator1);
             return ResponseMap.response(status.getSuccessCode(),
@@ -335,6 +332,58 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
+    @Override
+    public Map<String, Object> changePassword(String username, String oldPassword, String newPassword) {
+        try {
+            Operator user = handleUserValidation();
+
+            // Validate username and old password
+            if (!username.trim().equalsIgnoreCase(user.getEmail())) {
+                throw new GlobalExceptionHandler.NotFoundException("Invalid username");
+            }
+
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                throw new GlobalExceptionHandler.NotFoundException("Old password provided is incorrect");
+            }
+
+            // Encode and update new password
+            String newEncodedPassword = passwordEncoder.encode(newPassword);
+            int changePwd = portalUserMapper.changePassword(user.getEmail(), newEncodedPassword, user.getId());
+
+            if (changePwd == 0) {
+                throw new GlobalExceptionHandler.NotFoundException("Change password failed");
+            }
+
+            return ResponseMap.response(status.getSuccessCode(), "Password changed successfully", "");
+        } catch (Exception exception) {
+            log.error("Error occurred while [changing password]: {}", exception.getMessage().trim(), exception);
+            genericHandler.logAndSaveException(exception, "changing password");
+            throw exception;
+        }
+    }
+
+
+//    @Override
+//    public Map<String, Object> changePassword(String username, String oldPassword, String password) {
+//        try {
+//            Operator user = handleUserValidation();
+//            String oldPwd = passwordEncoder.encode(oldPassword);
+//
+//            if(oldPwd.trim().equalsIgnoreCase(user.getPassword()) && username.trim().equalsIgnoreCase(user.getEmail())) {
+//                int changePwd = portalUserMapper.changePassword(user.getEmail(), oldPwd, user.getId());
+//                if(changePwd == 0) throw new GlobalExceptionHandler.NotFoundException("Change password failed");
+//                return ResponseMap.response(status.getSuccessCode(), "Password changed successfully", "");
+//            } else {
+//                throw new GlobalExceptionHandler.NotFoundException("Old password provided is incorrect");
+//            }
+//        } catch (Exception exception){
+//            log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
+//            genericHandler.logAndSaveException(exception, "changing password");
+//            throw exception;
+//        }
+//
+//    }
+
     @Transactional
     @Override
     public Map<String, Object> generateOtp(String username) {
@@ -343,21 +392,19 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional
     @Override
-    public  Map<String, Object> verifyOtp(String email, String otp, String password, String retypePassword) {
+    public  Map<String, Object> verifyOtp(String email, String otp, String password) {
         try {
 
-            if(!password.equals(retypePassword)){
-                return ResponseMap.response(status.getNotFoundCode(), "Passwords do not match", "");
-            }
             Operator isOperator = portalUserMapper.findByAuthEmail(email);
             if (isOperator == null) {
                 throw new RuntimeException("User not found");
             }
-            String storedOtp = otpCache.get(email);
-            if (storedOtp != null && storedOtp.equals(otp)) {
-                otpCache.remove(email);
+            String storedOtp = portalOtpCache.get(email);
 
-                verifiedUsers.put(email, true, 2, TimeUnit.MINUTES);
+            if (storedOtp != null && storedOtp.equals(otp)) {
+                portalOtpCache.remove(email);
+
+                portalVerifiedUsers.put(email, true, 2, TimeUnit.MINUTES);
 
                 return handleForgetPassword(isOperator, password);
 
@@ -365,7 +412,6 @@ public class PortalUserServiceImpl implements PortalUserService {
             throw new GlobalExceptionHandler.NotFoundException("OTP verification failed");
 
         } catch (Exception exception){
-            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
             log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
             genericHandler.logAndSaveException(exception, "verifying otp");
             throw exception;
@@ -385,23 +431,21 @@ public class PortalUserServiceImpl implements PortalUserService {
                     "message", otp
             ), Void.class);
         } catch (RestClientException emailException) {
-            ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
             log.error("Failed to send OTP email to {}: {}", username, emailException.getMessage().trim(), emailException);
             genericHandler.logAndSaveException(emailException, "sending email");
             throw emailException;
         }
 
-        otpCache.put(username, otp);
+        portalOtpCache.put(username, otp);
         return ResponseMap.response(status.getSuccessCode(), "OTP Generated and sent successfully", "");
     }
 
 
     public Map<String, Object> handleForgetPassword(Operator user, String password) {
-        AuditLog AuditLog = new AuditLog();
         Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
         try {
 
-            if (!verifiedUsers.containsKey(user.getEmail())) {
+            if (!portalVerifiedUsers.containsKey(user.getEmail())) {
                 return ResponseMap.response(status.getNotFoundCode(), "OTP verification required before password change", "");
             }
 
@@ -409,9 +453,10 @@ public class PortalUserServiceImpl implements PortalUserService {
             if (passwordChangeResult == 0) {
                 return ResponseMap.response(status.getBlockCode(),  "Operator " + status.getBlockFailureDesc(), "");
             }
+
             user.setPassword("");
             // Remove OTP verification from cache after successful password reset
-            verifiedUsers.remove(user.getEmail());
+            portalVerifiedUsers.remove(user.getEmail());
 //			handleCacheUpdate(isOperator);
             AuditLog auditLog = buildAuditLog(user, "Reset password", "auth", null, metadata);
             auditRepository.save(auditLog);
