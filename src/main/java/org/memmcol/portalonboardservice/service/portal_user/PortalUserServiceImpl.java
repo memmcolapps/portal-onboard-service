@@ -362,28 +362,6 @@ public class PortalUserServiceImpl implements PortalUserService {
         }
     }
 
-
-//    @Override
-//    public Map<String, Object> changePassword(String username, String oldPassword, String password) {
-//        try {
-//            Operator user = handleUserValidation();
-//            String oldPwd = passwordEncoder.encode(oldPassword);
-//
-//            if(oldPwd.trim().equalsIgnoreCase(user.getPassword()) && username.trim().equalsIgnoreCase(user.getEmail())) {
-//                int changePwd = portalUserMapper.changePassword(user.getEmail(), oldPwd, user.getId());
-//                if(changePwd == 0) throw new GlobalExceptionHandler.NotFoundException("Change password failed");
-//                return ResponseMap.response(status.getSuccessCode(), "Password changed successfully", "");
-//            } else {
-//                throw new GlobalExceptionHandler.NotFoundException("Old password provided is incorrect");
-//            }
-//        } catch (Exception exception){
-//            log.error("Error occurred while [ACTION]: {}", exception.getMessage().trim(), exception);
-//            genericHandler.logAndSaveException(exception, "changing password");
-//            throw exception;
-//        }
-//
-//    }
-
     @Transactional
     @Override
     public Map<String, Object> generateOtp(String username) {

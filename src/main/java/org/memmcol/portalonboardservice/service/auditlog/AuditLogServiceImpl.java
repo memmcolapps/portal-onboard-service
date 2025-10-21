@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class AuditLogServiceImpl implements AuditLogService {
             if (page < 0 || size <= 0) {
                 List<AuditLogDto> result = auditRepository.findAllByCreator_Id(um.getId())
                         .stream()
+                        .sorted(Comparator.comparing(AuditLog::getCreatedAt).reversed())
                         .map(log -> new AuditLogDto(
                                 log.getId(),
                                 log.getType(),
