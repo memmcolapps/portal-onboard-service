@@ -259,7 +259,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Map<String, Object> getAll(String name, String email,String role, Boolean state, int page, int size) {
+    public Map<String, Object> getAll(String search,String role, Boolean state, int page, int size) {
         try {
 
             List<Operator> operators = portalUserMapper.getAllPortalUser();
@@ -276,16 +276,15 @@ public class PortalUserServiceImpl implements PortalUserService {
                         }
 
                         // Filter by name (case-insensitive)
-                        if (name != null && !name.isEmpty()) {
+                        if (search != null && !search.isEmpty()) {
+                            String searchLower = search.toLowerCase();
                             String fullName = o.getFirstname() + " " + o.getLastname();
-                            if (!fullName.toLowerCase().contains(name.toLowerCase())) {
-                                return false;
-                            }
-                        }
+                            String email = o.getEmail();
 
-                        // Filter by name (case-insensitive)
-                        if (email != null && !email.isEmpty()) {
-                            if (!o.getEmail().toLowerCase().contains(email)) {
+                            boolean matchesName = fullName.contains(searchLower);
+                            boolean matchesEmail = email.contains(searchLower);
+
+                            if (!matchesName && !matchesEmail) {
                                 return false;
                             }
                         }
