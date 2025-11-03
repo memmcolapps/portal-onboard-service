@@ -27,11 +27,14 @@ public class AuditLogController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAuditLogs(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String role,
             @RequestParam(value = "page", required = false,  defaultValue = "0") int page,
             @RequestParam(value = "size", required = false,  defaultValue = "0") int size
     ) {
         try {
-            Map<String, Object> result = auditLogService.getAuditLog(page, size);
+            Map<String, Object> result = auditLogService.getAuditLog(role,name,email,page, size);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

@@ -177,10 +177,28 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     @Transactional(readOnly = true)
 //    @Cacheable(value = "organizationCache", key = "'allOrgs'")
     @Override
-    public Map<String, Object> getOrganization() {
+    public Map<String, Object> getOrganization(String nameFilter,String statusFilter,int page, int size) {
         try {
 
             List<Organization> organizations = organizationMapper.getAllOrganizations();
+
+            if (nameFilter != null && !nameFilter.trim().isEmpty() || statusFilter != null && !statusFilter.trim().isEmpty()) {
+
+
+                String name = nameFilter != null ? nameFilter.trim().toLowerCase() : null;
+                String stat = statusFilter != null ? statusFilter.trim().toLowerCase() : null;
+
+                organizations = organizations.stream()
+                        .filter(org -> {
+                            boolean matchesName = ((name == null || name.isEmpty()) || (org.getBusinessName() != null && org.getBusinessName().toLowerCase().contains(name)));
+                            boolean matchesStatus = ((stat == null || stat.isEmpty()))
+                                    || (org.getStatus() != null &&
+                                    ((stat.equals("active") && org.getStatus()) ||
+                                            (stat.equals("suspended") && !org.getStatus())));
+                            return matchesName && matchesStatus;
+                        })
+                        .toList();
+            }
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 
             int totalOrganizations = organizations.size();
@@ -191,6 +209,23 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             Long overallFeeders = 0L;
             BigDecimal overallVending = BigDecimal.ZERO;
             BigDecimal overallBilling = BigDecimal.ZERO;
+
+            if (size <= 0) {
+                size = totalOrganizations == 0 ? 1 : totalOrganizations;
+            }
+            if (page < 0) {
+                page = 0;
+            }
+            int totalPages = (int) Math.ceil((double) totalOrganizations / size);
+
+            List<Organization> pagedOrganizations;
+            if (organizations.isEmpty()) {
+                pagedOrganizations = Collections.emptyList();
+            } else {
+                int fromIndex = Math.min(page * size, totalOrganizations);
+                int toIndex = Math.min(fromIndex + size, totalOrganizations);
+                pagedOrganizations = organizations.subList(fromIndex, toIndex);
+            }
 
             for (Organization org : organizations) {
                 if (org.getStatus()) {
@@ -250,7 +285,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             response.put("overallVending", overallVending);
             response.put("overallBilling", overallBilling);
             response.put("overallFeeder", overallFeeders);
-            response.put("organizations", organizations);
+            response.put("organizations", pagedOrganizations);
+            response.put("currentPage", page);
+            response.put("totalPages", totalPages);
+            response.put("pageSize", size);
 //            organizationCache.put("allOrgs", response);
             return ResponseMap.response(status.getSuccessCode(), "Organizations "+status.getDesc(), response);
 

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UUID;
 
 
-
 @RestController
 @RequestMapping("/gfPortal/service/organization")
 public class OnboardOrganizationController {
@@ -63,7 +62,7 @@ public class OnboardOrganizationController {
         userModel.setPhoneNumber(request.get("phoneNumber"));
 
         try {
-            if(file != null){
+            if (file != null) {
                 String fileUrl = fileStorageService.saveFile(file);
                 organization.setImage(fileUrl);
             }
@@ -97,19 +96,24 @@ public class OnboardOrganizationController {
 
         try {
 
-            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization,userModel);
+            Map<String, Object> result = onboardOrganizationService.updateOrganization(organization, userModel);
             return ResponseEntity.ok(result);
-        }catch (GlobalExceptionHandler.SQLServerException e) {
+        } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
         }
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Map<String, Object>> getOrganization() {
+    public ResponseEntity<Map<String, Object>> getOrganization(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "0") int size
+    ) {
         try {
-            Map<String, Object> result = onboardOrganizationService.getOrganization();
+            Map<String, Object> result = onboardOrganizationService.getOrganization(name, status,page,size);
             return ResponseEntity.ok(result);
-        }catch (GlobalExceptionHandler.SQLServerException e) {
+        } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
         }
     }
@@ -119,7 +123,7 @@ public class OnboardOrganizationController {
         try {
             Map<String, Object> result = onboardOrganizationService.getOrganizationById(id);
             return ResponseEntity.ok(result);
-        }catch (GlobalExceptionHandler.SQLServerException e) {
+        } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
         }
     }
@@ -129,7 +133,7 @@ public class OnboardOrganizationController {
         try {
             Map<String, Object> result = onboardOrganizationService.suspendOrganization(id, status);
             return ResponseEntity.ok(result);
-        }catch (GlobalExceptionHandler.SQLServerException e) {
+        } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
         }
     }

@@ -8,6 +8,7 @@ import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
+import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.model.user.Role;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
@@ -258,7 +259,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Transactional(readOnly = true)
     @Override
-    public Map<String, Object> getAll(String role, Boolean state) {
+    public Map<String, Object> getAll(String name, String email,String role, Boolean state, int page, int size) {
         try {
 
             List<Operator> operators = portalUserMapper.getAllPortalUser();
@@ -267,9 +268,24 @@ public class PortalUserServiceImpl implements PortalUserService {
             List<Operator> filteredUsers = operators.stream()
                     .filter(o -> {
                         // Filter by role
-                        if (!role.equalsIgnoreCase("all")) {
+                        if (role != null && !role.isEmpty()) {
                             String userRole = o.getRoles().get(0).getUserRole(); // Assuming first role is the main role
                             if (!userRole.equalsIgnoreCase(role)) {
+                                return false;
+                            }
+                        }
+
+                        // Filter by name (case-insensitive)
+                        if (name != null && !name.isEmpty()) {
+                            String fullName = o.getFirstname() + " " + o.getLastname();
+                            if (!fullName.toLowerCase().contains(name.toLowerCase())) {
+                                return false;
+                            }
+                        }
+
+                        // Filter by name (case-insensitive)
+                        if (email != null && !email.isEmpty()) {
+                            if (!o.getEmail().toLowerCase().contains(email)) {
                                 return false;
                             }
                         }
@@ -278,23 +294,39 @@ public class PortalUserServiceImpl implements PortalUserService {
                         if (state != null && o.isStatus() != state) {
                             return false;
                         }
-
                         return true;
                     })
                     .toList();
 
-            long totalPortalUsers = operators.size();
+            int totalFilteredUsers = filteredUsers.size();
+
+            if (size <= 0) {
+                size = totalFilteredUsers == 0 ? 1 : totalFilteredUsers;
+            }
+            if (page < 0) {
+                page = 0;
+            }
+
+            int totalPages = (int) Math.ceil((double) totalFilteredUsers / size);
+            int fromIndex = Math.min(page * size, totalFilteredUsers);
+            int toIndex = Math.min(fromIndex + size, totalFilteredUsers);
+
+            List<Operator> pagedUsers = filteredUsers.subList(fromIndex, toIndex);
 
             long  portalInActiveAdmin = operators.stream().filter(o -> !o.isActive()).count();
             long portalActiveAdmin = operators.stream().filter(o -> o.isActive()).count();
             long portalSuspendedAdmin = operators.stream().filter(o -> !o.isStatus()).count();
 
+
             Map<String, Object> result = new HashMap<>();
-            result.put("totalPortalUsers", totalPortalUsers);
+            result.put("totalPortalUsers", totalFilteredUsers);
             result.put("totalActiveAdmins", portalActiveAdmin);
             result.put("totalSuspendedAdmins", portalSuspendedAdmin);
             result.put("totalInActiveAdmins", portalInActiveAdmin);
-            result.put("operators", filteredUsers); // return filtered list
+            result.put("operators", pagedUsers); // return filtered list
+            result.put("currentPage", page);
+            result.put("totalPages", totalPages);
+            result.put("pageSize", size);
 
             return ResponseMap.response(
                     status.getSuccessCode(),
