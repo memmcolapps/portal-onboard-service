@@ -1,5 +1,6 @@
 package org.memmcol.portalonboardservice.controller;
 
+import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.service.auditlog.AuditLogService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +28,13 @@ public class AuditLogController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAuditLogs(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String role,
             @RequestParam(value = "page", required = false,  defaultValue = "0") int page,
             @RequestParam(value = "size", required = false,  defaultValue = "0") int size
     ) {
         try {
-            Map<String, Object> result = auditLogService.getAuditLog(role,name,email,page, size);
+            Map<String, Object> result = auditLogService.getAuditLog(role,search,page, size);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

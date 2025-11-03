@@ -138,12 +138,11 @@ public class PortalUserController {
     public ResponseEntity<?> getAll(
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Boolean status,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String search,
             @RequestParam(value = "page",required = false, defaultValue = "0") int page,
             @RequestParam(value = "size",required = false, defaultValue = "0") int size) {
         try {
-            Map<String, Object> result = service.getAll(name,email,role, status,page,size);
+            Map<String, Object> result = service.getAll(search,role, status,page,size);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

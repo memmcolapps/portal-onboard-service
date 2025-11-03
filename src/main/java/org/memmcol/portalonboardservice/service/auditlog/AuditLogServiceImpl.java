@@ -4,20 +4,12 @@ import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.AuditLogDto;
-import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.user.Operator;
-import org.memmcol.portalonboardservice.model.user.Role;
-import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
-import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -46,7 +38,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public Map<String, Object> getAuditLog(String role, String name, String email, int page, int size) {
+    public Map<String, Object> getAuditLog(String role, String search, int page, int size) {
         try {
             Operator um = handleUserValidation();
             Map<String, Object> response = new HashMap<>();
@@ -65,20 +57,20 @@ public class AuditLogServiceImpl implements AuditLogService {
                             }
                         }
 
-                        // Filter by name (first + last)
-                        if (name != null && !name.isEmpty()) {
+                        // Combined search (name OR email)
+                        if (search != null && !search.isEmpty()) {
+                            String searchLower = search.toLowerCase();
                             String fullName = (log.getCreator().getFirstname() + " " + log.getCreator().getLastname()).toLowerCase();
-                            if (!fullName.contains(name.toLowerCase())) {
+                            String email = log.getCreator().getEmail().toLowerCase();
+
+                            boolean matchesName = fullName.contains(searchLower);
+                            boolean matchesEmail = email.contains(searchLower);
+
+                            if (!matchesName && !matchesEmail) {
                                 return false;
                             }
                         }
 
-                        // Filter by email
-                        if (email != null && !email.isEmpty()) {
-                            if (!log.getCreator().getEmail().toLowerCase().contains(email.toLowerCase())) {
-                                return false;
-                            }
-                        }
 
                         return true;
                     })
