@@ -46,68 +46,87 @@ public class AuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public Map<String, Object> getAuditLog(int page, int size) {
+    public Map<String, Object> getAuditLog(String role, String name, String email, int page, int size) {
         try {
             Operator um = handleUserValidation();
             Map<String, Object> response = new HashMap<>();
 
-            // If page or size is null, 0, or less than 1, fetch all
-            if (page < 0 || size <= 0) {
-                List<AuditLogDto> result = auditRepository.findAllByCreator_Id(um.getId())
-                        .stream()
-                        .sorted(Comparator.comparing(AuditLog::getCreatedAt).reversed())
-                        .map(log -> new AuditLogDto(
-                                log.getId(),
-                                log.getType(),
-                                log.getCreator().getFirstname() + " " + log.getCreator().getLastname(),
-                                log.getCreator().getEmail(),
-                                log.getCreator().getRoles().get(0).getUserRole(),
-                                log.getDescription(),
-                                log.getUserAgent(),
-                                log.getIpAddress(),
-                                log.getCreatedAt(),
-                                log.getReason(),
-                                log.getEndPoint(),
-                                log.getHttpMethod()
-                        ))
-                        .collect(Collectors.toList());
-                response.put("data", result);
-                response.put("size", result.size());
+            // Fetch all logs by creator
+            List<AuditLog> logs = auditRepository.findAllByCreator_Id(um.getId());
 
-            } else {
-                Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-                Page<AuditLog> pagedResult = auditRepository.findAllByCreator_IdOrderByCreatedAtDesc(um.getId(),pageable);
+            // Apply filtering
+            List<AuditLog> filteredLogs = logs.stream()
+                    .filter(log -> {
+                        // Filter by role
+                        if (role != null && !role.isEmpty()) {
+                            String userRole = log.getCreator().getRoles().get(0).getUserRole();
+                            if (!userRole.equalsIgnoreCase(role)) {
+                                return false;
+                            }
+                        }
 
-                List<AuditLogDto> result = pagedResult.getContent().stream()
-                        .map(log -> new AuditLogDto(
-                                log.getId(),
-                                log.getType(),
-                                log.getCreator().getFirstname() + " " + log.getCreator().getLastname(),
-                                log.getCreator().getEmail(),
-                                log.getCreator().getRoles().get(0).getUserRole(),
-                                log.getDescription(),
-                                log.getUserAgent(),
-                                log.getIpAddress(),
-                                log.getCreatedAt(),
-                                log.getReason(),
-                                log.getEndPoint(),
-                                log.getHttpMethod()
+                        // Filter by name (first + last)
+                        if (name != null && !name.isEmpty()) {
+                            String fullName = (log.getCreator().getFirstname() + " " + log.getCreator().getLastname()).toLowerCase();
+                            if (!fullName.contains(name.toLowerCase())) {
+                                return false;
+                            }
+                        }
 
-                        ))
-                        .collect(Collectors.toList());
-                response.put("data", result);
-                response.put("page", pagedResult.getNumber());
-                response.put("totalData", pagedResult.getTotalElements());
-                response.put("size", pagedResult.getTotalPages());
-            }
+                        // Filter by email
+                        if (email != null && !email.isEmpty()) {
+                            if (!log.getCreator().getEmail().toLowerCase().contains(email.toLowerCase())) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    })
+                    .sorted(Comparator.comparing(AuditLog::getCreatedAt).reversed())
+                    .collect(Collectors.toList());
+
+            // ===== Pagination =====
+            int totalFiltered = filteredLogs.size();
+            if (size <= 0) size = totalFiltered == 0 ? 1 : totalFiltered;
+            if (page < 0) page = 0;
+
+            int fromIndex = Math.min(page * size, totalFiltered);
+            int toIndex = Math.min(fromIndex + size, totalFiltered);
+            List<AuditLog> pagedLogs = filteredLogs.subList(fromIndex, toIndex);
+
+            // ===== Map to DTO =====
+            List<AuditLogDto> result = pagedLogs.stream()
+                    .map(log -> new AuditLogDto(
+                            log.getId(),
+                            log.getType(),
+                            log.getCreator().getFirstname() + " " + log.getCreator().getLastname(),
+                            log.getCreator().getEmail(),
+                            log.getCreator().getRoles().get(0).getUserRole(),
+                            log.getDescription(),
+                            log.getUserAgent(),
+                            log.getIpAddress(),
+                            log.getCreatedAt(),
+                            log.getReason(),
+                            log.getEndPoint(),
+                            log.getHttpMethod()
+                    ))
+                    .collect(Collectors.toList());
+
+            // ===== Response =====
+            response.put("data", result);
+            response.put("currentPage", page);
+            response.put("pageSize", size);
+            response.put("totalPages", (int) Math.ceil((double) totalFiltered / size));
+            response.put("totalFilteredLogs", totalFiltered);
+
             return ResponseMap.response(status.getSuccessCode(), "Logs " + status.getDesc(), response);
 
         } catch (Exception exception) {
             log.error("Error occurred while fetching audit logs: {}", exception.getMessage().trim(), exception);
             genericHandler.logAndSaveException(exception, "fetching audit");
-
             throw exception;
         }
     }
+
 
 }
