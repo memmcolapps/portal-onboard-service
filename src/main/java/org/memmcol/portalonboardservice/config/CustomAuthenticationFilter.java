@@ -137,7 +137,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 		token.put("user_info", operator);
 		token.put("access_token", access_token);
 		resp.put("responsedata", token);
-		operatorMapper.updateLoginState(userPrincipal.getUsername(), LocalDateTime.now(ZoneId.of("Africa/Lagos")));
+		operatorMapper.updateLoginState(userPrincipal.getUsername(), LocalDateTime.now());
 		// Set content type to JSON
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 

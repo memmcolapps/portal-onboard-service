@@ -9,7 +9,7 @@ import org.memmcol.portalonboardservice.model.user.Organization;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "portal-audit-logs")
@@ -42,11 +42,11 @@ public class AuditLog {
 
     private String httpMethod;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
+    private LocalDateTime createdAt;
 
     public AuditLog() {
-        this.createdAt = new Date();
+        this.createdAt = LocalDateTime.now();
     }
 
     public String getId() {
@@ -105,11 +105,11 @@ public class AuditLog {
         this.ipAddress = ipAddress;
     }
 
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

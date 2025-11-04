@@ -87,8 +87,8 @@ public interface PortalUserMapper {
             @Result(property = "id", column = "id"),
             @Result(property = "lastActive", column = "last_active"),
             @Result(property = "phoneNo", column = "phone_no"),
-            @Result(property = "createdAt", column = "Created_at"),
-            @Result(property = "updatedAt", column = "Updated_at"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "roles", column = "id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
 

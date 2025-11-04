@@ -2,8 +2,9 @@ package org.memmcol.portalonboardservice.model.audit;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuditLogDto {
@@ -20,11 +21,11 @@ public class AuditLogDto {
     private String reason;
     private String role;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date timeStamp;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
+    private LocalDateTime timeStamp;
 
     public AuditLogDto(String id, String type, String username, String email, String role, String activity,
-                       String userAgent, String ipAddress, Date timeStamp, String reason, String endpoint,String httpMethod) {
+                       String userAgent, String ipAddress, LocalDateTime timeStamp, String reason, String endpoint,String httpMethod) {
         this.id = id;
         this.type = type;
         this.username = username;
@@ -75,8 +76,8 @@ public class AuditLogDto {
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
-    public Date getTimeStamp() { return timeStamp; }
-    public void setTimeStamp(Date timeStamp) { this.timeStamp = timeStamp; }
+    public LocalDateTime getTimeStamp() { return timeStamp; }
+    public void setTimeStamp(LocalDateTime timeStamp) { this.timeStamp = timeStamp; }
 
     public String getReason() {
         return reason;
