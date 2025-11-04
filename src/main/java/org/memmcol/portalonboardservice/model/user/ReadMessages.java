@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import lombok.*;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -21,10 +22,10 @@ public class ReadMessages implements Serializable {
     private boolean status;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date readAt;
+    private LocalDateTime readAt;
 
     public ReadMessages() {
-        this.readAt = new Date();
+        this.readAt = LocalDateTime.now();
     }
 
     public UUID getId() {
