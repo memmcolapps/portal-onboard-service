@@ -21,7 +21,7 @@ public class AuditLogDto {
     private String reason;
     private String role;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSSSSS")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timeStamp;
 
     public AuditLogDto(String id, String type, String username, String email, String role, String activity,
