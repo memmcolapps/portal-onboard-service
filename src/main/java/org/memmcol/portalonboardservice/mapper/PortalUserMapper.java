@@ -103,10 +103,10 @@ public interface PortalUserMapper {
             @Result(property = "id", column = "id"),
             @Result(property = "phoneNo", column = "phone_no"),
             @Result(property = "lastActive", column = "last_active"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "roles", column = "id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.PortalUserMapper.getRolesByOperatorId")),
-            @Result(property = "createdAt", column = "Created_at"),
-            @Result(property = "updatedAt", column = "Updated_at"),
     })
     Operator findByAuthEmail(String email);
 

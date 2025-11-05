@@ -55,6 +55,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
 	private GenericHandler genericHandler;
 
+	private final ObjectMapper objectMapper; // ✅ Injected ObjectMapper
+
 //	private HazelcastInstance hazelcastInstance;
 	// Define the required headers
 	private static final String ADMIN_HEADER_KEY = "custom";
@@ -66,13 +68,15 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 	public CustomAuthenticationFilter(
 			AuthenticationManager authenticationManager,
 			PortalUserMapper operatorMapper,
-			AuditRepository auditRepository, HazelcastInstance hazelcastInstance, GenericHandler genericHandler) {
+			AuditRepository auditRepository, HazelcastInstance hazelcastInstance, GenericHandler genericHandler,
+			ObjectMapper objectMapper) {
 		this.authenticationManager = authenticationManager;
 		this.operatorMapper = operatorMapper;
 		this.auditRepository = auditRepository;
 		this.auditCache = hazelcastInstance.getMap("auditCache");
 		this.authCache = hazelcastInstance.getMap("authCache");
 		this.genericHandler = genericHandler;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -115,6 +119,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 				.sign(algorithm);
 
 		Operator operator = operatorMapper.findByAuthEmail(userPrincipal.getUsername());
+//		operator.getCreatedAt().toString();
 		operator.setPassword("");
 		AuditLog auditLog = buildAuditLog(operator, "Logged in", "auth", null, metadata);
 		auditRepository.save(auditLog);
@@ -142,7 +147,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
 		// Write the response as JSON
-		ObjectMapper objectMapper = new ObjectMapper();
+//		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.writeValue(response.getOutputStream(), resp);
 
 	}
