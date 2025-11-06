@@ -195,6 +195,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             long totalUnresolved = incidentReport.size() - totalResolved;
 
+            List<IncidentReport> incidentReportsLimited = incidentReport.stream().limit(5).collect(Collectors.toList());
+
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
                     .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
@@ -290,6 +292,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             totalMonthlySummary.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
             totalMonthlySummary.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
 
+            Map<String, Object> cardData = new HashMap<>();
+            cardData.put("totalUtilityCompany",  organizations.size());
+            cardData.put("totalCustomers",  totalCustomers);
+            cardData.put("totalResolvedIncident", totalResolved); // TODO
+            cardData.put("totalUnresolvedIncident", totalUnresolved); // TODO
+
             // Build Final Response
             Map<String, Object> response = new HashMap<>();
             response.put("dailyReports", dailyReports);            // raw daily reports
@@ -298,11 +306,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("monthlyReports", monthlyReports);        // raw monthly reports
             response.put("monthlySummaries", monthlySummaries);
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
-            response.put("totalUtilityCompany", organizations.size());
-            response.put("totalCustomers", totalCustomers);
-            response.put("totalResolvedIncident", totalResolved); // TODO
-            response.put("totalUnresolvedIncident", totalUnresolved); // TODO
-            response.put("incidentReports", incidentReport); // TODO
+            response.put("cardData", cardData);
+//            response.put("totalUtilityCompany", organizations.size());
+//            response.put("totalCustomers", totalCustomers);
+//            response.put("totalResolvedIncident", totalResolved); // TODO
+//            response.put("totalUnresolvedIncident", totalUnresolved); // TODO
+            response.put("incidentReports", incidentReportsLimited); // TODO
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",

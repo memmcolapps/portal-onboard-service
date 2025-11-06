@@ -44,7 +44,7 @@ public interface AnalyticsMapper {
     @Select("UPDATE incident_report SET status = #{status} WHERE id = #{id}")
     IncidentReport getIncidentReportResolve(Boolean status, UUID id);
 
-    @Select("SELECT * FROM incident_report ORDER BY created_at DESC LIMIT 5")
+    @Select("SELECT * FROM incident_report ORDER BY created_at DESC")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
