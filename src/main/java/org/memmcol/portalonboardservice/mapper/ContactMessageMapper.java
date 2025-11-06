@@ -38,14 +38,8 @@ public interface ContactMessageMapper {
     FROM contact_messages cm
     LEFT JOIN contact_message_reads cmr ON cm.id = cmr.message_id AND cmr.portal_user_id = #{userId}
     WHERE 1=1
-    <if test='criteria.organizationName != null and criteria.organizationName != ""'>
-        AND cm.organization_name LIKE CONCAT('%', #{criteria.organizationName}, '%')
-    </if>
     <if test='criteria.organizationSize != null and criteria.organizationSize != ""'>
         AND cm.organization_size = #{criteria.organizationSize}
-    </if>
-    <if test='criteria.email != null and criteria.email != ""'>
-        AND cm.email LIKE CONCAT('%', #{criteria.email}, '%')
     </if>
     <if test='criteria.status != null and criteria.status != ""'>
         AND (
@@ -59,16 +53,12 @@ public interface ContactMessageMapper {
             </choose>
         )
     </if>
-    <if test='criteria.startDate != null'>
-        AND cm.created_at &gt;= #{criteria.startDate}
+    <if test='criteria.dateEntered != null'>
+        AND cm.created_at &gt;= #{criteria.dateEntered}
     </if>
-    <if test='criteria.endDate != null'>
-        AND cm.created_at &lt;= #{criteria.endDate}
-    </if>
-    <if test='criteria.searchTerm != null and criteria.searchTerm != ""'>
-        AND (cm.organization_name LIKE CONCAT('%', #{criteria.searchTerm}, '%')
-             OR cm.email LIKE CONCAT('%', #{criteria.searchTerm}, '%')
-             OR cm.message LIKE CONCAT('%', #{criteria.searchTerm}, '%'))
+    <if test='search != null and search != ""'>
+        AND (LOWER(cm.organization_name) LIKE CONCAT('%', LOWER(#{search}), '%')
+             OR LOWER(cm.email) LIKE CONCAT('%', LOWER(#{search}), '%'))
     </if>
     ORDER BY cm.created_at DESC
     </script>
@@ -85,7 +75,7 @@ public interface ContactMessageMapper {
             @Result(property = "readMessages", column = "id",
                     one = @One(select = "getReadMessagesByMessageIdAndUser"))
     })
-    List<ContactMessage> searchContactMessages(@Param("criteria") ContactMessageSearchCriteria criteria,
+    List<ContactMessage> searchContactMessages(@Param("search") String search,@Param("criteria") ContactMessageSearchCriteria criteria,
                                                @Param("userId") UUID userId);
 
     @Select("SELECT * FROM contact_message_reads WHERE message_id = #{messageId} AND portal_user_id = #{userId}")

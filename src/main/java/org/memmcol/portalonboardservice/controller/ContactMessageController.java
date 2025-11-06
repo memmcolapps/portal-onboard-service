@@ -48,26 +48,19 @@ public class ContactMessageController {
 
     @GetMapping("/get")
     public ResponseEntity<Map<String, Object>> searchMessages(
-            @RequestParam(required = false) String organizationName,
-            @RequestParam(required = false) String organizationSize,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate,
             @RequestParam(required = false) String searchTerm,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
+            @RequestParam(required = false) String organizationSize,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date dateEntered,
+            @RequestParam(required = false,defaultValue = "0") int page,
+            @RequestParam(required = false,defaultValue = "0") int size) {
         try {
             ContactMessageSearchCriteria criteria = new ContactMessageSearchCriteria();
-            criteria.setOrganizationName(organizationName);
             criteria.setOrganizationSize(organizationSize);
-            criteria.setEmail(email);
             criteria.setStatus(status);
-            criteria.setStartDate(startDate);
-            criteria.setEndDate(endDate);
-            criteria.setSearchTerm(searchTerm);
+            criteria.setDateEntered(dateEntered);
 
-            Map<String, Object> result = contactService.searchMessages(criteria, page, size);
+            Map<String, Object> result = contactService.searchMessages(searchTerm,criteria, page, size);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);

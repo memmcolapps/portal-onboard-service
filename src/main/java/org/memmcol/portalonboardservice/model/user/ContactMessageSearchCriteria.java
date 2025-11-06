@@ -10,22 +10,10 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ContactMessageSearchCriteria {
-    private String organizationName;
     private String organizationSize;
-    private String email;
     private String status; // "New" or "Read"
-    private Date startDate;
-    private Date endDate;
-    private String searchTerm; // For general search across multiple fields
+    private Date dateEntered;
 
-
-    public String getOrganizationName() {
-        return organizationName;
-    }
-
-    public void setOrganizationName(String organizationName) {
-        this.organizationName = organizationName;
-    }
 
     public String getOrganizationSize() {
         return organizationSize;
@@ -33,14 +21,6 @@ public class ContactMessageSearchCriteria {
 
     public void setOrganizationSize(String organizationSize) {
         this.organizationSize = organizationSize;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getStatus() {
@@ -51,27 +31,12 @@ public class ContactMessageSearchCriteria {
         this.status = status;
     }
 
-    public Date getStartDate() {
-        return startDate;
+    public Date getDateEntered() {
+        return dateEntered;
     }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
+    public void setDateEntered(Date dateEntered) {
+        this.dateEntered = dateEntered;
     }
 
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getSearchTerm() {
-        return searchTerm;
-    }
-
-    public void setSearchTerm(String searchTerm) {
-        this.searchTerm = searchTerm;
-    }
 }

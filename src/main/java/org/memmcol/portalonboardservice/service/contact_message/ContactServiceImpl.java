@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
@@ -96,13 +97,13 @@ public class ContactServiceImpl implements ContactService{
     }
 
     @Override
-    public Map<String, Object> searchMessages(ContactMessageSearchCriteria criteria, int page, int size) {
+    public Map<String, Object> searchMessages(String search,ContactMessageSearchCriteria criteria, int page, int size) {
         try {
 
             Operator operatorAction = handleUserValidation();
             UUID currentOperator = operatorAction.getId();
 
-            List<ContactMessage> filteredMessages = contactMessageMapper.searchContactMessages(criteria,currentOperator);
+            List<ContactMessage> filteredMessages = contactMessageMapper.searchContactMessages(search,criteria,currentOperator);
             int totalCount = filteredMessages.size();
 
             List<ContactMessage> paginatedMessages;
@@ -110,7 +111,7 @@ public class ContactServiceImpl implements ContactService{
             if (size == 0) {
                 paginatedMessages = filteredMessages;
             } else {
-                int fromIndex = Math.min(page * size, totalCount);
+                int fromIndex = Math.min(0,page * size);
                 int toIndex = Math.min(fromIndex + size, totalCount);
 
                 if (fromIndex > toIndex) {
