@@ -22,17 +22,17 @@ public class AnalyticsController {
 
     @GetMapping("/all")
     public ResponseEntity<?> getAnalytics(
-//            @RequestParam(required = false) Integer year,
-//            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) LocalDate day) {
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
         try {
             // Default to current date if params missing
-//            LocalDate today = LocalDate.now(ZoneOffset.UTC);
-//            int resolvedYear = (year != null) ? year : today.getYear();
-//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            int resolvedYear = (year != null) ? year : today.getYear();
+            int resolvedMonth = (month != null) ? month : today.getMonthValue();
 //            int resolvedDay = (day != null) ? day : 0; // keep nullable
 
-            Map<String, Object> result = service.getAnalytics(day);
+            Map<String, Object> result = service.getAnalytics(resolvedYear, resolvedMonth);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
@@ -42,16 +42,16 @@ public class AnalyticsController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboardAnalytics(
-//            @RequestParam(required = false) Integer year,
-//            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) LocalDate day) {
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
         try {
             // Default to current date if params missing
-//            LocalDate today = LocalDate.now(ZoneOffset.UTC);
-//            int resolvedYear = (year != null) ? year : today.getYear();
-//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
+            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+            int resolvedYear = (year != null) ? year : today.getYear();
+            int resolvedMonth = (month != null) ? month : today.getMonthValue();
 
-            Map<String, Object> result = service.getDashboardAnalytics(day);
+            Map<String, Object> result = service.getDashboardAnalytics(resolvedYear, resolvedMonth);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
