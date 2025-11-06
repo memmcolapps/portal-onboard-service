@@ -8,9 +8,9 @@ import java.util.UUID;
 public interface AnalyticsService {
 //    Map<String, Object> getAnalytics(int resolvedYear, int resolvedMonth, Integer resolvedDay);
 
-    Map<String, Object> getAnalytics(LocalDate day);
+    Map<String, Object> getAnalytics(int year, int month);
 
-    Map<String, Object> getDashboardAnalytics(LocalDate day);
+    Map<String, Object> getDashboardAnalytics(int resolvedYear, int resolvedMonth);
 
     Map<String, Object> getIncidentReport(Boolean status, int page, int size);
 
