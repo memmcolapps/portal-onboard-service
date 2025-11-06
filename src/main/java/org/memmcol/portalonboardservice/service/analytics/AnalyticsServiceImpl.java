@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.TextStyle;
 import java.util.*;
@@ -47,8 +48,14 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     private ExceptionAuditRepository exceptionAuditRepository;
 
     @Override
-    public Map<String, Object> getAnalytics(int year, int month) {
+    public Map<String, Object> getAnalytics(LocalDate day) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
+
+        LocalDate localDate = (day != null) ? day : LocalDate.now(ZoneOffset.UTC);
+
+        int year = localDate.getYear();
+        int month = localDate.getMonthValue();
+        int dayOfMonth = (day != null) ? localDate.getDayOfMonth() : 0;
 
         YearMonth ym = YearMonth.of(year, month);
         LocalDate startDate = ym.atDay(1);
@@ -61,8 +68,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
-                    .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
-                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
+                    .findByReportTypeAndCreatedAtAndServiceNameIn(
+                            "DAILY", startDate.toString(), SERVICES
                     );
 
             // Fetch monthly reports
@@ -177,7 +184,13 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     }
 
     @Override
-    public Map<String, Object> getDashboardAnalytics(int year, int month) {
+    public Map<String, Object> getDashboardAnalytics(LocalDate day) {
+
+        LocalDate localDate = (day != null) ? day : LocalDate.now(ZoneOffset.UTC);
+
+        int year = localDate.getYear();
+        int month = localDate.getMonthValue();
+        int dayOfMonth = (day != null) ? localDate.getDayOfMonth() : 0;
 
         YearMonth ym = YearMonth.of(year, month);
         LocalDate startDate = ym.atDay(1);
@@ -196,8 +209,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
-                    .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
-                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
+                    .findByReportTypeAndCreatedAtAndServiceNameIn(
+                            "DAILY", startDate.toString(), SERVICES
                     );
 
             // Fetch monthly reports

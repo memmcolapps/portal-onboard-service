@@ -12,5 +12,5 @@ public interface ContactService {
 
     Map<String, Object> addMessage(ContactMessage messages);
     Map<String, Object> addReadMessage(UUID msgId);
-    Map<String, Object> searchMessages(ContactMessageSearchCriteria criteria, int page, int size);
+    Map<String, Object> searchMessages(String search,ContactMessageSearchCriteria searchTerm, int page, int size);
 }
