@@ -49,7 +49,6 @@ public class AnalyticsController {
             // Default to current date if params missing
             LocalDate today = LocalDate.now(ZoneOffset.UTC);
             int resolvedYear = (year != null) ? year : today.getYear();
-//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
             LocalDate resolvedDate = (date != null)
                     ? date
                     : LocalDate.now(ZoneOffset.UTC);

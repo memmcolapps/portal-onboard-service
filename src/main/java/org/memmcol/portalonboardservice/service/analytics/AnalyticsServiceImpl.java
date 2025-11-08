@@ -48,16 +48,8 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     public Map<String, Object> getAnalytics(int year, LocalDate date) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
 
-//           YearMonth ym = YearMonth.of(year, month);
-//           LocalDate startDate = ym.atDay(1);
-//           LocalDate endDate = ym.atEndOfMonth();
-//           LocalDateTime startOfDay = date.atStartOfDay();      // 2025-10-07T00:00
-//           LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
            LocalDate startOfMonth = date.withDayOfMonth(1);
            LocalDate endOfMonth = date.withDayOfMonth(date.lengthOfMonth());
-
-//           LocalDateTime startOfMonthDateTime = startOfMonth.atStartOfDay();
-//           LocalDateTime endOfMonthDateTime = endOfMonth.atTime(LocalTime.MAX);
 
         try {
 

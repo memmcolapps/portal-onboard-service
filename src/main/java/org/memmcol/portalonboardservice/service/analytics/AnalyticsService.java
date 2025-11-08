@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface AnalyticsService {
-//    Map<String, Object> getAnalytics(int resolvedYear, int resolvedMonth, Integer resolvedDay);
 
     Map<String, Object> getAnalytics(int year, LocalDate resolvedDate);
 
