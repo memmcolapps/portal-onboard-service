@@ -16,10 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,22 +45,36 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     private ExceptionAuditRepository exceptionAuditRepository;
 
        @Override
-    public Map<String, Object> getAnalytics(int year, int month) {
+    public Map<String, Object> getAnalytics(int year, LocalDate date) {
         ExceptionErrorLogs exceptionErrorLogs = new ExceptionErrorLogs();
 
-        YearMonth ym = YearMonth.of(year, month);
-        LocalDate startDate = ym.atDay(1);
-        LocalDate endDate = ym.atEndOfMonth();
+//           YearMonth ym = YearMonth.of(year, month);
+//           LocalDate startDate = ym.atDay(1);
+//           LocalDate endDate = ym.atEndOfMonth();
+//           LocalDateTime startOfDay = date.atStartOfDay();      // 2025-10-07T00:00
+//           LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+           LocalDate startOfMonth = date.withDayOfMonth(1);
+           LocalDate endOfMonth = date.withDayOfMonth(date.lengthOfMonth());
+
+//           LocalDateTime startOfMonthDateTime = startOfMonth.atStartOfDay();
+//           LocalDateTime endOfMonthDateTime = endOfMonth.atTime(LocalTime.MAX);
 
         try {
+
+            List<IncidentReport> incidentReport = analyticsMapper.getIncidentReport();
+
+            long incidentCount  = incidentReport.stream().filter(ic -> ic.getCreatedAt().toLocalDate().isEqual(date)).count();
+
             // Fetch utility companies
             List<Organization> organizations = analyticsMapper.getAllOrganizations();
             long activeCount = organizations.stream().filter(Organization::getStatus).count();
 
+            long avgMinutes = calculateAverageRecoveryTime(incidentReport);
+
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
                     .findByReportTypeAndCreatedAtBetweenAndServiceNameIn(
-                            "DAILY", startDate.toString(), endDate.toString(), SERVICES
+                            "DAILY", startOfMonth.toString(), endOfMonth.toString(), SERVICES
                     );
 
             // Fetch monthly reports
@@ -78,7 +89,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             List<Map<String, Object>> dailySummaries = new ArrayList<>();
             for (Map.Entry<String, List<UptimeReport>> entry : reportsByDate.entrySet()) {
-                String date = entry.getKey();
+                String dat = entry.getKey();
                 List<UptimeReport> reportsForDay = entry.getValue();
 
                 long up = reportsForDay.stream().mapToLong(UptimeReport::getUptimeMinutes).sum();
@@ -86,7 +97,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                 long total = up + down;
 
                 Map<String, Object> summary = new HashMap<>();
-                summary.put("date", date);
+                summary.put("date", dat);
                 summary.put("services", reportsForDay.stream().map(UptimeReport::getServiceName).toList());
                 summary.put("uptimeMinutes", up);
                 summary.put("downtimeMinutes", down);
@@ -149,6 +160,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             totalMonthlySummary.put("uptimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalUp * 100.0 / monthlyTotal));
             totalMonthlySummary.put("downtimePercent", monthlyTotal == 0 ? 0 : (monthlyTotalDown * 100.0 / monthlyTotal));
 
+            Map<String, Object> cardData = new HashMap<>();
+            cardData.put("totalUtilityCompany", organizations.size());
+            cardData.put("activeUtilityCompany", activeCount);
+            cardData.put("averageRecoveryTime", avgMinutes);
+            cardData.put("incidentReport", incidentCount);
+
             // Build Final Response
             Map<String, Object> response = new HashMap<>();
             response.put("dailyReports", dailyReports);            // raw daily reports
@@ -157,10 +174,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("monthlyReports", monthlyReports);        // raw monthly reports
             response.put("monthlySummaries", monthlySummaries);
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
-            response.put("totalUtilityCompany", organizations.size());
-            response.put("activeUtilityCompany", activeCount);
-            response.put("incidentReport", 0); // TODO
-            response.put("averageRecoveryTime", 0); // TODO
+            response.put("cardData", cardData);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",
@@ -175,6 +189,20 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             exceptionAuditRepository.save(exceptionErrorLogs);
             throw exception;
         }
+    }
+
+    public long calculateAverageRecoveryTime(List<IncidentReport> incidents) {
+
+        return (long) incidents.stream()
+                .filter(IncidentReport::getStatus)                    // only resolved incidents
+                .filter(i -> i.getCreatedAt() != null)
+                .filter(i -> i.getUpdatedAt() != null)
+                .mapToLong(i -> Duration.between(
+                        i.getCreatedAt(),
+                        i.getUpdatedAt()
+                ).toMinutes())
+                .average()
+                .orElse(0);
     }
 
     @Override
@@ -307,11 +335,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("monthlySummaries", monthlySummaries);
             response.put("totalMonthlySummary", totalMonthlySummary); // overall monthly
             response.put("cardData", cardData);
-//            response.put("totalUtilityCompany", organizations.size());
-//            response.put("totalCustomers", totalCustomers);
-//            response.put("totalResolvedIncident", totalResolved); // TODO
-//            response.put("totalUnresolvedIncident", totalUnresolved); // TODO
-            response.put("incidentReports", incidentReportsLimited); // TODO
+            response.put("incidentReports", incidentReportsLimited);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Analytics summary fetched successfully",

@@ -3,6 +3,7 @@ package org.memmcol.portalonboardservice.controller;
 import org.memmcol.portalonboardservice.service.analytics.AnalyticsService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,19 +21,39 @@ public class AnalyticsController {
     @Autowired private AnalyticsService service;
     @Autowired private GlobalExceptionHandler exception;
 
+//    @GetMapping("/all")
+//    public ResponseEntity<?> getAnalytics(
+//            @RequestParam(required = false) Integer year,
+//            @RequestParam(required = false) Integer month,
+//            @RequestParam(required = false) Integer day) {
+//        try {
+//            // Default to current date if params missing
+//            LocalDate today = LocalDate.now(ZoneOffset.UTC);
+//            int resolvedYear = (year != null) ? year : today.getYear();
+//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
+////            int resolvedDay = (day != null) ? day : 0; // keep nullable
+//
+//            Map<String, Object> result = service.getAnalytics(resolvedYear, resolvedMonth);
+//
+//            return ResponseEntity.ok(result);
+//        } catch (GlobalExceptionHandler.SQLServerException e) {
+//            return handleException(e);
+//        }
+//    }
+
     @GetMapping("/all")
     public ResponseEntity<?> getAnalytics(
             @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) Integer month,
-            @RequestParam(required = false) Integer day) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         try {
             // Default to current date if params missing
             LocalDate today = LocalDate.now(ZoneOffset.UTC);
             int resolvedYear = (year != null) ? year : today.getYear();
-            int resolvedMonth = (month != null) ? month : today.getMonthValue();
-//            int resolvedDay = (day != null) ? day : 0; // keep nullable
-
-            Map<String, Object> result = service.getAnalytics(resolvedYear, resolvedMonth);
+//            int resolvedMonth = (month != null) ? month : today.getMonthValue();
+            LocalDate resolvedDate = (date != null)
+                    ? date
+                    : LocalDate.now(ZoneOffset.UTC);
+            Map<String, Object> result = service.getAnalytics(resolvedYear, resolvedDate);
 
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {

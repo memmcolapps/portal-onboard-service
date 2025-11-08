@@ -22,7 +22,7 @@ public interface AnalyticsMapper {
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
-            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "organization", column = "org_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
             @Result(property = "user", column = "user_id",
@@ -48,11 +48,14 @@ public interface AnalyticsMapper {
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
-            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "organization", column = "org_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
             @Result(property = "user", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
     })
     List<IncidentReport> incidentReportResolveAnalytics();
+
+    @Select("SELECT COUNT(*) FROM incident_report")
+    long getIncidentReportCount();
 }
