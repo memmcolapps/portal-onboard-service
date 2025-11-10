@@ -67,6 +67,11 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Operator um = handleUserValidation();
 
+            RegionBhubServiceCenter n = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
+            if(n != null){
+                throw new GlobalExceptionHandler.NotFoundException("Node " + status.getExistDesc());
+            }
+
             Node node = new Node();
             node.setName(request.getName());
             node.setOrgId(request.getOrgId());
@@ -120,6 +125,11 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator um = handleUserValidation();
+
+            SubStationTransformerFeederLine sub = nodeMapper.verifySubNode(request.getAssetId(), request.getOrgId());
+            if(sub != null){
+                throw new GlobalExceptionHandler.NotFoundException("Node " + status.getExistDesc());
+            }
 
             Node node = new Node();
             node.setName(request.getName());
