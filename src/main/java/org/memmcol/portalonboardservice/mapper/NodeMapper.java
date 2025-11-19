@@ -120,4 +120,13 @@ public interface NodeMapper {
             @Result(property = "orgId", column = "org_id")
     })
     SubStationTransformerFeederLine verifySubNode(String regionId, UUID orgId);
+
+    @Select("SELECT * FROM region_bhub_service_centers WHERE region_id = #{regionId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "nodeId", column = "node_id"),
+            @Result(property = "regionId", column = "region_id"),
+            @Result(property = "orgId", column = "org_id")
+    })
+    Boolean existByRegionId(String regionId);
 }

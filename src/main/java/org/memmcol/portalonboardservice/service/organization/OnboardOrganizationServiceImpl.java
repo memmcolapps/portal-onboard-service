@@ -4,6 +4,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.components.GenericHandler;
+import org.memmcol.portalonboardservice.mapper.NodeMapper;
 import org.memmcol.portalonboardservice.mapper.OrganizationMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
@@ -37,6 +38,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
 
     private final OrganizationMapper organizationMapper;
+    private final NodeMapper nodeMapper;
     private final ExceptionAuditRepository exceptionAuditRepository;
     private static final Logger log = LoggerFactory.getLogger(OnboardOrganizationServiceImpl.class);
 
@@ -62,9 +64,11 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
     // Other mappers can be added as needed
     public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
+                                          NodeMapper nodeMapper,
                                           ExceptionAuditRepository exceptionAuditRepository,
                                           @Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
         this.organizationMapper = organizationMapper;
+        this.nodeMapper = nodeMapper;
         this.exceptionAuditRepository = exceptionAuditRepository;
         this.organizationCache = hazelcastInstance.getMap("organizationCache");
     }
@@ -89,6 +93,26 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             organizationMapper.insertNodes(rootNode);
             UUID rootNodeId = rootNode.getId();
+
+            // Create root
+            RegionBhubServiceCenter regionBhubServiceCenter = new RegionBhubServiceCenter();
+            regionBhubServiceCenter.setOrgId(orgId);
+            regionBhubServiceCenter.setNodeId(rootNodeId);
+            regionBhubServiceCenter.setName(userModel.getFirstname());
+            regionBhubServiceCenter.setContactPerson(userModel.getFirstname()+' '+userModel.getLastname());
+            regionBhubServiceCenter.setEmail(userModel.getEmail());
+            regionBhubServiceCenter.setAddress(organization.getAddress());
+            regionBhubServiceCenter.setPhoneNo(userModel.getPhoneNumber());
+
+            String regionId;
+
+            do {
+                regionId = String.valueOf(100000 + new Random().nextInt(900000));
+            } while (Boolean.TRUE.equals(nodeMapper.existByRegionId(regionId)));
+
+            regionBhubServiceCenter.setRegionId(regionId);
+            regionBhubServiceCenter.setType("root");
+            nodeMapper.createRegionBhubServiceCenter(regionBhubServiceCenter);
 
             Permission permission = new Permission();
 
