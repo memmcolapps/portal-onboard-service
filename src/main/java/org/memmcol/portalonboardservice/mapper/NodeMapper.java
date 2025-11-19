@@ -129,4 +129,13 @@ public interface NodeMapper {
             @Result(property = "orgId", column = "org_id")
     })
     Boolean existByRegionId(String regionId);
+
+    @Select("SELECT * FROM region_bhub_service_centers WHERE email = #{email}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "nodeId", column = "node_id"),
+            @Result(property = "regionId", column = "region_id"),
+            @Result(property = "orgId", column = "org_id")
+    })
+    boolean existByEmail(String email);
 }
