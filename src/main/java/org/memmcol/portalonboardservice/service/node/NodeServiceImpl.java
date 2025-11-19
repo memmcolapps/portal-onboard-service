@@ -187,6 +187,7 @@ public class NodeServiceImpl implements NodeService {
             node.setName(request.getName());
             node.setOrgId(request.getOrgId());
             node.setParentId(request.getParentId());
+            System.out.println(">>>>>>>>>>>: "+request.getOrgId());
 
             Node nd = nodeMapper.isNodeExist(request.getNodeId());
 
