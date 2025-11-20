@@ -94,10 +94,10 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("business hub") ||
                     request.getType().equalsIgnoreCase("service center")){
 
-                boolean emailExists = nodeMapper.existByEmail(request.getEmail());
-                if(Boolean.TRUE.equals(emailExists)){
-                    throw new GlobalExceptionHandler.NotFoundException("Email " + status.getExistDesc() + " For a Customer");
-                }
+//                boolean emailExists = nodeMapper.existByEmail(request.getEmail());
+//                if(Boolean.TRUE.equals(emailExists)){
+//                    throw new GlobalExceptionHandler.NotFoundException("Email " + status.getExistDesc() + " For a Customer");
+//                }
                 nodeMapper.createRegionBhubServiceCenter(request);
                 id = request.getNodeId();
                 regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(id);
