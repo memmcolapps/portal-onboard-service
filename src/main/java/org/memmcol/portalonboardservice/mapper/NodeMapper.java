@@ -138,4 +138,24 @@ public interface NodeMapper {
             @Result(property = "orgId", column = "org_id")
     })
     boolean existByEmail(String email);
+
+    @Select("""
+            SELECT * FROM region_bhub_service_centers 
+            WHERE org_id = #{orgId} AND name = #{name}
+            """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+    })
+    RegionBhubServiceCenter getBhubByOrgIdAndName(String name,UUID orgId);
+
+    @Select("""
+            SELECT * FROM substation_trans_feeder_lines 
+            WHERE org_id = #{orgId} AND name = #{name}
+            """)
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+    })
+    SubStationTransformerFeederLine getSubTransformerFeederLineByOrgIdAndName(UUID id, String name);
 }

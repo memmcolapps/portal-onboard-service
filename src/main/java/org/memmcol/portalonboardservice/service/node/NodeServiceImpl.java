@@ -69,7 +69,26 @@ public class NodeServiceImpl implements NodeService {
 
             RegionBhubServiceCenter n = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
             if(n != null){
-                throw new GlobalExceptionHandler.NotFoundException("Node " + status.getExistDesc());
+                if (n.getRegionId().equalsIgnoreCase(request.getRegionId())){
+                    throw new GlobalExceptionHandler.NotFoundException("Region ID ("+ request.getRegionId()+") " + status.getExistDesc());
+                }
+            }
+
+            RegionBhubServiceCenter rgBhubService = nodeMapper.getBhubByOrgIdAndName(request.getName(), request.getOrgId());
+            if (rgBhubService.getName().equalsIgnoreCase(request.getName())){
+                String type = request.getType().toLowerCase();
+
+                switch (type){
+                    case "region":
+                        throw new GlobalExceptionHandler.NotFoundException("Region Name (" + request.getName()+") " + status.getExistDesc() +" for a "+rgBhubService.getType());
+                    case "business hub":
+                        throw new GlobalExceptionHandler.NotFoundException("Business Name (" + request.getName()+") " + status.getExistDesc() +" for a "+rgBhubService.getType());
+                    case "service center":
+                        throw new GlobalExceptionHandler.NotFoundException("Service Name (" + request.getName()+") " + status.getExistDesc() +" for a "+rgBhubService.getType());
+
+                    default:
+                        throw new GlobalExceptionHandler.NotFoundException("Node Name (" + request.getName()+") " + status.getExistDesc() +" for a "+rgBhubService.getType());
+                }
             }
 
             Node node = new Node();
@@ -133,7 +152,27 @@ public class NodeServiceImpl implements NodeService {
 
             SubStationTransformerFeederLine sub = nodeMapper.verifySubNode(request.getAssetId(), request.getOrgId());
             if(sub != null){
-                throw new GlobalExceptionHandler.NotFoundException("Node " + status.getExistDesc());
+                if (sub.getAssetId().equalsIgnoreCase(request.getAssetId())){
+                    throw new GlobalExceptionHandler.NotFoundException("Asset ID ("+ request.getAssetId()+") " + status.getExistDesc());
+                }
+            }
+
+            SubStationTransformerFeederLine subTransFeeder = nodeMapper.getSubTransformerFeederLineByOrgIdAndName(request.getOrgId(), request.getName());
+            if (subTransFeeder.getName().equalsIgnoreCase(request.getName())){
+
+                String type = request.getType().toLowerCase();
+                switch (type){
+                    case "dss":
+                        throw new GlobalExceptionHandler.NotFoundException("DSS Name ("+ request.getName()+") " + status.getExistDesc() +" for a "+subTransFeeder.getType());
+                    case "feeder line":
+                        throw new GlobalExceptionHandler.NotFoundException("Feeder line Name ("+ request.getName()+") " + status.getExistDesc() +" for a "+subTransFeeder.getType());
+                    case "substation":
+                        throw new GlobalExceptionHandler.NotFoundException("Substation Name (" + request.getName()+") " + status.getExistDesc() +" for a "+subTransFeeder.getType());
+
+                    default:
+                        throw new GlobalExceptionHandler.NotFoundException("Node Name (" + request.getName()+") " + status.getExistDesc() +" for a "+subTransFeeder.getType());
+                }
+
             }
 
             Node node = new Node();
