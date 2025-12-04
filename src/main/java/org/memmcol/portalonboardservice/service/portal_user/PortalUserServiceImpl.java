@@ -119,7 +119,7 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             Operator existingOperator = portalUserMapper.findByEmail(email);
             if(existingOperator != null) {
-                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists");
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists with email ("+email+").");
             }
 
             String password = passwordEncoder.encode(operator.getPassword());
@@ -171,6 +171,10 @@ public class PortalUserServiceImpl implements PortalUserService {
             Operator user = portalUserMapper.getSinglePortalUser(id);
             if(user == null){
                 throw new GlobalExceptionHandler.NotFoundException("Operator does not exist");
+            }
+            Operator existingOperator = portalUserMapper.findByEmail(operator.getEmail());
+            if(existingOperator.getEmail().equalsIgnoreCase(operator.getEmail())) {
+                throw new GlobalExceptionHandler.ResourceAlreadyExistsException("Operator already exists with email ("+operator.getEmail()+").");
             }
 
             if (!currentUser.getRoles().get(0).getUserRole().equalsIgnoreCase("SUPER_ADMIN")
