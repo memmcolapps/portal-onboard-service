@@ -81,7 +81,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operator = handleUserValidation();
 
-            // Save to database
+            // Save to database ---
             organizationMapper.insertOrganization(organization);
             UUID orgId = organization.getId();
             String name = organization.getBusinessName();
