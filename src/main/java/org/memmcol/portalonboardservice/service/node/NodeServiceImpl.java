@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
@@ -75,7 +76,7 @@ public class NodeServiceImpl implements NodeService {
             }
 
             RegionBhubServiceCenter rgBhubService = nodeMapper.getBhubByOrgIdAndName(request.getName(), request.getOrgId());
-            if (rgBhubService.getName().equalsIgnoreCase(request.getName())){
+            if (rgBhubService != null){
                 String type = request.getType().toLowerCase();
 
                 switch (type){
@@ -158,7 +159,7 @@ public class NodeServiceImpl implements NodeService {
             }
 
             SubStationTransformerFeederLine subTransFeeder = nodeMapper.getSubTransformerFeederLineByOrgIdAndName(request.getOrgId(), request.getName());
-            if (subTransFeeder.getName().equalsIgnoreCase(request.getName())){
+            if (subTransFeeder != null){
 
                 String type = request.getType().toLowerCase();
                 switch (type){
@@ -245,7 +246,8 @@ public class NodeServiceImpl implements NodeService {
 
             if(request.getType().equalsIgnoreCase("region") ||
                     request.getType().equalsIgnoreCase("business hub") ||
-                    request.getType().equalsIgnoreCase("service center")) {
+                    request.getType().equalsIgnoreCase("service center") ||
+                    request.getType().equalsIgnoreCase("root")) {
                 nodeMapper.updateRegionBhubServiceCenter(request);
                 regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(request.getNodeId());
                 desc = regionBhubServiceCenter.getName()  + " edited";
@@ -291,6 +293,7 @@ public class NodeServiceImpl implements NodeService {
 
             UUID nodeId = node.getId();
 
+            request.setUpdatedAt(LocalDateTime.now());
             request.setNodeId(nodeId);
 
             if(request.getType().equalsIgnoreCase("dss") ||

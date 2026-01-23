@@ -119,7 +119,7 @@ public interface NodeMapper {
             @Result(property = "parentId", column = "parent_id"),
             @Result(property = "orgId", column = "org_id")
     })
-    SubStationTransformerFeederLine verifySubNode(String regionId, UUID orgId);
+    SubStationTransformerFeederLine verifySubNode(String assetId, UUID orgId);
 
     @Select("SELECT * FROM region_bhub_service_centers WHERE region_id = #{regionId}")
     @Results({
@@ -157,5 +157,5 @@ public interface NodeMapper {
             @Result(property = "id", column = "id"),
             @Result(property = "orgId", column = "org_id"),
     })
-    SubStationTransformerFeederLine getSubTransformerFeederLineByOrgIdAndName(UUID id, String name);
+    SubStationTransformerFeederLine getSubTransformerFeederLineByOrgIdAndName(UUID orgId, String name);
 }
