@@ -6,6 +6,7 @@ import org.memmcol.portalonboardservice.model.node.NodeInfo;
 import org.memmcol.portalonboardservice.model.user.*;
 import org.memmcol.portalonboardservice.model.user.Module;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -292,5 +293,8 @@ public interface OrganizationMapper {
 
     @Update("UPDATE organizations SET status = #{suspend} WHERE id = #{id}")
     void suspendOrganization(UUID id, Boolean suspend);
+
+    @Select("SELECT SUM(initial_amount) FROM vw_vending_transactions_summary WHERE org_id = #{id} And status = 'Successful' ")
+    BigDecimal totalVending(UUID id);
 
 }

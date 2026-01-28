@@ -330,7 +330,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 //        Map<String, Object> res;
         try {
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-            BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
+            BigDecimal orgVendingTotal = organizationMapper.totalVending(orgId);
             BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
 //            // 1. Check cache first
