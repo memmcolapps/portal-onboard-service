@@ -13,6 +13,7 @@ import org.memmcol.portalonboardservice.model.node.*;
 import org.memmcol.portalonboardservice.model.user.UserModel;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
@@ -38,7 +39,7 @@ public class NodeServiceImpl implements NodeService {
     private ResponseProperties status;
 
     @Autowired
-    private AuditRepository auditRepository;
+    private SafeAuditService safeAuditService;
 
     @Autowired
     private GenericHandler genericHandler;
@@ -129,7 +130,8 @@ public class NodeServiceImpl implements NodeService {
 //            handleClearCache(node);
 
             AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("region") ? "region" : request.getType().equals("service center") ? "service center" : "business hub", regionBhubServiceCenter, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ regionBhubServiceCenter.getName() +"' "+ status.getRegDesc(), "");
 
@@ -207,7 +209,8 @@ public class NodeServiceImpl implements NodeService {
 //            handleClearCache(node);
 
             AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("dss") ? "dss" : request.getType().equals("feeder line") ? "feeder line" : "substation", subStationTransformerFeederLine, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ subStationTransformerFeederLine.getName() +"' "+ status.getRegDesc(), "");
 
@@ -257,7 +260,8 @@ public class NodeServiceImpl implements NodeService {
 
 //            handleClearCache(node);
             AuditLog auditLog = buildAuditLog(um, desc, request.getType().equals("region") ? "Region" : request.getType().equals("service center") ? "Service center" : "Business hub", regionBhubServiceCenter, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ regionBhubServiceCenter.getName() +"' "+ status.getUpdateDesc(), "");
 
@@ -310,8 +314,8 @@ public class NodeServiceImpl implements NodeService {
 //            handleClearCache(node);
 
             AuditLog auditLog = buildAuditLog(um, desc, request.getType().equalsIgnoreCase("dss") ? "dss" : request.getType().equalsIgnoreCase("feeder line") ? "Feeder line" : "Substation", subStationTransformerFeederLine, metadata);
-            auditRepository.save(auditLog);
-
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),  "Node '"+ subStationTransformerFeederLine.getName() +"' "+ status.getUpdateDesc(), "");
 

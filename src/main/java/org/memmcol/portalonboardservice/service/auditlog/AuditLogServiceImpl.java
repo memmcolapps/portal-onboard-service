@@ -25,6 +25,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogServiceImpl.class);
 
+    @Autowired(required = false)
     private final AuditRepository auditRepository;
 
     @Autowired
@@ -42,9 +43,16 @@ public class AuditLogServiceImpl implements AuditLogService {
         try {
             Operator um = handleUserValidation();
             Map<String, Object> response = new HashMap<>();
-
+            List<AuditLog> logs;
+            try{
+                 logs = auditRepository.findAllByCreator_Id(um.getId());
+            }catch (Exception e) {
+                // Log the error but don't throw
+                System.err.println("Mongo save failed: " + e.getMessage());
+                // log.warn("Failed to save audit log", e);
+            }
             // Fetch all logs by creator
-            List<AuditLog> logs = auditRepository.findAllByCreator_Id(um.getId());
+            logs = auditRepository.findAllByCreator_Id(um.getId());
 
             // Apply filtering
             List<AuditLog> filteredLogs = logs.stream()
