@@ -47,7 +47,8 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 				|| request.getServletPath().equals("/gfPortal/auth/service/generate-otp")
 				|| request.getServletPath().equals("/gfPortal/auth/service/forget-password")
 				|| request.getServletPath().equals("/gfPortal/analytic/service/all")
-				|| request.getServletPath().equals("/gfPortal/service/message/create")) {
+				|| request.getServletPath().equals("/gfPortal/service/message/create")
+				|| request.getServletPath().equals("/gfPortal/auth/service/test")) {
 			filterChain.doFilter(request, response);
 		} else {
 			String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
