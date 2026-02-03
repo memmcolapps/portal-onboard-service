@@ -15,6 +15,7 @@ import org.memmcol.portalonboardservice.model.user.*;
 import org.memmcol.portalonboardservice.model.user.Module;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
@@ -46,7 +47,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     private ResponseProperties status;
 
     @Autowired
-    private AuditRepository auditRepository;
+    private SafeAuditService safeAuditService;
 
     @Autowired
     private HttpServletRequest httpServletRequest;
@@ -175,7 +176,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             // Save into Hazelcast cache (persists via MapStore)
 //            organizationCache.put(res.getId().toString(), res);
             AuditLog auditLog = buildAuditLog(operator, "Organization created", "organization", res, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 //            auditNotificationDTO.setCreator(operator);
 //            auditNotificationDTO.setIpAddress(ipAddress);
 //            auditNotificationDTO.setUserAgent(userAgent);
@@ -421,7 +423,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             }
 
             AuditLog auditLog = buildAuditLog(operator, "Organization edited", "organization", res, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Organization "+status.getUpdateDesc(),
@@ -453,7 +456,8 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             String desc = response.getStatus() ? "Organization activated" : "Organization suspended";
 
             AuditLog auditLog = buildAuditLog(operator, desc, "organization", res, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(), desc + " successfully", "");
 
         } catch (Exception exception) {

@@ -12,6 +12,7 @@ import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.model.user.Role;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
@@ -43,6 +44,9 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Autowired
     private ResponseProperties status;
+
+    @Autowired
+    private SafeAuditService safeAuditService;
 
     @Autowired
     private AuditRepository auditRepository;
@@ -97,8 +101,8 @@ public class PortalUserServiceImpl implements PortalUserService {
 
 
             AuditLog auditLog = buildAuditLog(operator, "Logged out", "auth", null, metadata);
-            auditRepository.save(auditLog);
-
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(), "Logged out successfully", "");
 
         } catch (Exception exception) {
@@ -141,8 +145,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             Operator operator1 = portalUserMapper.findByEmail(email);
 
             AuditLog auditLog = buildAuditLog(operatorAction, "Operator newly created", "operator", operator1, metadata);
-            auditRepository.save(auditLog);
-
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             portalAuthCache.put(operator1.getId().toString(), operator1);
 
 //            handleAddCache(operator1);
@@ -192,8 +196,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             }
             Operator operator1 = portalUserMapper.findByEmail(currentUser.getEmail());
             AuditLog auditLog = buildAuditLog(currentUser, "Edited operator", "operator", operator1, metadata);
-            auditRepository.save(auditLog);
-
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(), "Operator "+status.getUpdateDesc(), "");
         } catch (Exception exception){
 
@@ -227,8 +231,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             String desc = operator.isStatus() ? "Operator activated" : "Operator deactivated";
 
             AuditLog auditLog = buildAuditLog(user, desc, "operator", operator, metadata);
-            auditRepository.save(auditLog);
-
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(), desc+" successfully", "");
 
         }catch (Exception exception){
@@ -351,8 +355,14 @@ public class PortalUserServiceImpl implements PortalUserService {
 
             Operator operatorAction = handleUserValidation();
             UUID currentOperator = operatorAction.getId();
+            List<AuditLog> result = Collections.emptyList(); // ✅ initialized
 
-            List<AuditLog> result = auditRepository.findTop5ByCreator_IdOrderByCreatedAtDesc(currentOperator);
+            try {
+                result = auditRepository
+                        .findTop5ByCreator_IdOrderByCreatedAtDesc(currentOperator);
+            } catch (Exception e) {
+                log.warn("Failed to fetch audit logs for operator {}", currentOperator, e);
+            }
 
             return ResponseMap.response(
                     status.getSuccessCode(),
@@ -473,7 +483,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             portalVerifiedUsers.remove(user.getEmail());
 //			handleCacheUpdate(isOperator);
             AuditLog auditLog = buildAuditLog(user, "Reset password", "auth", null, metadata);
-            auditRepository.save(auditLog);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(), "Password " + status.getUpdateDesc(), "");
 
         } catch (Exception exception) {
