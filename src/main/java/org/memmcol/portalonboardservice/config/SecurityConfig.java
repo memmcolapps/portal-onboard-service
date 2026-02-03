@@ -84,7 +84,7 @@ public class  SecurityConfig {
 		// Authorization
 		http.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers("/gfPortal/auth/service/login/**", "/gfPortal/auth/service/logout/**", "/actuator/prometheus", "/gfPortal/service/message/create",
-						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password", "/gfPortal/analytic/service/all").permitAll()
+						"/gfPortal/auth/service/generate-otp","/gfPortal/auth/service/forget-password", "/gfPortal/analytic/service/all", "/gfPortal/auth/service/test").permitAll()
 				.requestMatchers("/gfPortal/service/organization/update", "/gfPortal/service/organization/create", "/gfPortal/service/organization/suspend",
 						"/gfPortal/service/organization/get", "/gfPortal/service/organization/all", "/gfPortal/auth/service/profile", "/gfPortal/auth/service/update",
 						"/gfPortal/auth/service/single", "/gfPortal/auth/service/create","/gfPortal/auth/service/change-status","/gfPortal/auth/service/all",
