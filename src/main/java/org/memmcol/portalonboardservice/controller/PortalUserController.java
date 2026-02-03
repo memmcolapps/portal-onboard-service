@@ -149,6 +149,15 @@ public class PortalUserController {
         }
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<?> getTest( ) {
+        try {
+            return ResponseEntity.ok("Welcome to GridFlex Portal");
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
     private ResponseEntity<Map<String, Object>> handleException(GlobalExceptionHandler.SQLServerException e) {
         return (ResponseEntity<Map<String, Object>>) exception.handleSQLServerException(e);
     }
