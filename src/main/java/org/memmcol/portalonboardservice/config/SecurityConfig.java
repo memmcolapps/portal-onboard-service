@@ -9,6 +9,7 @@ import org.memmcol.portalonboardservice.components.CustomAuthorizationFilter;
 import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -37,8 +38,11 @@ public class  SecurityConfig {
     @Autowired
     private PortalUserMapper operatorMapper;
 
+//	@Autowired
+//	private AuditRepository auditRepository;
+
 	@Autowired
-	private AuditRepository auditRepository;
+	private SafeAuditService safeAuditService;
 
 	@Autowired
 	private CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -68,7 +72,7 @@ public class  SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 		CustomAuthenticationFilter userAuthFilter = new CustomAuthenticationFilter(
-				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, auditRepository, hazelcastInstance, genericHandler,objectMapper);
+				authenticationManager(userDetailsService, bCryptPasswordEncoder), operatorMapper, safeAuditService, hazelcastInstance, genericHandler,objectMapper);
 		userAuthFilter.setFilterProcessesUrl("/gfPortal/auth/service/login");
 
 //		CustomAuthenticationFilter adminAuthFilter = new CustomAuthenticationFilter(

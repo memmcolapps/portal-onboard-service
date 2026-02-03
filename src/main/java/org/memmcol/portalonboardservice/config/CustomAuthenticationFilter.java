@@ -19,6 +19,7 @@ import org.memmcol.portalonboardservice.model.user.CustomUserDetails;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -47,7 +48,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 //	@Autowired
 	private PortalUserMapper operatorMapper;
 
-	private AuditRepository auditRepository;
+	private SafeAuditService safeAuditService;
 
 	private IMap<String, Boolean> auditCache;
 
@@ -68,11 +69,11 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 	public CustomAuthenticationFilter(
 			AuthenticationManager authenticationManager,
 			PortalUserMapper operatorMapper,
-			AuditRepository auditRepository, HazelcastInstance hazelcastInstance, GenericHandler genericHandler,
+			SafeAuditService auditRepository, HazelcastInstance hazelcastInstance, GenericHandler genericHandler,
 			ObjectMapper objectMapper) {
 		this.authenticationManager = authenticationManager;
 		this.operatorMapper = operatorMapper;
-		this.auditRepository = auditRepository;
+		this.safeAuditService = auditRepository;
 		this.auditCache = hazelcastInstance.getMap("auditCache");
 		this.authCache = hazelcastInstance.getMap("authCache");
 		this.genericHandler = genericHandler;
@@ -123,7 +124,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 //		operator.getCreatedAt().toString();
 		operator.setPassword("");
 		AuditLog auditLog = buildAuditLog(operator, "Logged in", "auth", null, metadata);
-		auditRepository.save(auditLog);
+		safeAuditService.saveAudit(auditLog);
+//		auditRepository.save(auditLog);
 //		auditNotificationDTO.setCreator(operator);
 //		auditNotificationDTO.setIpAddress(ipAddress);
 //		auditNotificationDTO.setUserAgent(userAgent);
