@@ -25,7 +25,6 @@ public class AuditLogServiceImpl implements AuditLogService {
 
     private static final Logger log = LoggerFactory.getLogger(AuditLogServiceImpl.class);
 
-    @Autowired(required = false)
     private final AuditRepository auditRepository;
 
     @Autowired
