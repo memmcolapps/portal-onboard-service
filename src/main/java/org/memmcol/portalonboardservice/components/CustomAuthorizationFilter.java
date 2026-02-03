@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -76,6 +77,7 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 					SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 					filterChain.doFilter(request, response);
 				} catch (JWTVerificationException exception) {
+					System.out.println("errrrrrrrrrrrrr: "+exception.getMessage());
 					handleException(response, exception, "Authorization Token Expired", HttpServletResponse.SC_FORBIDDEN);
 				} catch (Exception exception) {
 					handleException(response, exception, "Internal Server Error", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -91,9 +93,28 @@ public class CustomAuthorizationFilter extends OncePerRequestFilter {
 		errorMessage.put("responsecode", String.valueOf(statusCode));
 		errorMessage.put("responsedesc", description);
 		errorMessage.put("responsedata", exception.getMessage());
-
+		System.out.println("errrrrrrrrrrrrr11111: "+errorMessage);
 		response.setStatus(statusCode);
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		new ObjectMapper().writeValue(response.getOutputStream(), errorMessage);
 	}
 }
+
+//@Override
+//protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+//										  AuthenticationException failed) throws IOException, ServletException {
+////	    log.error("Authentication failed: {}", failed.getMessage());
+//
+//	// Prepare the response message
+//	Map<String, String> errorMessage = new HashMap<>();
+//	errorMessage.put("responsecode", "122");
+//	errorMessage.put("responsedesc", failed.getMessage());
+//	errorMessage.put("responsedata", "");
+//
+//	// Set the response status to indicate authentication failure
+//	response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//
+//	// Write the error message to the response body
+//	response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+//	new ObjectMapper().writeValue(response.getOutputStream(), errorMessage);
+//}

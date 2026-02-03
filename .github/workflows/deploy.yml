@@ -50,18 +50,18 @@ jobs:
             ${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }} << EOF
               sudo mkdir -p /opt/java-webservices
               sudo chown -R \$USER:\$USER /opt/java-webservices
-              pkill -f 'gridflex-backend-service.jar' || true
+              pkill -f 'portal-onboard-service.jar' || true
           EOF
 
           scp -o StrictHostKeyChecking=no target/*.jar \
-            ${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }}:/opt/java-webservices/gridflex-backend-service.jar
+            ${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
 
           ssh -o StrictHostKeyChecking=no \
             ${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }} << EOF
               nohup java -jar \
                 -Dspring.profiles.active=staging \
-                /opt/java-webservices/gridflex-backend-service.jar \
-                > /opt/java-webservices/gridflex-staging.log 2>&1 &
+                /opt/java-webservices/portal-onboard-service.jar \
+                > /opt/java-webservices/portal-staging.log 2>&1 &
           EOF
 
       # =====================================================
@@ -80,18 +80,18 @@ jobs:
             ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} << EOF
               sudo mkdir -p /opt/java-webservices
               sudo chown -R \$USER:\$USER /opt/java-webservices
-              pkill -f 'gridflex-backend-service.jar' || true
+              pkill -f 'portal-onboard-service.jar' || true
           EOF
 
           scp -o StrictHostKeyChecking=no target/*.jar \
-            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:/opt/java-webservices/gridflex-backend-service.jar
+            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
 
           ssh -o StrictHostKeyChecking=no \
             ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} << EOF
               nohup java -jar \
                 -Dspring.profiles.active=prod \
-                /opt/java-webservices/gridflex-backend-service.jar \
-                > /opt/java-webservices/gridflex-prod.log 2>&1 &
+                /opt/java-webservices/portal-onboard-service.jar \
+                > /opt/java-webservices/portal-prod.log 2>&1 &
           EOF
 
 #on:
