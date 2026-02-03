@@ -25,7 +25,6 @@ public class SafeAuditService {
         } catch (Exception e) {
             // Log the error but don't throw
             System.err.println("Mongo save failed: " + e.getMessage());
-            // optionally use a logger:
             // log.warn("Failed to save audit log", e);
         }
     }
