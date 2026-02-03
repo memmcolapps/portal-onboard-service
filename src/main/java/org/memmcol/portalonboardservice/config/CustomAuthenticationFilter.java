@@ -90,6 +90,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 		if (user == null) {
 			throw new UsernameNotFoundException("User not found");
 		}
+
 		// Validate the required header
 		String headerValue = request.getHeader(ADMIN_HEADER_KEY);
 		if (headerValue == null || !headerValue.equals(ADMIN_HEADER_VALUE)) {
