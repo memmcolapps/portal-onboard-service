@@ -21,7 +21,7 @@ SELECT
     'R&D Software',
     'memmcolapp@gmail.com',
     '+2348012345678',
-    '$2a$10$7EqJtq98hPqEX7fNZaFWoOaK1QK5c5eF1Jp0x2b9p3K5u7ZQe4Qv6',
+    '$2a$10$vpdTuh9gul9V3YTye2DNXeKOz4QKU1JFssIgcXm0YSrn.ySonEnrO',
     TRUE,
     TRUE,
     NOW(),
