@@ -66,28 +66,29 @@ jobs:
 
       # =====================================================
       # PRODUCTION DEPLOYMENT (branch: main)
+      # secrets.PROD_SSH_PRIVATE_KEY
       # =====================================================
       - name: Setup SSH Agent (Production)
         if: github.ref == 'refs/heads/main'
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to Production Server
         if: github.ref == 'refs/heads/main'
         run: |
           ssh -o StrictHostKeyChecking=no \
-            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} << EOF
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
               sudo mkdir -p /opt/java-webservices
               sudo chown -R \$USER:\$USER /opt/java-webservices
               pkill -f 'portal-onboard-service.jar' || true
           EOF
 
           scp -o StrictHostKeyChecking=no target/*.jar \
-            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
 
           ssh -o StrictHostKeyChecking=no \
-            ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }} << EOF
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << EOF
               nohup java -jar \
                 -Dspring.profiles.active=prod \
                 /opt/java-webservices/portal-onboard-service.jar \
