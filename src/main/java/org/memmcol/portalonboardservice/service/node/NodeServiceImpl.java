@@ -69,6 +69,14 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Operator um = handleUserValidation();
 
+            if (request.getRegionId() == null || request.getRegionId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Region ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
             RegionBhubServiceCenter n = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
             if(n != null){
                 if (n.getRegionId().equalsIgnoreCase(request.getRegionId())){
@@ -103,6 +111,22 @@ public class NodeServiceImpl implements NodeService {
             if(nd == null) {
                 throw new GlobalExceptionHandler.NotFoundException("Parent node does not exist");
             }
+
+            RegionBhubServiceCenter duplicate = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
+            if (duplicate != null && request.getType().equalsIgnoreCase(duplicate.getType())) {
+                throw new GlobalExceptionHandler.NotFoundException(
+                        request.getType().substring(0, 1).toUpperCase()
+                                + request.getType().substring(1).toLowerCase()
+                                + " already exists for Region ID (" + request.getRegionId() + ")"
+                );
+            }
+
+            if (Boolean.TRUE.equals(nodeMapper.existsByRegionEmail(request.getEmail(), request.getOrgId()))) {
+                throw new GlobalExceptionHandler.NotFoundException(
+                        "Email (" + request.getEmail() + ") already been used"
+                );
+            }
+
             nodeMapper.createNode(node);
 
             UUID nodeId = node.getId();
@@ -153,11 +177,41 @@ public class NodeServiceImpl implements NodeService {
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator um = handleUserValidation();
 
+            if (request.getAssetId() == null || request.getAssetId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Asset ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
+            if (request.getSerialNo() == null || request.getSerialNo().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Serial No is required");
+            }
+
+            if (request.getStatus() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Status is required");
+            }
+
+            if (request.getVoltage() == null || request.getVoltage().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Voltage is required");
+            }
+
             SubStationTransformerFeederLine sub = nodeMapper.verifySubNode(request.getAssetId(), request.getOrgId());
-            if(sub != null){
-                if (sub.getAssetId().equalsIgnoreCase(request.getAssetId())){
-                    throw new GlobalExceptionHandler.NotFoundException("Asset ID ("+ request.getAssetId()+") " + status.getExistDesc());
-                }
+            if(sub != null && sub.getType().equalsIgnoreCase(request.getType())){
+                throw new GlobalExceptionHandler.NotFoundException("Asset ID ("+ request.getAssetId()+") " + status.getExistDesc() +" for a "+ request.getType());
+            }
+
+            if (Boolean.TRUE.equals(nodeMapper.existsBySerial(request.getSerialNo(), request.getOrgId(), request.getType().toLowerCase()))) {
+                throw new GlobalExceptionHandler.NotFoundException(
+                        "Serial No (" + request.getSerialNo() + ") " + status.getExistDesc()
+                                +" for a "+ request.getType());
+            }
+
+            if (Boolean.TRUE.equals(nodeMapper.existsByEmail(request.getEmail(), request.getOrgId()))) {
+                throw new GlobalExceptionHandler.NotFoundException(
+                        "Email (" + request.getEmail() + ") already been used"
+                );
             }
 
             SubStationTransformerFeederLine subTransFeeder = nodeMapper.getSubTransformerFeederLineByOrgIdAndName(request.getOrgId(), request.getName());
@@ -230,6 +284,71 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Operator um = handleUserValidation();
 
+            if (request.getRegionId() == null || request.getRegionId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Region ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
+            RegionBhubServiceCenter existingRecord = nodeMapper.getRegionBhubServiceCenter(request.getNodeId());
+
+            if (existingRecord == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Region/Business Hub/Service Center record not found");
+            }
+
+            // Validate Region ID + Type combination (only if regionId changed)
+            if (request.getRegionId() != null && !request.getRegionId().isEmpty() &&
+                    !request.getRegionId().equals(existingRecord.getRegionId())) {
+
+                if (Boolean.TRUE.equals(nodeMapper.existsByRegionIdAndTypeExcludingCurrent(
+                        request.getRegionId(), request.getOrgId(), request.getType(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            request.getType().substring(0, 1).toUpperCase()
+                                    + request.getType().substring(1).toLowerCase()
+                                    + " already exists for Region ID (" + request.getRegionId() + ")"
+                    );
+                }
+            }
+
+            // Validate Email (only if email changed)
+            if (request.getEmail() != null && !request.getEmail().isEmpty() &&
+                    !request.getEmail().equals(existingRecord.getEmail())) {
+
+                if (Boolean.TRUE.equals(nodeMapper.existsByRegionEmailExcludingCurrent(
+                        request.getEmail(), request.getOrgId(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Email (" + request.getEmail() + ") already been used"
+                    );
+                }
+            }
+
+            // Validate Name (only if name changed)
+            if (request.getName() != null && !request.getName().isEmpty() &&
+                    !request.getName().equals(existingRecord.getName())) {
+
+                if (Boolean.TRUE.equals(nodeMapper.existsByNameExcludingCurrent(
+                        request.getName(), request.getOrgId(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Node Name (" + request.getName() + ") " + status.getExistDesc()
+                    );
+                }
+            }
+
+            // Validate Phone Number (only if phone number changed)
+            if (request.getPhoneNo() != null && !request.getPhoneNo().isEmpty() &&
+                    !request.getPhoneNo().equals(existingRecord.getPhoneNo())) {
+
+                if (Boolean.TRUE.equals(nodeMapper.existsByPhoneNumberExcludingCurrent(
+                        request.getPhoneNo(), request.getOrgId(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Phone Number (" + request.getPhoneNo() + ") already been used"
+                    );
+                }
+            }
+
+
             Node node = new Node();
             node.setId(request.getNodeId());
             node.setName(request.getName());
@@ -281,6 +400,71 @@ public class NodeServiceImpl implements NodeService {
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             String desc;
             Operator um = handleUserValidation();
+
+            if (request.getAssetId() == null || request.getAssetId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Asset ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
+            if (request.getSerialNo() == null || request.getSerialNo().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Serial No is required");
+            }
+
+            if (request.getStatus() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Status is required");
+            }
+
+            if (request.getVoltage() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Voltage is required");
+            }
+
+            SubStationTransformerFeederLine existingRecord = nodeMapper.getSubStationTransformerFeederLine(request.getNodeId());
+
+            if (existingRecord == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Substation/Feeder/DSS record not found for the given node ID");
+            }
+
+            // Serial Number Validation - only check if value changed
+            if (request.getSerialNo() != null && !request.getSerialNo().isEmpty() &&
+                    !request.getSerialNo().equals(existingRecord.getSerialNo())) {
+
+                // Check if another record of same type has this serial (excluding current)
+                if (Boolean.TRUE.equals(nodeMapper.existsBySerialForSameTypeExcludingCurrent(
+                        request.getSerialNo(), request.getOrgId(), request.getType().toLowerCase(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Serial No (" + request.getSerialNo() + ") " + status.getExistDesc()
+                                    + " for a " + request.getType());
+                }
+            }
+
+            // Email Validation - only check if value changed
+            if (request.getEmail() != null && !request.getEmail().isEmpty() &&
+                    !request.getEmail().equals(existingRecord.getEmail())) {
+
+                // Check if email exists for any other node in org
+                if (Boolean.TRUE.equals(nodeMapper.existsByEmailForDifferentNode(
+                        request.getEmail(), request.getOrgId(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Email (" + request.getEmail() + ") already been used"
+                    );
+                }
+            }
+
+            // Asset ID Validation - only check if value changed
+            if (request.getAssetId() != null && !request.getAssetId().isEmpty() &&
+                    !request.getAssetId().equals(existingRecord.getAssetId())) {
+
+                // Check if another record of same type has this assetId (excluding current)
+                if (Boolean.TRUE.equals(nodeMapper.existsByAssetIdForSameTypeExcludingCurrent(
+                        request.getAssetId(), request.getOrgId(), request.getType().toLowerCase(), request.getNodeId()))) {
+                    throw new GlobalExceptionHandler.NotFoundException(
+                            "Asset ID (" + request.getAssetId() + ") " + status.getExistDesc()
+                                    + " for a " + request.getType());
+                }
+            }
 
             Node node = new Node();
             node.setId(request.getNodeId());
