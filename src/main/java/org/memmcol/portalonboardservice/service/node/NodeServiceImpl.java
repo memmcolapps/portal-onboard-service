@@ -69,6 +69,14 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Operator um = handleUserValidation();
 
+            if (request.getRegionId() == null || request.getRegionId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Region ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
             RegionBhubServiceCenter n = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
             if(n != null){
                 if (n.getRegionId().equalsIgnoreCase(request.getRegionId())){
@@ -153,6 +161,26 @@ public class NodeServiceImpl implements NodeService {
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator um = handleUserValidation();
 
+            if (request.getAssetId() == null || request.getAssetId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Asset ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
+            if (request.getSerialNo() == null || request.getSerialNo().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Serial No is required");
+            }
+
+            if (request.getStatus() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Status is required");
+            }
+
+            if (request.getVoltage() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Voltage is required");
+            }
+
             SubStationTransformerFeederLine sub = nodeMapper.verifySubNode(request.getAssetId(), request.getOrgId());
             if(sub != null){
                 if (sub.getAssetId().equalsIgnoreCase(request.getAssetId())){
@@ -230,6 +258,14 @@ public class NodeServiceImpl implements NodeService {
             String desc;
             Operator um = handleUserValidation();
 
+            if (request.getRegionId() == null || request.getRegionId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Region ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
             Node node = new Node();
             node.setId(request.getNodeId());
             node.setName(request.getName());
@@ -281,6 +317,26 @@ public class NodeServiceImpl implements NodeService {
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             String desc;
             Operator um = handleUserValidation();
+
+            if (request.getAssetId() == null || request.getAssetId().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Asset ID is required");
+            }
+
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Name is required");
+            }
+
+            if (request.getSerialNo() == null || request.getSerialNo().trim().isEmpty()) {
+                throw new GlobalExceptionHandler.NotFoundException("Serial No is required");
+            }
+
+            if (request.getStatus() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Status is required");
+            }
+
+            if (request.getVoltage() == null) {
+                throw new GlobalExceptionHandler.NotFoundException("Voltage is required");
+            }
 
             Node node = new Node();
             node.setId(request.getNodeId());
