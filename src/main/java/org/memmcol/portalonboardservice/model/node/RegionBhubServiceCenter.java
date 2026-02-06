@@ -24,6 +24,7 @@ public class RegionBhubServiceCenter implements Serializable {
     private String contactPerson;
     private String address;
     private String type;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
@@ -60,7 +61,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getRegionId() {
-        return regionId;
+        return regionId == null ? regionId : regionId.trim();
     }
 
     public void setRegionId(String regionId) {
@@ -76,7 +77,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getName() {
-        return name;
+        return name == null ? name : name.trim();
     }
 
     public void setName(String name) {
@@ -84,7 +85,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getPhoneNo() {
-        return phoneNo;
+        return phoneNo == null ? phoneNo : phoneNo.trim();
     }
 
     public void setPhoneNo(String phoneNo) {
@@ -92,7 +93,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getEmail() {
-        return email;
+        return email == null ? email : email.toLowerCase().trim();
     }
 
     public void setEmail(String email) {
@@ -100,7 +101,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getContactPerson() {
-        return contactPerson;
+        return contactPerson == null ? contactPerson : contactPerson.trim();
     }
 
     public void setContactPerson(String contactPerson) {
@@ -108,7 +109,7 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getAddress() {
-        return address;
+        return address == null ? address : address.trim();
     }
 
     public void setAddress(String address) {
@@ -132,10 +133,11 @@ public class RegionBhubServiceCenter implements Serializable {
     }
 
     public String getType() {
-        return type;
+        return type == null ? type : type.trim();
     }
 
     public void setType(String type) {
         this.type = type;
     }
+
 }

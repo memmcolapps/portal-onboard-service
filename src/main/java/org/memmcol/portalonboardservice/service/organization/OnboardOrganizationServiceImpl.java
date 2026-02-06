@@ -188,7 +188,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             return ResponseMap.response(
                     status.getSuccessCode(),
-                    (organization.getBusinessName() + " Organization Created " + " Successfully"),
+                    "Organization Created Successfully",
                     "");
 
         } catch (Exception exception) {
