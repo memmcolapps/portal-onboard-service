@@ -116,7 +116,7 @@ public interface NodeMapper {
     RegionBhubServiceCenter verifyNode(String regionId, UUID orgId, String type);
 
     @Select("SELECT * FROM substation_trans_feeder_lines " +
-            "WHERE asset_id = #{assetId} AND org_id = #{orgId}" +
+            "WHERE asset_id = #{assetId} AND org_id = #{orgId} " +
             "AND type = #{type}")
     @Results({
             @Result(property = "id", column = "id"),
@@ -137,14 +137,14 @@ public interface NodeMapper {
     })
     Boolean existByRegionId(String regionId);
 
-    @Select("SELECT * FROM region_bhub_service_centers WHERE email = #{email}")
-    @Results({
-            @Result(property = "id", column = "id"),
-            @Result(property = "nodeId", column = "node_id"),
-            @Result(property = "regionId", column = "region_id"),
-            @Result(property = "orgId", column = "org_id")
-    })
-    boolean existByEmail(String email);
+//    @Select("SELECT * FROM region_bhub_service_centers WHERE email = #{email}")
+//    @Results({
+//            @Result(property = "id", column = "id"),
+//            @Result(property = "nodeId", column = "node_id"),
+//            @Result(property = "regionId", column = "region_id"),
+//            @Result(property = "orgId", column = "org_id")
+//    })
+//    RegionBhubServiceCenter existByEmail(String email);
 
     @Select("""
             SELECT * FROM region_bhub_service_centers 
@@ -183,20 +183,18 @@ public interface NodeMapper {
     @Select("""
     SELECT 1
     FROM substation_trans_feeder_lines
-    WHERE org_id = #{orgId}
-      AND email = #{email}
+    WHERE email = #{email}
     LIMIT 1
     """)
-    Boolean existsByEmail(@Param("email") String email, @Param("orgId") UUID orgId);
+    Boolean existsByEmail(@Param("email") String email);
 
     @Select("""
     SELECT 1
     FROM region_bhub_service_centers
-    WHERE org_id = #{orgId}
-      AND email = #{email}
+      WHERE email = #{email}
     LIMIT 1
     """)
-    Boolean existsByRegionEmail(@Param("email") String email, @Param("orgId") UUID orgId);
+    Boolean existsByRegionEmail(@Param("email") String email);
 
     @Select("""
     SELECT 1
