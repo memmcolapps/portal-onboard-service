@@ -58,4 +58,34 @@ public interface AnalyticsMapper {
 
     @Select("SELECT COUNT(*) FROM incident_report")
     long getIncidentReportCount();
+
+    @Select("SELECT * FROM incident_report WHERE org_id = #{orgId} ORDER BY created_at DESC")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "organization", column = "org_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
+            @Result(property = "user", column = "user_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
+    })
+    List<IncidentReport> getIncidentReportByCompany(UUID orgId);
+
+    @Select("SELECT COUNT(*) FROM incident_report WHERE org_id = #{orgId}")
+    long getIncidentReportCountByCompany(UUID orgId);
+
+    @Select("SELECT * FROM incident_report WHERE status = false ORDER BY created_at DESC")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "updatedAt", column = "updated_at"),
+            @Result(property = "organization", column = "org_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getOrganization")),
+            @Result(property = "user", column = "user_id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
+    })
+    List<IncidentReport> getUnresolvedIncidentReports();
+
+    @Select("SELECT COUNT(*) FROM incident_report WHERE status = false")
+    long getUnresolvedIncidentCount();
 }
