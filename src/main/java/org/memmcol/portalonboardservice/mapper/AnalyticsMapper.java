@@ -59,7 +59,13 @@ public interface AnalyticsMapper {
     @Select("SELECT COUNT(*) FROM incident_report")
     long getIncidentReportCount();
 
-    @Select("SELECT * FROM incident_report WHERE org_id = #{orgId} ORDER BY created_at DESC")
+    @Select("""
+    SELECT * 
+    FROM incident_report 
+    WHERE org_id = #{orgId} 
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+    """)
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
@@ -69,12 +75,23 @@ public interface AnalyticsMapper {
             @Result(property = "user", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
     })
-    List<IncidentReport> getIncidentReportByCompany(UUID orgId);
+    List<IncidentReport> getIncidentReportByCompanyPaged(
+            @Param("orgId") UUID orgId,
+            @Param("offset") int offset,
+            @Param("size") int size
+    );
+
 
     @Select("SELECT COUNT(*) FROM incident_report WHERE org_id = #{orgId}")
-    long getIncidentReportCountByCompany(UUID orgId);
+    int countIncidentReportsByCompany(UUID orgId);
 
-    @Select("SELECT * FROM incident_report WHERE status = false ORDER BY created_at DESC")
+    @Select("""
+    SELECT * 
+    FROM incident_report
+    WHERE status = false
+    ORDER BY created_at DESC
+    LIMIT #{size} OFFSET #{offset}
+    """)
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "createdAt", column = "created_at"),
@@ -84,8 +101,11 @@ public interface AnalyticsMapper {
             @Result(property = "user", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.AnalyticsMapper.getUser"))
     })
-    List<IncidentReport> getUnresolvedIncidentReports();
+    List<IncidentReport> getUnresolvedIncidentReports(
+            @Param("offset") int offset,
+            @Param("size") int size
+    );
 
     @Select("SELECT COUNT(*) FROM incident_report WHERE status = false")
-    long getUnresolvedIncidentCount();
+    int getUnresolvedIncidentCount();
 }
