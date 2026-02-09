@@ -189,12 +189,19 @@ public interface NodeMapper {
     Boolean existsByEmail(@Param("email") String email);
 
     @Select("""
-    SELECT 1
-    FROM region_bhub_service_centers
-      WHERE email = #{email}
+    SELECT EXISTS (
+        SELECT 1
+        FROM region_bhub_service_centers
+        WHERE email = #{email}
+          AND node_id != #{nodeId}
     LIMIT 1
+    )
     """)
-    Boolean existsByRegionEmail(@Param("email") String email);
+    Boolean existsByEmailExcludingNode(
+            @Param("email") String email,
+            @Param("nodeId") UUID nodeId
+    );
+
 
     @Select("""
     SELECT 1
@@ -213,14 +220,10 @@ public interface NodeMapper {
     @Select("""
     SELECT 1
     FROM region_bhub_service_centers
-    WHERE org_id = #{orgId}
-      AND email = #{email}
-      AND node_id != #{nodeId}
+    WHERE email = #{email}
     LIMIT 1
     """)
-    Boolean existsByRegionEmailExcludingCurrent(@Param("email") String email,
-                                                @Param("orgId") UUID orgId,
-                                                @Param("nodeId") UUID nodeId);
+    Boolean existsByRegionEmailExcludingCurrent(@Param("email") String email);
 
     @Select("""
     SELECT 1
@@ -263,13 +266,11 @@ public interface NodeMapper {
     @Select("""
     SELECT 1
     FROM substation_trans_feeder_lines
-    WHERE org_id = #{orgId}
-      AND email = #{email}
-      AND node_id != #{nodeId}
+    WHERE email = #{email}
+    AND node_id != #{nodeId}
     LIMIT 1
     """)
     Boolean existsByEmailForDifferentNode(@Param("email") String email,
-                                          @Param("orgId") UUID orgId,
                                           @Param("nodeId") UUID nodeId);
 
     @Select("""
