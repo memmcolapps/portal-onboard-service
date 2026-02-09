@@ -106,6 +106,34 @@ public class AnalyticsController {
         }
     }
 
+    @GetMapping("/incident/report/company/{orgId}")
+    public ResponseEntity<?> getIncidentReportsByCompany(
+            @PathVariable UUID orgId,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "0") int size,
+            @RequestParam(required = false) Boolean status) {
+        try {
+            Map<String, Object> result = service.getIncidentReportsByCompany(orgId, status, page, size);
+
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
+    @GetMapping("/incident/report/unresolved/latest")
+    public ResponseEntity<?> getLatestUnresolvedIncidents(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "0") int size) {
+        try {
+            Map<String, Object> result = service.getLatestUnresolvedIncidents(page, size);
+
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        }
+    }
+
     private ResponseEntity<Map<String, Object>> handleException(GlobalExceptionHandler.SQLServerException e) {
         return (ResponseEntity<Map<String, Object>>) exception.handleSQLServerException(e);
     }

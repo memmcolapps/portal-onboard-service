@@ -14,4 +14,8 @@ public interface AnalyticsService {
     Map<String, Object> getIncidentReport(Boolean status, int page, int size);
 
     Map<String, Object> getIncidentReportResolve(UUID id, Boolean status);
+
+    Map<String, Object> getIncidentReportsByCompany(UUID orgId, Boolean status, int page, int size);
+
+    Map<String, Object> getLatestUnresolvedIncidents(int page, int size);
 }
