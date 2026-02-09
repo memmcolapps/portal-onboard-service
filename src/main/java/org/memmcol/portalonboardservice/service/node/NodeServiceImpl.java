@@ -90,12 +90,6 @@ public class NodeServiceImpl implements NodeService {
                 );
             }
 
-//            if(n != null){
-//                if (n.getRegionId().equalsIgnoreCase(request.getRegionId())){
-//                    throw new GlobalExceptionHandler.NotFoundException("Region ID ("+ request.getRegionId()+") " + status.getExistDesc());
-//                }
-//            }
-
             if (Boolean.TRUE.equals(nodeMapper.existsByRegionEmailExcludingCurrent(request.getEmail()))) {
                 throw new GlobalExceptionHandler.NotFoundException(
                         "Email (" + request.getEmail() + ") already been used"
@@ -119,21 +113,6 @@ public class NodeServiceImpl implements NodeService {
                 }
             }
 
-//            RegionBhubServiceCenter duplicate = nodeMapper.verifyNode(request.getRegionId(), request.getOrgId());
-//            if (duplicate != null && request.getType().equalsIgnoreCase(duplicate.getType())) {
-//                throw new GlobalExceptionHandler.NotFoundException(
-//                        request.getType().substring(0, 1).toUpperCase()
-//                                + request.getType().substring(1).toLowerCase()
-//                                + " already exists for Region ID (" + request.getRegionId() + ")"
-//                );
-//            }
-
-//            if (Boolean.TRUE.equals(nodeMapper.existsByRegionEmail(request.getEmail(), request.getOrgId()))) {
-//                throw new GlobalExceptionHandler.NotFoundException(
-//                        "Email (" + request.getEmail() + ") already been used"
-//                );
-//            }
-
             nodeMapper.createNode(node);
 
             UUID nodeId = node.getId();
@@ -146,10 +125,6 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("business hub") ||
                     request.getType().equalsIgnoreCase("service center")){
 
-//                boolean emailExists = nodeMapper.existByEmail(request.getEmail());
-//                if(Boolean.TRUE.equals(emailExists)){
-//                    throw new GlobalExceptionHandler.NotFoundException("Email " + status.getExistDesc() + " For a Customer");
-//                }
                 request.setEmail(
                         StringUtils.isBlank(request.getEmail()) ? null : request.getEmail()
                 );
@@ -371,18 +346,6 @@ public class NodeServiceImpl implements NodeService {
                 }
             }
 
-//            // Validate Phone Number (only if phone number changed)
-//            if (request.getPhoneNo() != null && !request.getPhoneNo().isEmpty() &&
-//                    !request.getPhoneNo().equals(existingRecord.getPhoneNo())) {
-//
-//                if (Boolean.TRUE.equals(nodeMapper.existsByPhoneNumberExcludingCurrent(
-//                        request.getPhoneNo(), request.getOrgId(), request.getNodeId()))) {
-//                    throw new GlobalExceptionHandler.NotFoundException(
-//                            "Phone Number (" + request.getPhoneNo() + ") already been used"
-//                    );
-//                }
-//            }
-
             nodeMapper.updateNode(node);
 
             UUID nodeId = node.getId();
@@ -517,7 +480,6 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("feeder line") ||
                     request.getType().equalsIgnoreCase("substation")){
                 nodeMapper.updateSubStationTransformerFeederLine(request);
-//                id = request.getId();
                 subStationTransformerFeederLine = nodeMapper.getSubStationTransformerFeederLine(request.getNodeId());
                 desc = subStationTransformerFeederLine.getName()  + "edited";
             } else {
