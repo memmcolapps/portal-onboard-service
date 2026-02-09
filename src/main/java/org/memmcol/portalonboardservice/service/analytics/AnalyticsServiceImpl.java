@@ -404,44 +404,34 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     @Override
     public Map<String, Object> getIncidentReportsByCompany(UUID orgId, Boolean resultStatus, int page, int size) {
         try {
-            List<IncidentReport> allReports = analyticsMapper.getIncidentReportByCompany(orgId);
+            if (size <= 0) size = 10;
 
-            List<IncidentReport> filteredReports;
-            if (resultStatus == null) {
-                filteredReports = allReports;
-            } else {
-                filteredReports = allReports.stream()
+            int offset = page * size;
+
+            List<IncidentReport> paginatedReports = analyticsMapper
+                    .getIncidentReportByCompanyPaged(orgId, offset, size);
+
+            if (resultStatus != null) {
+                paginatedReports = paginatedReports.stream()
                         .filter(i -> resultStatus.equals(i.getStatus()))
                         .toList();
             }
 
-            int totalReports = filteredReports.size();
-            List<IncidentReport> paginatedReports;
-            if (size == 0) {
-                paginatedReports = filteredReports;
-            } else {
-                int fromIndex = Math.min(page * size, totalReports);
-                int toIndex = Math.min(fromIndex + size, totalReports);
-                paginatedReports = filteredReports.subList(fromIndex, toIndex);
-            }
-
-            int totalPages = (size > 0)
-                    ? (totalReports + size - 1) / size
-                    : 1;
+            int totalReports = analyticsMapper.countIncidentReportsByCompany(orgId);
+            int totalPages = (size > 0) ? (totalReports + size - 1) / size : 1;
 
             Map<String, Object> response = new HashMap<>();
             response.put("data", paginatedReports);
             response.put("totalData", totalReports);
             response.put("page", page);
             response.put("size", size);
-//            response.put("totalPages", (int) Math.ceil((double) totalReports / size));
             response.put("totalPages", totalPages);
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Incident reports by company fetched successfully", response
             );
         } catch (Exception exception) {
-            log.error("Error occurred while fetching incident reports by company [ACTION]: {}", exception.getMessage().trim(), exception);
+            log.error("Error occurred while fetching incident reports by company [ACTION]: {}",exception.getMessage().trim(), exception);
             genericHandler.logAndSaveException(exception, "fetching incident reports by company");
             throw exception;
         }
@@ -450,17 +440,14 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     @Override
     public Map<String, Object> getLatestUnresolvedIncidents(int page, int size) {
         try {
-            List<IncidentReport> allUnresolvedReports = analyticsMapper.getUnresolvedIncidentReports();
+            if (size <= 0) size = 10; // default page size
 
-            int totalReports = allUnresolvedReports.size();
-            List<IncidentReport> paginatedReports;
-            if (size == 0) {
-                paginatedReports = allUnresolvedReports;
-            } else {
-                int fromIndex = Math.min(page * size, totalReports);
-                int toIndex = Math.min(fromIndex + size, totalReports);
-                paginatedReports = allUnresolvedReports.subList(fromIndex, toIndex);
-            }
+            int offset = page * size;
+
+            // Fetch only paginated data
+            List<IncidentReport> paginatedReports = analyticsMapper.getUnresolvedIncidentReports(offset, size);
+
+            int totalReports = analyticsMapper.getUnresolvedIncidentCount();
 
             int totalPages = (size > 0)
                     ? (totalReports + size - 1) / size
@@ -472,13 +459,14 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             response.put("page", page);
             response.put("size", size);
             response.put("totalPages", totalPages);
-//            response.put("totalPages", (int) Math.ceil((double) totalReports / size));
 
             return ResponseMap.response(status.getSuccessCode(),
                     "Latest unresolved incidents fetched successfully", response
             );
+
         } catch (Exception exception) {
-            log.error("Error occurred while fetching latest unresolved incidents [ACTION]: {}", exception.getMessage().trim(), exception);
+            log.error("Error occurred while fetching latest unresolved incidents [ACTION]: {}",
+                    exception.getMessage().trim(), exception);
             genericHandler.logAndSaveException(exception, "fetching latest unresolved incidents");
             throw exception;
         }
