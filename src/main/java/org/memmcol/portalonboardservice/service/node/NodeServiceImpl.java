@@ -356,6 +356,9 @@ public class NodeServiceImpl implements NodeService {
                     request.getType().equalsIgnoreCase("business hub") ||
                     request.getType().equalsIgnoreCase("service center") ||
                     request.getType().equalsIgnoreCase("root")) {
+                request.setEmail(
+                        StringUtils.isBlank(request.getEmail()) ? null : request.getEmail()
+                );
                 nodeMapper.updateRegionBhubServiceCenter(request);
                 regionBhubServiceCenter = nodeMapper.getRegionBhubServiceCenter(request.getNodeId());
                 desc = regionBhubServiceCenter.getName()  + " edited";
@@ -479,6 +482,9 @@ public class NodeServiceImpl implements NodeService {
             if(request.getType().equalsIgnoreCase("dss") ||
                     request.getType().equalsIgnoreCase("feeder line") ||
                     request.getType().equalsIgnoreCase("substation")){
+                request.setEmail(
+                        StringUtils.isBlank(request.getEmail()) ? null : request.getEmail()
+                );
                 nodeMapper.updateSubStationTransformerFeederLine(request);
                 subStationTransformerFeederLine = nodeMapper.getSubStationTransformerFeederLine(request.getNodeId());
                 desc = subStationTransformerFeederLine.getName()  + "edited";
