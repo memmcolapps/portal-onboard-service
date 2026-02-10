@@ -348,9 +348,9 @@ public class NodeServiceImpl implements NodeService {
 
             nodeMapper.updateNode(node);
 
-            UUID nodeId = node.getId();
+//            UUID nodeId = node.getId();
 
-            request.setNodeId(nodeId);
+//            request.setNodeId(nodeId);
 
             if(request.getType().equalsIgnoreCase("region") ||
                     request.getType().equalsIgnoreCase("business hub") ||
@@ -474,10 +474,10 @@ public class NodeServiceImpl implements NodeService {
 
             nodeMapper.updateNode(node);
 
-            UUID nodeId = node.getId();
+//            UUID nodeId = node.getId();
 
-            request.setUpdatedAt(LocalDateTime.now());
-            request.setNodeId(nodeId);
+//            request.setUpdatedAt(LocalDateTime.now());
+//            request.setNodeId(nodeId);
 
             if(request.getType().equalsIgnoreCase("dss") ||
                     request.getType().equalsIgnoreCase("feeder line") ||
