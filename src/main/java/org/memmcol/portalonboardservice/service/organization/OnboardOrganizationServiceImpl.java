@@ -79,8 +79,15 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     public Map<String, Object> addOrganization(Organization organization, UserModel userModel) {
 
         try {
+            handleRequired(organization, userModel);
+
             Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
             Operator operator = handleUserValidation();
+
+            UserModel email = organizationMapper.getUserByEmail(userModel.getEmail());
+            if (email != null) {
+                throw new GlobalExceptionHandler.NotFoundException("Email already used");
+            }
 
             // Save to database ---
             organizationMapper.insertOrganization(organization);
@@ -199,6 +206,26 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
         }
     }
 
+    private void validateRequired(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new GlobalExceptionHandler.NotFoundException(fieldName + " is required");
+        }
+    }
+
+    private void handleRequired(Organization orgRequest, UserModel userRequest) {
+
+        validateRequired(orgRequest.getBusinessName(), "Business name");
+        validateRequired(orgRequest.getAddress(), "Address");
+        validateRequired(orgRequest.getCountry(), "Country");
+        validateRequired(orgRequest.getState(), "State");
+        validateRequired(orgRequest.getCity(), "City");
+
+        validateRequired(userRequest.getFirstname(), "Firstname");
+        validateRequired(userRequest.getLastname(), "Lastname");
+        validateRequired(userRequest.getEmail(), "Email");
+        validateRequired(userRequest.getPhoneNumber(), "Phone number");
+        validateRequired(userRequest.getPassword(), "Password");
+    }
 
     @Transactional(readOnly = true)
 //    @Cacheable(value = "organizationCache", key = "'allOrgs'")
@@ -410,6 +437,16 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 
             if (res == null) {
                 throw  new GlobalExceptionHandler.NotFoundException("Organization not found");
+            }
+
+            if (userModel.getEmail() != null) {
+                UserModel existingUser = organizationMapper.getUserByOrgId(organization.getId());
+                if (existingUser != null && !existingUser.getEmail().equals(userModel.getEmail())) {
+                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
+                    if (emailUser != null) {
+                        throw new GlobalExceptionHandler.NotFoundException("Email already used");
+                    }
+                }
             }
 
             int result;
