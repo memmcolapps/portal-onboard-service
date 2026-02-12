@@ -43,23 +43,33 @@ public class OnboardOrganizationController {
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> createOrganization(
-            @RequestParam Map<String, String> request,
+            @RequestParam(value = "businessName", required = true) String businessName,
+            @RequestParam(value = "postalCode", required = true) String postalCode,
+            @RequestParam(value = "address", required = true) String address,
+            @RequestParam(value = "country", required = true) String country,
+            @RequestParam(value = "state", required = true) String state,
+            @RequestParam(value = "city", required = true) String city,
+            @RequestParam(value = "firstName", required = true) String firstName,
+            @RequestParam(value = "lastName", required = true) String lastName,
+            @RequestParam(value = "email", required = true) String email,
+            @RequestParam(value = "password", required = true) String password,
+            @RequestParam(value = "phoneNumber", required = true) String phoneNumber,
             @RequestParam(value = "logo", required = false) MultipartFile file) {
 
         Organization organization = new Organization();
-        organization.setBusinessName(request.get("businessName"));
-        organization.setPostalCode(request.get("postalCode"));
-        organization.setAddress(request.get("address"));
-        organization.setCountry(request.get("country"));
-        organization.setState(request.get("state"));
-        organization.setCity(request.get("city"));
+        organization.setBusinessName(businessName);
+        organization.setPostalCode(postalCode);
+        organization.setAddress(address);
+        organization.setCountry(country);
+        organization.setState(state);
+        organization.setCity(city);
 
         UserModel userModel = new UserModel();
-        userModel.setFirstname(request.get("firstName"));
-        userModel.setLastname(request.get("lastName"));
-        userModel.setEmail(request.get("email"));
-        userModel.setPassword(request.get("password"));
-        userModel.setPhoneNumber(request.get("phoneNumber"));
+        userModel.setFirstname(firstName);
+        userModel.setLastname(lastName);
+        userModel.setEmail(email);
+        userModel.setPassword(password);
+        userModel.setPhoneNumber(phoneNumber);
 
         try {
             if (file != null) {
