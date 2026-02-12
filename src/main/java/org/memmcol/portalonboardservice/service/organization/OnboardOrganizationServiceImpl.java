@@ -454,10 +454,10 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
-            result = organizationMapper.updateUserByOrgId(userModel, organization.getId());
-            if(result == 0){
-                throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
-            }
+//            result = organizationMapper.updateUserByOrgId(userModel, organization.getId());
+//            if(result == 0){
+//                throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
+//            }
 
             AuditLog auditLog = buildAuditLog(operator, "Organization edited", "organization", res, metadata);
 //            auditRepository.save(auditLog);
