@@ -62,7 +62,7 @@ public interface AnalyticsMapper {
     @Select("""
     SELECT * 
     FROM incident_report 
-    WHERE org_id = #{orgId} 
+    WHERE org_id = #{orgId}  AND status = #{status}
     ORDER BY created_at DESC
     LIMIT #{size} OFFSET #{offset}
     """)
@@ -77,13 +77,14 @@ public interface AnalyticsMapper {
     })
     List<IncidentReport> getIncidentReportByCompanyPaged(
             @Param("orgId") UUID orgId,
+            @Param("status") Boolean status,
             @Param("offset") int offset,
             @Param("size") int size
     );
 
 
-    @Select("SELECT COUNT(*) FROM incident_report WHERE org_id = #{orgId}")
-    int countIncidentReportsByCompany(UUID orgId);
+    @Select("SELECT COUNT(*) FROM incident_report WHERE org_id = #{orgId} AND status= #{status}")
+    int countIncidentReportsByCompany(UUID orgId, Boolean status);
 
     @Select("""
     SELECT * 
