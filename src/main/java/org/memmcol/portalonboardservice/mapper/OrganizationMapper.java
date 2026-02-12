@@ -35,18 +35,18 @@ public interface OrganizationMapper {
             "</script>")
     int updateOrganizationSelective(@Param("organization") Organization organization);
 
-    @Update("<script>" +
-            "UPDATE users " +
-            "<trim prefix='SET' suffixOverrides=','>" +
-            "  <if test='userModel.email != null'>email = #{userModel.email},</if>" +
-            "  <if test='userModel.phoneNumber != null'>phone_number = #{userModel.phoneNumber},</if>" +
-            "  <if test='userModel.firstname != null'>firstname = #{userModel.firstname},</if>" +
-            "  <if test='userModel.lastname != null'>lastname = #{userModel.lastname},</if>" +
-            "  updated_at = #{userModel.updatedAt}" +
-            "</trim> " +
-            "WHERE id = #{userModel.id} AND org_id = #{orgId}" +
-            "</script>")
-    int updateUserByOrgId(@Param("userModel") UserModel userModel, @Param("orgId") UUID orgId);
+//    @Update("<script>" +
+//            "UPDATE users " +
+//            "<trim prefix='SET' suffixOverrides=','>" +
+//            "  <if test='userModel.email != null'>email = #{userModel.email},</if>" +
+//            "  <if test='userModel.phoneNumber != null'>phone_number = #{userModel.phoneNumber},</if>" +
+//            "  <if test='userModel.firstname != null'>firstname = #{userModel.firstname},</if>" +
+//            "  <if test='userModel.lastname != null'>lastname = #{userModel.lastname},</if>" +
+//            "  updated_at = #{userModel.updatedAt}" +
+//            "</trim> " +
+//            "WHERE id = #{userModel.id} AND org_id = #{orgId}" +
+//            "</script>")
+//    int updateUserByOrgId(@Param("userModel") UserModel userModel, @Param("orgId") UUID orgId);
 
 
     @Insert("""
@@ -124,6 +124,7 @@ public interface OrganizationMapper {
             @Result(property = "id", column = "id"),
             @Result(property = "orgId", column = "org_id"),
             @Result(property = "nodeId", column = "node_id"),
+            @Result(property = "phoneNumber", column = "phone_number"),
             @Result(property = "lastActive", column = "last_active"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),

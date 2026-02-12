@@ -42,6 +42,7 @@ public class GenericHandler {
     }
 
     public static String getClientIp(HttpServletRequest request) {
+        /*
         String ip = request.getHeader("X-Forwarded-For");
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
             return ip.split(",")[0].trim();
@@ -51,6 +52,39 @@ public class GenericHandler {
             return ip;
         }
         return request.getRemoteAddr();
+        */
+
+        // Debug logging for AWS API Gateway
+        log.debug("IP Headers Debug - X-Forwarded-For: {}, X-Real-IP: {}, RemoteAddr: {}",
+                request.getHeader("X-Forwarded-For"),
+                request.getHeader("X-Real-IP"),
+                request.getRemoteAddr());
+
+        // Check X-Forwarded-For (standard header, may contain: client-ip, proxy1, proxy2, ...)
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            // Take the first IP (original client) before any commas
+            String[] ips = ip.split(",");
+            for (String potentialIp : ips) {
+                String trimmedIp = potentialIp.trim();
+                if (!"unknown".equalsIgnoreCase(trimmedIp)) {
+                    log.debug("X-Forwarded-For found multiple IPs, using first valid: {}", trimmedIp);
+                    return trimmedIp;
+                }
+            }
+        }
+
+        // Check X-Real-IP (used by Nginx, Cloudflare, and some proxies)
+        ip = request.getHeader("X-Real-IP");
+        if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+            log.debug("Using X-Real-IP: {}", ip);
+            return ip;
+        }
+
+        // Fallback to direct connection IP
+        String remoteAddr = request.getRemoteAddr();
+        log.debug("Using RemoteAddr (fallback): {}", remoteAddr);
+        return remoteAddr;
     }
 
 }
