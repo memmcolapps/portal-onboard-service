@@ -215,7 +215,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             long totalUnresolved = incidentReport.size() - totalResolved;
 
-            List<IncidentReport> incidentReportsLimited = incidentReport.stream().limit(5).collect(Collectors.toList());
+            List<IncidentReport> incidentReportsLimited = incidentReport.stream().filter(i -> !i.getStatus()).limit(5).collect(Collectors.toList());
 
             // Fetch daily reports
             List<UptimeReport> dailyReports = reportRepository
@@ -409,7 +409,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             int offset = page * size;
 
             List<IncidentReport> paginatedReports = analyticsMapper
-                    .getIncidentReportByCompanyPaged(orgId, offset, size);
+                    .getIncidentReportByCompanyPaged(orgId,resultStatus, offset, size);
 
             if (resultStatus != null) {
                 paginatedReports = paginatedReports.stream()
@@ -417,7 +417,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
                         .toList();
             }
 
-            int totalReports = analyticsMapper.countIncidentReportsByCompany(orgId);
+            int totalReports = analyticsMapper.countIncidentReportsByCompany(orgId, resultStatus);
             int totalPages = (size > 0) ? (totalReports + size - 1) / size : 1;
 
             Map<String, Object> response = new HashMap<>();
