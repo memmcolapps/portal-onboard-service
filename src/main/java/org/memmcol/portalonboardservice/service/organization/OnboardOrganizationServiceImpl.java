@@ -440,12 +440,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             }
 
             if (userModel.getEmail() != null) {
-                UserModel existingUser = organizationMapper.getUserByOrgId(organization.getId());
-                if (existingUser != null && !existingUser.getEmail().equals(userModel.getEmail())) {
-                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
-                    if (emailUser != null) {
-                        throw new GlobalExceptionHandler.NotFoundException("Email already used");
-                    }
+                UserModel existingUser = organizationMapper.getUserByEmail(userModel.getEmail());
+                if (existingUser != null && !existingUser.getId().equals(userModel.getId())) {
+//                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
+//                    if (emailUser != null) {
+                    throw new GlobalExceptionHandler.NotFoundException("Email already used");
+//                    }
                 }
             }
 
