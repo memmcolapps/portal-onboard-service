@@ -55,7 +55,7 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
             List<IncidentReport> incidentReport = analyticsMapper.getIncidentReport();
 
-            long incidentCount  = incidentReport.stream().filter(ic -> ic.getCreatedAt().toLocalDate().isEqual(date)).count();
+            long incidentCount  = incidentReport.stream().count();
 
             // Fetch utility companies
             List<Organization> organizations = analyticsMapper.getAllOrganizations();
