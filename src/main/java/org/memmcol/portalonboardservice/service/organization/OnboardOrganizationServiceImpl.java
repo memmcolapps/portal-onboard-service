@@ -308,7 +308,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 org.setNodes(root);
                 Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
                 Long orgFeederCount = organizationMapper.totalFeeder(org.getId());
-                BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
+                BigDecimal orgVendingTotal = organizationMapper.totalVending(org.getId());
                 BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
                 // Set in organization object
@@ -359,7 +359,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 //        Map<String, Object> res;
         try {
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-            BigDecimal orgVendingTotal = organizationMapper.totalVending(orgId);
+            BigDecimal orgVendingTotal = organizationMapper.initialSumVended(orgId);
             BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
 //            // 1. Check cache first

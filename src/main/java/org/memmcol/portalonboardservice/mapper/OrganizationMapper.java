@@ -296,6 +296,9 @@ public interface OrganizationMapper {
     void suspendOrganization(UUID id, Boolean suspend);
 
     @Select("SELECT SUM(initial_amount) FROM vw_vending_transactions_summary WHERE org_id = #{id} And status = 'Successful' ")
+    BigDecimal initialSumVended(UUID id);
+
+    @Select("SELECT COUNT(*) FROM vw_vending_transactions_summary WHERE org_id = #{id} And status = 'Successful' ")
     BigDecimal totalVending(UUID id);
 
 }

@@ -1,17 +1,21 @@
 package org.memmcol.portalonboardservice.service.contact_message;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.mapper.ContactMessageMapper;
 import org.memmcol.portalonboardservice.mapper.PortalUserMapper;
 import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
+import org.memmcol.portalonboardservice.model.node.RegionBhubServiceCenter;
+import org.memmcol.portalonboardservice.model.node.SubStationTransformerFeederLine;
 import org.memmcol.portalonboardservice.model.user.ContactMessage;
 import org.memmcol.portalonboardservice.model.user.ContactMessageSearchCriteria;
 import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.user.ReadMessages;
 import org.memmcol.portalonboardservice.repository.AuditRepository;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.memmcol.portalonboardservice.service.organization.OnboardOrganizationServiceImpl;
 import org.memmcol.portalonboardservice.util.GlobalExceptionHandler;
 import org.memmcol.portalonboardservice.util.ResponseMap;
@@ -35,6 +39,12 @@ public class ContactServiceImpl implements ContactService{
     private final ContactMessageMapper contactMessageMapper;
     private final ExceptionAuditRepository exceptionAuditRepository;
     private static final Logger log = LoggerFactory.getLogger(ContactServiceImpl.class);
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
+    @Autowired
+    private SafeAuditService safeAuditService;
 
     @Autowired
     private ResponseProperties status;
@@ -73,6 +83,8 @@ public class ContactServiceImpl implements ContactService{
     public Map<String, Object> addReadMessage(UUID msgId) {
         try {
 
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
+            String desc;
             Operator operatorAction = handleUserValidation();
             UUID currentOperator = operatorAction.getId();
 
@@ -85,6 +97,12 @@ public class ContactServiceImpl implements ContactService{
                 readMessages.setStatus(true);
                 contactMessageMapper.insertReadMessage(readMessages);
             }
+            String auditType = "message";
+            desc ="Message "+ msgId+" Read";
+
+            AuditLog auditLog = buildAuditLog(operatorAction, desc,auditType, metadata);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(
                     status.getSuccessCode(), "Message marked read successfully", "");
 
@@ -136,5 +154,18 @@ public class ContactServiceImpl implements ContactService{
             throw exception;
         }
     }
+
+    private AuditLog buildAuditLog(Operator creator, String description, String type, Map<String, String> metadata) {
+        AuditLog log = new AuditLog();
+        log.setCreator(creator);
+        log.setDescription(description);
+        log.setType(type);
+        log.setIpAddress(metadata.get("ipAddress"));
+        log.setUserAgent(metadata.get("userAgent"));
+        log.setEndPoint(metadata.get("endpoint"));
+        log.setHttpMethod(metadata.get("httpMethod"));
+        return log;
+    }
+
 
 }
