@@ -286,6 +286,22 @@ public interface OrganizationMapper {
     })
     NodeInfo getHierarchyById(UUID nodeId);
 
+@Select("SELECT * FROM xyz WHERE org_id = #{orgId} AND module = #{module}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "module", column = "module"),
+            @Result(property = "moduleStatus", column = "module_status")
+    })
+    XYZ getXyzByOrgAndModule(@Param("orgId") UUID orgId, @Param("module") String module);
+
+    @Insert("INSERT INTO xyz (module, status, org_id) VALUES ( #{module}, #{moduleStatus}, #{orgId})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    void insertXyz(XYZ xyz);
+
+    @Update("UPDATE xyz SET status = #{status} WHERE id = #{id}")
+    void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
+
     @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
     Long totalCustomer(UUID id);
 
