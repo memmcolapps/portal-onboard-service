@@ -43,6 +43,8 @@ public class Organization implements Serializable {
 
     private Node nodes;
 
+    private List<XYZ> moduleAccess;
+
     private Long totalCustomer;
 
     private Long totalFeeder;
@@ -50,8 +52,6 @@ public class Organization implements Serializable {
     private BigDecimal totalVending;
 
     private BigDecimal totalBilling;
-
-    private List<XYZ> moduleAccess;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -206,5 +206,13 @@ public class Organization implements Serializable {
 
     public void setNodes(Node nodes) {
         this.nodes = nodes;
+    }
+
+    public List<XYZ> getModuleAccess() {
+        return moduleAccess;
+    }
+
+    public void setModuleAccess(List<XYZ> moduleAccess) {
+        this.moduleAccess = moduleAccess;
     }
 }
