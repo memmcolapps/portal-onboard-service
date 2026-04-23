@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -49,6 +50,8 @@ public class Organization implements Serializable {
     private BigDecimal totalVending;
 
     private BigDecimal totalBilling;
+
+    private List<XYZ> moduleAccess;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
