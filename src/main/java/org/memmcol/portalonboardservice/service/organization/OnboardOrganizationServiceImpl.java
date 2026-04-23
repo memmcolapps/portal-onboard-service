@@ -526,8 +526,6 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
                     results.add(Map.of("module", moduleName, "status", statusText));
                     continue;
                 }
-                System.out.println("requestedStatus: "+requestedStatus);
-                System.out.println("existingXyz.getId(): "+existingXyz.getId());
                 organizationMapper.updateXyzStatusById(existingXyz.getId(), requestedStatus);
 
                 String statusText = requestedStatus ? "activated" : "deactivated";

@@ -114,7 +114,10 @@ public interface OrganizationMapper {
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
-                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator"))
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator")),
+            @Result(property = "moduleAccess", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getXyzByOrgId"))
+
     })
     List<Organization> getAllOrganizations();
 
@@ -192,7 +195,7 @@ public interface OrganizationMapper {
 //    })
 //    List<Organization> getOrganizations(@Param("size") int size, @Param("offset") int offset);
 
-    @Select("SELECT * FROM organizations WHERE id = #{id}")
+@Select("SELECT * FROM organizations WHERE id = #{id}")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "userId", column = "user_id"),
@@ -202,8 +205,8 @@ public interface OrganizationMapper {
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator")),
-//            @Result(property = "nodes", column = "id",
-//                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getNode"))
+            @Result(property = "moduleAccess", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getXyzByOrgId"))
     })
     Organization getOrganizationById(@Param("id") UUID id);
 
@@ -286,12 +289,21 @@ public interface OrganizationMapper {
     })
     NodeInfo getHierarchyById(UUID nodeId);
 
-@Select("SELECT * FROM xyz WHERE org_id = #{orgId} AND module = #{module}")
+@Select("SELECT * FROM xyz WHERE org_id = #{orgId}")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "orgId", column = "org_id"),
             @Result(property = "module", column = "module"),
-            @Result(property = "moduleStatus", column = "module_status")
+            @Result(property = "status", column = "status")
+    })
+    List<XYZ> getXyzByOrgId(@Param("orgId") UUID orgId);
+
+    @Select("SELECT * FROM xyz WHERE org_id = #{orgId} AND module = #{module}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "module", column = "module"),
+            @Result(property = "status", column = "status")
     })
     XYZ getXyzByOrgAndModule(@Param("orgId") UUID orgId, @Param("module") String module);
 
