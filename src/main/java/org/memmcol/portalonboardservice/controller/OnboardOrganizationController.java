@@ -88,7 +88,8 @@ public class OnboardOrganizationController {
     }
 
     @PatchMapping("/update")
-    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody OnboardingOrganizationDTO request) {
+    public ResponseEntity<Map<String, Object>> updateOrganization(
+            @RequestBody OnboardingOrganizationDTO request) {
         Organization organization = new Organization();
         organization.setId(request.getId());
         organization.setBusinessName(request.getBusinessName());

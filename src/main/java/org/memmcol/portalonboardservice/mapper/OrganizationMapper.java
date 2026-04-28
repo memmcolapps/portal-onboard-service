@@ -307,11 +307,14 @@ public interface OrganizationMapper {
     })
     XYZ getXyzByOrgAndModule(@Param("orgId") UUID orgId, @Param("module") String module);
 
-    @Insert("INSERT INTO xyz (module, status, org_id) VALUES ( #{module}, #{moduleStatus}, #{orgId})")
+    @Insert("INSERT INTO xyz (module, status, org_id) VALUES ( #{module}, #{status}, #{orgId})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertXyz(XYZ xyz);
 
-    @Update("UPDATE xyz SET status = #{status} WHERE id = #{id}")
+//    @Update("UPDATE xyz SET status = #{status} WHERE id = #{id}")
+//    void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
+
+    @Delete("DELETE FROM xyz WHERE id = #{id}")
     void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
 
     @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
