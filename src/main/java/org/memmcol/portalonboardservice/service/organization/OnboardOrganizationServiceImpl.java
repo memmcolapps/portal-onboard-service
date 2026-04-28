@@ -480,24 +480,24 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
         try {
             List<Map<String, Object>> results = new ArrayList<>();
 
-            String dataMgmtValue = ModuleType.DATA_MANAGEMENT.getValue();
-            XYZ existingDataMgmt = organizationMapper.getXyzByOrgAndModule(orgId, dataMgmtValue);
-            if (existingDataMgmt == null) {
-                XYZ xyz = new XYZ();
-                xyz.setModule(dataMgmtValue);
-                xyz.setStatus(true);
-                xyz.setOrgId(orgId);
-                organizationMapper.insertXyz(xyz);
-                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "activated"));
-            } else {
-                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "already activated"));
-            }
+//            String dataMgmtValue = ModuleType.DATA_MANAGEMENT.getValue();
+//            XYZ existingDataMgmt = organizationMapper.getXyzByOrgAndModule(orgId, dataMgmtValue);
+//            if (existingDataMgmt == null) {
+//                XYZ xyz = new XYZ();
+//                xyz.setModule(dataMgmtValue);
+//                xyz.setStatus(true);
+//                xyz.setOrgId(orgId);
+//                organizationMapper.insertXyz(xyz);
+//                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "activated"));
+//            } else {
+//                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "already activated"));
+//            }
 
             for (Map.Entry<String, Boolean> entry : module.entrySet()) {
                 String moduleName = entry.getKey();
                 Boolean requestedStatus = entry.getValue();
 
-                if (moduleName.equals("DATA_MANAGEMENT")) continue;
+//                if (moduleName.equals("DATA_MANAGEMENT")) continue;
 
                 ModuleType moduleType = ModuleType.fromName(moduleName);
                 if (moduleType == null) {
@@ -536,10 +536,10 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
             for (Map<String, Object> result : results) {
                 String moduleName = (String) result.get("module");
                 String status = (String) result.get("status");
-                if (!moduleName.equals("DATA_MANAGEMENT")) {
+//                if (!moduleName.equals("DATA_MANAGEMENT")) {
                     if (message.length() > 0) message.append(", ");
                     message.append(moduleName).append(": ").append(status);
-                }
+//                }
             }
 
             return ResponseMap.response(status.getSuccessCode(), message.toString(), "");

@@ -1,7 +1,7 @@
 package org.memmcol.portalonboardservice.model.user;
 
 public enum ModuleType {
-    DATA_MANAGEMENT("re12kmd783nd&h#$k4sd7012nh&dk"),
+//    DATA_MANAGEMENT("re12kmd783nd&h#$k4sd7012nh&dk"),
     VENDING("5rtyek&mrtiks5784092nbdhnjk!34@"),
     HES("@478nks#5kljh%ngh&jjkjkjkld##bjk134"),
     BILLING("9gwjk982bhdbgu$gjjksd)hj9bjjj@13bvnb%");
