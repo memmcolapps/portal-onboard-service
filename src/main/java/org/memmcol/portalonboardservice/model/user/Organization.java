@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -41,6 +42,8 @@ public class Organization implements Serializable {
     private UserModel operator;
 
     private Node nodes;
+
+    private List<XYZ> moduleAccess;
 
     private Long totalCustomer;
 
@@ -203,5 +206,13 @@ public class Organization implements Serializable {
 
     public void setNodes(Node nodes) {
         this.nodes = nodes;
+    }
+
+    public List<XYZ> getModuleAccess() {
+        return moduleAccess;
+    }
+
+    public void setModuleAccess(List<XYZ> moduleAccess) {
+        this.moduleAccess = moduleAccess;
     }
 }

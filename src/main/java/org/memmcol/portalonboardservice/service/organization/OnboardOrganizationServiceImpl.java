@@ -38,7 +38,7 @@ import static org.memmcol.portalonboardservice.components.handleValidUser.handle
 public class OnboardOrganizationServiceImpl implements OnboardOrganizationService {
 
 
-    private final OrganizationMapper organizationMapper;
+private final OrganizationMapper organizationMapper;
     private final NodeMapper nodeMapper;
     private final ExceptionAuditRepository exceptionAuditRepository;
     private static final Logger log = LoggerFactory.getLogger(OnboardOrganizationServiceImpl.class);
@@ -64,7 +64,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
     private final IMap<String, Organization> organizationCache;
 
     // Other mappers can be added as needed
-    public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
+public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
                                           NodeMapper nodeMapper,
                                           ExceptionAuditRepository exceptionAuditRepository,
                                           @Qualifier("hazelcastInstance") HazelcastInstance hazelcastInstance) {
@@ -308,7 +308,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
                 org.setNodes(root);
                 Long orgCustomerCount = organizationMapper.totalCustomer(org.getId());
                 Long orgFeederCount = organizationMapper.totalFeeder(org.getId());
-                BigDecimal orgVendingTotal = BigDecimal.valueOf(0);
+                BigDecimal orgVendingTotal = organizationMapper.totalVending(org.getId());
                 BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
                 // Set in organization object
@@ -359,7 +359,7 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
 //        Map<String, Object> res;
         try {
             String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-            BigDecimal orgVendingTotal = organizationMapper.totalVending(orgId);
+            BigDecimal orgVendingTotal = organizationMapper.initialSumVended(orgId);
             BigDecimal orgBillingTotal = BigDecimal.valueOf(0);
 
 //            // 1. Check cache first
@@ -440,12 +440,12 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             }
 
             if (userModel.getEmail() != null) {
-                UserModel existingUser = organizationMapper.getUserByOrgId(organization.getId());
-                if (existingUser != null && !existingUser.getEmail().equals(userModel.getEmail())) {
-                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
-                    if (emailUser != null) {
-                        throw new GlobalExceptionHandler.NotFoundException("Email already used");
-                    }
+                UserModel existingUser = organizationMapper.getUserByEmail(userModel.getEmail());
+                if (existingUser != null && !existingUser.getId().equals(userModel.getId())) {
+//                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
+//                    if (emailUser != null) {
+                    throw new GlobalExceptionHandler.NotFoundException("Email already used");
+//                    }
                 }
             }
 
@@ -473,6 +473,81 @@ public class OnboardOrganizationServiceImpl implements OnboardOrganizationServic
             throw exception;
         }
 
+    }
+
+    @Override
+    public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean> module) {
+        try {
+            List<Map<String, Object>> results = new ArrayList<>();
+
+            String dataMgmtValue = ModuleType.DATA_MANAGEMENT.getValue();
+            XYZ existingDataMgmt = organizationMapper.getXyzByOrgAndModule(orgId, dataMgmtValue);
+            if (existingDataMgmt == null) {
+                XYZ xyz = new XYZ();
+                xyz.setModule(dataMgmtValue);
+                xyz.setStatus(true);
+                xyz.setOrgId(orgId);
+                organizationMapper.insertXyz(xyz);
+                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "activated"));
+            } else {
+                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "already activated"));
+            }
+
+            for (Map.Entry<String, Boolean> entry : module.entrySet()) {
+                String moduleName = entry.getKey();
+                Boolean requestedStatus = entry.getValue();
+
+                if (moduleName.equals("DATA_MANAGEMENT")) continue;
+
+                ModuleType moduleType = ModuleType.fromName(moduleName);
+                if (moduleType == null) {
+                    throw new IllegalArgumentException("Invalid module type: " + moduleName);
+                }
+
+                String moduleValue = moduleType.getValue();
+                XYZ existingXyz = organizationMapper.getXyzByOrgAndModule(orgId, moduleValue);
+
+                if (existingXyz == null) {
+                    XYZ xyz = new XYZ();
+                    xyz.setModule(moduleValue);
+                    xyz.setStatus(requestedStatus);
+                    xyz.setOrgId(orgId);
+                    organizationMapper.insertXyz(xyz);
+
+                    String statusText = requestedStatus ? "activated" : "deactivated";
+                    results.add(Map.of("module", moduleName, "status", statusText));
+                    continue;
+                }
+
+                boolean currentStatus = existingXyz.isStatus();
+
+                if (currentStatus == requestedStatus) {
+                    String statusText = currentStatus ? "already activated" : "already deactivated";
+                    results.add(Map.of("module", moduleName, "status", statusText));
+                    continue;
+                }
+                organizationMapper.updateXyzStatusById(existingXyz.getId(), requestedStatus);
+
+                String statusText = requestedStatus ? "activated" : "deactivated";
+                results.add(Map.of("module", moduleName, "status", statusText));
+            }
+
+            StringBuilder message = new StringBuilder();
+            for (Map<String, Object> result : results) {
+                String moduleName = (String) result.get("module");
+                String status = (String) result.get("status");
+                if (!moduleName.equals("DATA_MANAGEMENT")) {
+                    if (message.length() > 0) message.append(", ");
+                    message.append(moduleName).append(": ").append(status);
+                }
+            }
+
+            return ResponseMap.response(status.getSuccessCode(), message.toString(), "");
+        } catch (Exception exception) {
+            log.error("Error activating module: {}", exception.getMessage(), exception);
+            genericHandler.logAndSaveException(exception, "activating module");
+            throw exception;
+        }
     }
 
     @Override

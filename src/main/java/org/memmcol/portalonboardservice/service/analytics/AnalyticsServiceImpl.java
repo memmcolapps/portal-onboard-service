@@ -1,14 +1,18 @@
 package org.memmcol.portalonboardservice.service.analytics;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.memmcol.portalonboardservice.components.GenericHandler;
 import org.memmcol.portalonboardservice.config.ResponseProperties;
 import org.memmcol.portalonboardservice.mapper.AnalyticsMapper;
+import org.memmcol.portalonboardservice.model.audit.AuditLog;
 import org.memmcol.portalonboardservice.model.audit.ExceptionErrorLogs;
 import org.memmcol.portalonboardservice.model.audit.IncidentReport;
 import org.memmcol.portalonboardservice.model.audit.UptimeReport;
+import org.memmcol.portalonboardservice.model.user.Operator;
 import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.repository.ExceptionAuditRepository;
 import org.memmcol.portalonboardservice.repository.UptimeReportRepository;
+import org.memmcol.portalonboardservice.service.auditlog.SafeAuditService;
 import org.memmcol.portalonboardservice.service.node.NodeServiceImpl;
 import org.memmcol.portalonboardservice.util.ResponseMap;
 import org.slf4j.Logger;
@@ -20,6 +24,8 @@ import java.time.*;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.memmcol.portalonboardservice.components.handleValidUser.handleUserValidation;
 
 
 @Service
@@ -34,6 +40,12 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Autowired
     private ResponseProperties status;
+
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
+    @Autowired
+    private SafeAuditService safeAuditService;
 
     @Autowired
     private AnalyticsMapper analyticsMapper;
@@ -390,7 +402,19 @@ public class AnalyticsServiceImpl implements AnalyticsService{
     @Override
     public Map<String, Object> getIncidentReportResolve(UUID id, Boolean state) {
         try {
+            Map<String, String> metadata = genericHandler.extractRequestMetadata(httpServletRequest);
+            String desc;
+            Operator operatorAction = handleUserValidation();
+            UUID currentOperator = operatorAction.getId();
+
             IncidentReport response = analyticsMapper.getIncidentReportResolve(state, id);
+
+            String auditType = "incident resolved";
+            desc ="Incident "+ id +" Resolved";
+
+            AuditLog auditLog = buildAuditLog(operatorAction, desc,auditType, metadata);
+//            auditRepository.save(auditLog);
+            safeAuditService.saveAudit(auditLog);
             return ResponseMap.response(status.getSuccessCode(),
                     "Incident reports resolved successfully", response
             );
@@ -470,6 +494,19 @@ public class AnalyticsServiceImpl implements AnalyticsService{
             genericHandler.logAndSaveException(exception, "fetching latest unresolved incidents");
             throw exception;
         }
+    }
+
+    private AuditLog buildAuditLog(Operator creator, String description, String type, Map<String, String> metadata) {
+        AuditLog log = new AuditLog();
+        log.setCreator(creator);
+        log.setDescription(description);
+        log.setType(type);
+//        log.setOperator(createdEntity);
+        log.setIpAddress(metadata.get("ipAddress"));
+        log.setUserAgent(metadata.get("userAgent"));
+        log.setEndPoint(metadata.get("endpoint"));
+        log.setHttpMethod(metadata.get("httpMethod"));
+        return log;
     }
 
 
