@@ -315,7 +315,7 @@ public interface OrganizationMapper {
 //    void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
 
     @Delete("DELETE FROM xyz WHERE id = #{id}")
-    void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
+    void deleteXyzFalseStatusById(@Param("id") UUID id);
 
     @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
     Long totalCustomer(UUID id);
