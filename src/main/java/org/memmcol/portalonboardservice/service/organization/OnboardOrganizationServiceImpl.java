@@ -476,28 +476,20 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
     }
 
     @Override
-    public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean> module) {
+public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean> module) {
         try {
             List<Map<String, Object>> results = new ArrayList<>();
 
-//            String dataMgmtValue = ModuleType.DATA_MANAGEMENT.getValue();
-//            XYZ existingDataMgmt = organizationMapper.getXyzByOrgAndModule(orgId, dataMgmtValue);
-//            if (existingDataMgmt == null) {
-//                XYZ xyz = new XYZ();
-//                xyz.setModule(dataMgmtValue);
-//                xyz.setStatus(true);
-//                xyz.setOrgId(orgId);
-//                organizationMapper.insertXyz(xyz);
-//                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "activated"));
-//            } else {
-//                results.add(Map.of("module", "DATA_MANAGEMENT", "status", "already activated"));
-//            }
+            // Auto-activate default modules (DATA_MANAGEMENT, USER_MANAGEMENT) if not in user input
+            for (ModuleType type : ModuleType.values()) {
+                if (type.isDefault()) {
+                    module.putIfAbsent(type.name(), true);
+                }
+            }
 
             for (Map.Entry<String, Boolean> entry : module.entrySet()) {
                 String moduleName = entry.getKey();
                 Boolean requestedStatus = entry.getValue();
-
-//                if (moduleName.equals("DATA_MANAGEMENT")) continue;
 
                 ModuleType moduleType = ModuleType.fromName(moduleName);
                 if (moduleType == null) {
@@ -507,39 +499,60 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
                 String moduleValue = moduleType.getValue();
                 XYZ existingXyz = organizationMapper.getXyzByOrgAndModule(orgId, moduleValue);
 
-                if (existingXyz == null) {
-                    XYZ xyz = new XYZ();
-                    xyz.setModule(moduleValue);
-                    xyz.setStatus(requestedStatus);
-                    xyz.setOrgId(orgId);
-                    organizationMapper.insertXyz(xyz);
+                if (Boolean.TRUE.equals(requestedStatus)) {
 
-                    String statusText = requestedStatus ? "activated" : "deactivated";
-                    results.add(Map.of("module", moduleName, "status", statusText));
-                    continue;
+                    if (existingXyz == null) {
+                        XYZ xyz = new XYZ();
+                        xyz.setModule(moduleValue);
+                        xyz.setStatus(true);
+                        xyz.setOrgId(orgId);
+                        organizationMapper.insertXyz(xyz);
+
+                        results.add(Map.of("module", moduleName, "status", "activated"));
+                    }else {
+                        results.add(Map.of("module", moduleName, "status", "already activated"));
+                    }
+                }else {
+                    if (existingXyz != null) {
+                        results.add(Map.of("module", moduleName, "status", "deactivated"));
+
+                    }else {
+                        results.add(Map.of("module", moduleName, "status", "already deactivated"));
+                    }
                 }
 
-                boolean currentStatus = existingXyz.isStatus();
-
-                if (currentStatus == requestedStatus) {
-                    String statusText = currentStatus ? "already activated" : "already deactivated";
-                    results.add(Map.of("module", moduleName, "status", statusText));
-                    continue;
-                }
-                organizationMapper.updateXyzStatusById(existingXyz.getId(), requestedStatus);
-
-                String statusText = requestedStatus ? "activated" : "deactivated";
-                results.add(Map.of("module", moduleName, "status", statusText));
+//                if (existingXyz == null) {
+//                    XYZ xyz = new XYZ();
+//                    xyz.setModule(moduleValue);
+//                    xyz.setStatus(requestedStatus);
+//                    xyz.setOrgId(orgId);
+//                    organizationMapper.insertXyz(xyz);
+//
+//                    String statusText = requestedStatus ? "activated" : "deactivated";
+//                    results.add(Map.of("module", moduleName, "status", statusText));
+//                    continue;
+//                }
+//
+//                boolean currentStatus = existingXyz.isStatus();
+//
+//                if (currentStatus == requestedStatus) {
+//                    String statusText = currentStatus ? "already activated" : "already deactivated";
+//                    results.add(Map.of("module", moduleName, "status", statusText));
+//                    continue;
+//                }
+//
+//                String statusText = requestedStatus ? "activated" : "deactivated";
+//                results.add(Map.of("module", moduleName, "status", statusText));
             }
 
             StringBuilder message = new StringBuilder();
             for (Map<String, Object> result : results) {
                 String moduleName = (String) result.get("module");
                 String status = (String) result.get("status");
-//                if (!moduleName.equals("DATA_MANAGEMENT")) {
+                if (!moduleName.equals("DATA_MANAGEMENT") && !moduleName.equals("USER_MANAGEMENT")) {
                     if (message.length() > 0) message.append(", ");
                     message.append(moduleName).append(": ").append(status);
-//                }
+                }
             }
 
             return ResponseMap.response(status.getSuccessCode(), message.toString(), "");
