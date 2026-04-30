@@ -490,7 +490,6 @@ public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean
             for (Map.Entry<String, Boolean> entry : module.entrySet()) {
                 String moduleName = entry.getKey();
                 Boolean requestedStatus = entry.getValue();
-
                 ModuleType moduleType = ModuleType.fromName(moduleName);
                 if (moduleType == null) {
                     throw new IllegalArgumentException("Invalid module type: " + moduleName);
@@ -514,6 +513,8 @@ public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean
                     }
                 }else {
                     if (existingXyz != null) {
+                        UUID id = existingXyz.getId();
+                        organizationMapper.deleteXyzFalseStatusById(id);
                         results.add(Map.of("module", moduleName, "status", "deactivated"));
 
                     }else {
