@@ -332,4 +332,13 @@ public interface OrganizationMapper {
     @Select("SELECT COUNT(*) FROM vw_vending_transactions_summary WHERE org_id = #{id} And status = 'Successful' ")
     BigDecimal totalVending(UUID id);
 
+    @Delete("""
+        DELETE FROM modules WHERE UPPER(name) = UPPER(#{moduleName}) AND org_id = #{orgId}
+    """)
+    void deleteModule(String moduleName, UUID orgId);
+
+    @Delete("""
+        DELETE FROM submodules WHERE UPPER(name) = UPPER(#{moduleName}) AND org_id = #{orgId}
+    """)
+    void deleteSubModule(String moduleName, UUID orgId);
 }
