@@ -515,6 +515,8 @@ public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean
                     if (existingXyz != null) {
                         UUID id = existingXyz.getId();
                         organizationMapper.deleteXyzFalseStatusById(id);
+                        organizationMapper.deleteModule(moduleName, orgId);
+                        organizationMapper.deleteSubModule(moduleName, orgId);
                         results.add(Map.of("module", moduleName, "status", "deactivated"));
 
                     }else {
