@@ -181,17 +181,8 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
             Organization res = organizationMapper.getOrganizationById(organization.getId());
 
             // Save into Hazelcast cache (persists via MapStore)
-//            organizationCache.put(res.getId().toString(), res);
             AuditLog auditLog = buildAuditLog(operator, "Organization created", "organization", res, metadata);
-//            auditRepository.save(auditLog);
             safeAuditService.saveAudit(auditLog);
-//            auditNotificationDTO.setCreator(operator);
-//            auditNotificationDTO.setIpAddress(ipAddress);
-//            auditNotificationDTO.setUserAgent(userAgent);
-//            auditNotificationDTO.setDescription("Organization created");
-//            auditNotificationDTO.setType("organization");
-//            auditNotificationDTO.setOrganization(res);
-//            auditRepository.save(auditNotificationDTO);
 
             return ResponseMap.response(
                     status.getSuccessCode(),
@@ -442,10 +433,7 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
             if (userModel.getEmail() != null) {
                 UserModel existingUser = organizationMapper.getUserByEmail(userModel.getEmail());
                 if (existingUser != null && !existingUser.getId().equals(userModel.getId())) {
-//                    UserModel emailUser = organizationMapper.getUserByEmail(userModel.getEmail());
-//                    if (emailUser != null) {
                     throw new GlobalExceptionHandler.NotFoundException("Email already used");
-//                    }
                 }
             }
 
@@ -454,10 +442,6 @@ public OnboardOrganizationServiceImpl(OrganizationMapper organizationMapper,
             if(result == 0){
                 throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
             }
-//            result = organizationMapper.updateUserByOrgId(userModel, organization.getId());
-//            if(result == 0){
-//                throw new GlobalExceptionHandler.NotFoundException("Fail to update organization");
-//            }
 
             AuditLog auditLog = buildAuditLog(operator, "Organization edited", "organization", res, metadata);
 //            auditRepository.save(auditLog);
@@ -490,7 +474,6 @@ public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean
             for (Map.Entry<String, Boolean> entry : module.entrySet()) {
                 String moduleName = entry.getKey();
                 Boolean requestedStatus = entry.getValue();
-
                 ModuleType moduleType = ModuleType.fromName(moduleName);
                 if (moduleType == null) {
                     throw new IllegalArgumentException("Invalid module type: " + moduleName);
@@ -514,6 +497,10 @@ public Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean
                     }
                 }else {
                     if (existingXyz != null) {
+                        UUID id = existingXyz.getId();
+                        organizationMapper.deleteXyzFalseStatusById(id);
+                        organizationMapper.deleteSubModule(moduleName, orgId);
+                        organizationMapper.deleteModule(moduleName, orgId);
                         results.add(Map.of("module", moduleName, "status", "deactivated"));
 
                     }else {
