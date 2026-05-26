@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -87,7 +88,8 @@ public class OnboardOrganizationController {
     }
 
     @PatchMapping("/update")
-    public ResponseEntity<Map<String, Object>> updateOrganization(@RequestBody OnboardingOrganizationDTO request) {
+    public ResponseEntity<Map<String, Object>> updateOrganization(
+            @RequestBody OnboardingOrganizationDTO request) {
         Organization organization = new Organization();
         organization.setId(request.getId());
         organization.setBusinessName(request.getBusinessName());
@@ -138,13 +140,28 @@ public class OnboardOrganizationController {
         }
     }
 
-    @PatchMapping("/suspend")
+@PatchMapping("/suspend")
     public ResponseEntity<Map<String, Object>> suspendOrganization(@RequestParam UUID id, @RequestParam Boolean status) {
         try {
             Map<String, Object> result = onboardOrganizationService.suspendOrganization(id, status);
             return ResponseEntity.ok(result);
         } catch (GlobalExceptionHandler.SQLServerException e) {
             return handleException(e);
+        }
+    }
+
+@PostMapping("/module-activated")
+    public ResponseEntity<Map<String, Object>> addOrgModuleActivated(@RequestBody Map<String, Object> request) {
+        try {
+            UUID orgId = UUID.fromString((String) request.get("orgId"));
+            Map<String, Boolean> module = (Map<String, Boolean>) request.get("module");
+            
+            Map<String, Object> result = onboardOrganizationService.addOrgModuleActivated(orgId, module);
+            return ResponseEntity.ok(result);
+        } catch (GlobalExceptionHandler.SQLServerException e) {
+            return handleException(e);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

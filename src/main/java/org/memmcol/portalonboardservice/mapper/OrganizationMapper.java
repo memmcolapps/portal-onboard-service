@@ -114,7 +114,10 @@ public interface OrganizationMapper {
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
-                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator"))
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator")),
+            @Result(property = "moduleAccess", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getXyzByOrgId"))
+
     })
     List<Organization> getAllOrganizations();
 
@@ -192,7 +195,7 @@ public interface OrganizationMapper {
 //    })
 //    List<Organization> getOrganizations(@Param("size") int size, @Param("offset") int offset);
 
-    @Select("SELECT * FROM organizations WHERE id = #{id}")
+@Select("SELECT * FROM organizations WHERE id = #{id}")
     @Results({
             @Result(property = "id", column = "id"),
             @Result(property = "userId", column = "user_id"),
@@ -202,8 +205,8 @@ public interface OrganizationMapper {
             @Result(property = "updatedAt", column = "updated_at"),
             @Result(property = "operator", column = "user_id",
                     one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getOperator")),
-//            @Result(property = "nodes", column = "id",
-//                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getNode"))
+            @Result(property = "moduleAccess", column = "id",
+                    one = @One(select = "org.memmcol.portalonboardservice.mapper.OrganizationMapper.getXyzByOrgId"))
     })
     Organization getOrganizationById(@Param("id") UUID id);
 
@@ -286,6 +289,34 @@ public interface OrganizationMapper {
     })
     NodeInfo getHierarchyById(UUID nodeId);
 
+@Select("SELECT * FROM xyz WHERE org_id = #{orgId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "module", column = "module"),
+            @Result(property = "status", column = "status")
+    })
+    List<XYZ> getXyzByOrgId(@Param("orgId") UUID orgId);
+
+    @Select("SELECT * FROM xyz WHERE org_id = #{orgId} AND module = #{module}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "orgId", column = "org_id"),
+            @Result(property = "module", column = "module"),
+            @Result(property = "status", column = "status")
+    })
+    XYZ getXyzByOrgAndModule(@Param("orgId") UUID orgId, @Param("module") String module);
+
+    @Insert("INSERT INTO xyz (module, status, org_id) VALUES ( #{module}, #{status}, #{orgId})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    void insertXyz(XYZ xyz);
+
+//    @Update("UPDATE xyz SET status = #{status} WHERE id = #{id}")
+//    void updateXyzStatusById(@Param("id") UUID id, @Param("status") Boolean status);
+
+    @Delete("DELETE FROM xyz WHERE id = #{id}")
+    void deleteXyzFalseStatusById(@Param("id") UUID id);
+
     @Select("SELECT COUNT(*) FROM customers WHERE org_id = #{id} ")
     Long totalCustomer(UUID id);
 
@@ -301,4 +332,13 @@ public interface OrganizationMapper {
     @Select("SELECT COUNT(*) FROM vw_vending_transactions_summary WHERE org_id = #{id} And status = 'Successful' ")
     BigDecimal totalVending(UUID id);
 
+    @Delete("""
+        DELETE FROM modules WHERE UPPER(name) = UPPER(#{moduleName}) AND org_id = #{orgId}
+    """)
+    void deleteModule(String moduleName, UUID orgId);
+
+    @Delete("""
+        DELETE FROM submodules WHERE UPPER(name) = UPPER(#{moduleName}) AND org_id = #{orgId}
+    """)
+    void deleteSubModule(String moduleName, UUID orgId);
 }

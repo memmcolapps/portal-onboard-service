@@ -3,6 +3,7 @@ package org.memmcol.portalonboardservice.service.organization;
 import org.memmcol.portalonboardservice.model.user.Organization;
 import org.memmcol.portalonboardservice.model.user.UserModel;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -13,4 +14,5 @@ public interface OnboardOrganizationService {
     Map<String, Object> updateOrganization(Organization organization,UserModel UserModel);
 
     Map<String, Object> suspendOrganization(UUID id, Boolean suspend);
+    Map<String, Object> addOrgModuleActivated(UUID orgId, Map<String, Boolean> module);
 }
