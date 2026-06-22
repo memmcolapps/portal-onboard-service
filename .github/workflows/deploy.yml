@@ -60,7 +60,7 @@ jobs:
           ssh-private-key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
 
       # =====================================================
-      # DEPLOY STAGING
+      # DEPLOY STAGING -
       # =====================================================
       - name: Deploy Staging
         if: github.ref == 'refs/heads/staging'
@@ -125,7 +125,7 @@ jobs:
           ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
 
       # =====================================================
-      # DEPLOY PRODUCTION
+      # DEPLOY PRODUCTION -
       # =====================================================
       - name: Deploy Production
         if: github.ref == 'refs/heads/main'
