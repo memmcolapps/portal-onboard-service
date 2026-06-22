@@ -107,6 +107,10 @@ jobs:
             fi
 
             echo "Starting app..."
+          
+            set -a
+            source /opt/java-webservices/staging.env
+            set +a
 
             nohup java -Dspring.profiles.active=staging \
               -jar /opt/java-webservices/portal-onboard-service.jar \
@@ -174,6 +178,10 @@ jobs:
             fi
 
             echo "Starting app..."
+          
+            set -a
+            source /opt/java-webservices/staging.env
+            set +a
 
             nohup java -Dspring.profiles.active=prod \
               -jar /opt/java-webservices/portal-onboard-service.jar \
