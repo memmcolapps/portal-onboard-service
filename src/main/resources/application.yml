@@ -22,9 +22,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
-      # https://eureka-service-production-6595.up.railway.app/eureka/ #memmcolapp railway address
-      # https://eureka-service-production.up.railway.app/eureka/ #my railway address
+      defaultZone: http://${EUREKA_ADDRESS}:${EUREKA_PORT}/eureka/
   instance:
     prefer-ip-address: true
     health-check-url-path: /actuator/health
