@@ -4,7 +4,7 @@
 
   <name>API Gateway Service</name>
 
-  <description>Spring Boot API Gateway</description>
+  <description>Spring Boot Portal Onboard</description>
 
   <executable>java</executable>
 
@@ -18,7 +18,7 @@
 
     -XX:ErrorFile=%BASE%\logs\hs_err_pid%p.log
 
-    -jar "%BASE%\api-gateway-service.jar"
+    -jar "%BASE%\portal-onboard-service.jar"
   </arguments>
 
   <workingdirectory>%BASE%</workingdirectory>
