@@ -66,10 +66,11 @@ jobs:
         if: github.ref == 'refs/heads/staging'
         run: |
           SERVER="${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }}"
-          REMOTE_PATH="/${{ secrets.LOCATION }}/portal-onboard-service.jar"
+          
+          REMOTE_PATH="/${{secrets.LOCATION }}/portal-onboard-service.jar"
 
           echo "Creating remote directory..."
-          ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{ secrets.LOCATION }}"
+          ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{secrets.LOCATION }}"
 
           echo "Uploading JAR..."
           rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" \
@@ -77,20 +78,23 @@ jobs:
             $SERVER:$REMOTE_PATH
           
           echo "Writing env file..."
-          ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{ secrets.LOCATION }}/portal-staging.env" << EOF
-          DB_HOST="${{ secrets.STAGING_DB_HOST }}"
-          DB_PORT="${{ secrets.STAGING_DB_PORT }}"
-          DB_NAME="${{ secrets.STAGING_DB_NAME }}"
-          DB_USERNAME="${{ secrets.STAGING_DB_USERNAME }}"
-          DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
-          MONGO_HOST="${{ secrets.STAGING_MONGO_HOST }}"
-          MONGO_PORT="${{ secrets.STAGING_MONGO_PORT }}"
-          MONGO_DB="${{ secrets.STAGING_MONGO_DB }}"
-          EUREKA_ADDRESS="${{ secrets.EUREKA_ADDRESS }}"
-          EUREKA_PORT="${{ secrets.EUREKA_ADDRESS }}"
+          
+          ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{secrets.LOCATION }}/.env.portal" << EOF
+          
+          EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
+          EUREKA_PORT=${{ secrets.EUREKA_PORT }}
+          LOCATION=${{ secrets.LOCATION }} 
+          DB_HOST=${{ secrets.STAGING_DB_HOST }}
+          DB_PORT=${{ secrets.STAGING_DB_PORT }}
+          DB_NAME=${{ secrets.STAGING_DB_NAME }}
+          DB_USERNAME=${{ secrets.STAGING_DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
+          MONGO_HOST=${{ secrets.STAGING_MONGO_HOST }}
+          MONGO_PORT=${{ secrets.STAGING_MONGO_PORT }}
+          MONGO_DB=${{ secrets.STAGING_MONGO_DB }}
           EOF
           
-          ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{ secrets.LOCATION }}/portal-staging.env"
+          ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{secrets.LOCATION }}/.env.portal"
 
           echo "Deploying (safe SSH execution)..."
           ssh -o StrictHostKeyChecking=no $SERVER 'bash -s' << 'EOF'
@@ -111,12 +115,13 @@ jobs:
             echo "Starting app..."
           
             set -a
-            source /${{ secrets.LOCATION }}/portal-staging.env
+            
+            source /${{ secrets.LOCATION }}/.env.portal
             set +a
 
             nohup java -Dspring.profiles.active=staging \
-              -jar /${{ secrets.LOCATION }}/portal-onboard-service.jar \
-              > /${{ secrets.LOCATION }}/portal-staging.log 2>&1 &
+              -jar /${{secrets.LOCATION }}/portal-onboard-service.jar \
+              >/dev/null 2>&1 < /dev/null &
 
             echo "Deployment complete"
           EOF
@@ -140,7 +145,8 @@ jobs:
           REMOTE_PATH="/${{ secrets.LOCATION }}/portal-onboard-service.jar"
 
           echo "Creating remote directory..."
-          ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{ secrets.LOCATION }}"
+
+          ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{secrets.LOCATION }}"
 
           echo "Uploading JAR..."
           rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" \
@@ -148,22 +154,24 @@ jobs:
             $SERVER:$REMOTE_PATH
           
           echo "Writing env file..."
-          ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{ secrets.LOCATION }}/portal-prod.env" << EOF
-          DB_HOST="${{ secrets.PROD_DB_HOST }}"
-          DB_PORT="${{ secrets.PROD_DB_PORT }}"
-          DB_NAME="${{ secrets.PROD_DB_NAME }}"
-          DB_USERNAME="${{ secrets.PROD_DB_USERNAME }}"
-          DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
-          MONGO_HOST="${{ secrets.PROD_MONGO_HOST }}"
-          MONGO_PORT="${{ secrets.PROD_MONGO_PORT }}"
-          MONGO_DB="${{ secrets.PROD_MONGO_DB }}"
-          MONGO_USERNAME="${{ secrets.PROD_MONGO_USERNAME }}"
-          MONGO_PASSWORD="${{ secrets.PROD_MONGO_PASSWORD }}"
-          EUREKA_ADDRESS="${{ secrets.EUREKA_ADDRESS }}"
-          EUREKA_PORT="${{ secrets.EUREKA_ADDRESS }}"
+          ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{secrets.LOCATION }}/.env.portal" << EOF
+          
+          EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
+          EUREKA_PORT=${{ secrets.EUREKA_PORT }}
+          LOCATION=${{ secrets.LOCATION }} 
+          DB_HOST=${{ secrets.PROD_DB_HOST }}
+          DB_PORT=${{ secrets.PROD_DB_PORT }}
+          DB_NAME=${{ secrets.PROD_DB_NAME }}
+          DB_USERNAME=${{ secrets.PROD_DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
+          MONGO_HOST=${{ secrets.PROD_MONGO_HOST }}
+          MONGO_PORT=${{ secrets.PROD_MONGO_PORT }}
+          MONGO_DB=${{ secrets.PROD_MONGO_DB }}
+          MONGO_USERNAME=${{ secrets.PROD_MONGO_USERNAME }}
+          MONGO_PASSWORD=${{ secrets.PROD_MONGO_PASSWORD }}
           EOF
           
-          ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{ secrets.LOCATION }}/portal-prod.env"
+          ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{secrets.LOCATION }}/.env.portal"
 
           echo "Deploying (safe SSH execution)..."
           ssh -o StrictHostKeyChecking=no $SERVER 'bash -s' << 'EOF'
@@ -184,51 +192,13 @@ jobs:
             echo "Starting app..."
           
             set -a
-            source /${{ secrets.LOCATION }}/portal-prod.env
+            source /${{ secrets.LOCATION }}/.env.portal
             set +a
 
             nohup java -Dspring.profiles.active=prod \
-              -jar /${{ secrets.LOCATION }}/portal-onboard-service.jar \
-              > /${{ secrets.LOCATION }}/portal-prod.log 2>&1 &
+              -jar /${{secrets.LOCATION }}/portal-onboard-service.jar \
+              >/dev/null 2>&1 < /dev/null &
 
             echo "Deployment complete"
           EOF
 
-
-
-#name: Deploy Spring Boot to Server
-#
-#on:
-#  push:
-#    branches:
-#      - main
-#
-#jobs:
-#  deploy:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
-#      - name: Build with Maven
-#        run: |
-#          chmod +x ./mvnw
-#          ./mvnw clean package -DskipTests
-#
-#      - name: Set up SSH agent
-#        uses: webfactory/ssh-agent@v0.9.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#
-#      - name: Copy JAR to server
-#        run: |
-#          scp -o StrictHostKeyChecking=no target/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
-#
-#      - name: Run app on server
-#        run: |
-#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-#            pkill -f 'portal-onboard-service.jar' || true
-#            nohup java -jar /opt/java-webservices/portal-onboard-service.jar > /opt/java-webservices/portal.log 2>&1 &
-#          EOF
-##
