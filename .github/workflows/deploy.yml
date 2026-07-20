@@ -60,12 +60,13 @@ jobs:
           ssh-private-key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
 
       # =====================================================
-      # DEPLOY STAGING
+      # DEPLOY STAGING -
       # =====================================================
       - name: Deploy Staging
         if: github.ref == 'refs/heads/staging'
         run: |
           SERVER="${{ secrets.STAGING_SERVER_USER }}@${{ secrets.STAGING_SERVER_HOST }}"
+          
           REMOTE_PATH="/${{secrets.LOCATION }}/portal-onboard-service.jar"
 
           echo "Creating remote directory..."
@@ -77,11 +78,12 @@ jobs:
             $SERVER:$REMOTE_PATH
           
           echo "Writing env file..."
+          
           ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{secrets.LOCATION }}/.env.portal" << EOF
           
           EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
           EUREKA_PORT=${{ secrets.EUREKA_PORT }}
-          WIN_LOCATION=${{ secrets.LOCATION }} 
+          LOCATION=${{ secrets.LOCATION }} 
           DB_HOST=${{ secrets.STAGING_DB_HOST }}
           DB_PORT=${{ secrets.STAGING_DB_PORT }}
           DB_NAME=${{ secrets.STAGING_DB_NAME }}
@@ -113,6 +115,7 @@ jobs:
             echo "Starting app..."
           
             set -a
+            
             source /${{ secrets.LOCATION }}/.env.portal
             set +a
 
@@ -133,15 +136,16 @@ jobs:
           ssh-private-key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
 
       # =====================================================
-      # DEPLOY PRODUCTION
+      # DEPLOY PRODUCTION -
       # =====================================================
       - name: Deploy Production
         if: github.ref == 'refs/heads/main'
         run: |
           SERVER="${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_HOST }}"
-          REMOTE_PATH="/opt/java-webservices/portal-onboard-service.jar"
+          REMOTE_PATH="/${{ secrets.LOCATION }}/portal-onboard-service.jar"
 
           echo "Creating remote directory..."
+
           ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{secrets.LOCATION }}"
 
           echo "Uploading JAR..."
@@ -154,7 +158,7 @@ jobs:
           
           EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
           EUREKA_PORT=${{ secrets.EUREKA_PORT }}
-          WIN_LOCATION=${{ secrets.LOCATION }} 
+          LOCATION=${{ secrets.LOCATION }} 
           DB_HOST=${{ secrets.PROD_DB_HOST }}
           DB_PORT=${{ secrets.PROD_DB_PORT }}
           DB_NAME=${{ secrets.PROD_DB_NAME }}
@@ -198,41 +202,3 @@ jobs:
             echo "Deployment complete"
           EOF
 
-
-
-#name: Deploy Spring Boot to Server
-#
-#on:
-#  push:
-#    branches:
-#      - main
-#
-#jobs:
-#  deploy:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
-#      - name: Build with Maven
-#        run: |
-#          chmod +x ./mvnw
-#          ./mvnw clean package -DskipTests
-#
-#      - name: Set up SSH agent
-#        uses: webfactory/ssh-agent@v0.9.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#
-#      - name: Copy JAR to server
-#        run: |
-#          scp -o StrictHostKeyChecking=no target/*.jar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/java-webservices/portal-onboard-service.jar
-#
-#      - name: Run app on server
-#        run: |
-#          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-#            pkill -f 'portal-onboard-service.jar' || true
-#            nohup java -jar /opt/java-webservices/portal-onboard-service.jar > /opt/java-webservices/portal.log 2>&1 &
-#          EOF
-##
