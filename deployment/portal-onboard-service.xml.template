@@ -1,8 +1,8 @@
 <service>
 
-  <id>api-gateway-service</id>
+  <id>portal-onboard-service</id>
 
-  <name>API Gateway Service</name>
+  <name>Portal Onboard Service</name>
 
   <description>Spring Boot Portal Onboard</description>
 
