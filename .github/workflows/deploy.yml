@@ -620,8 +620,8 @@ jobs:
             Write-Host ''
             Write-Host '========== SPRING LOG =========='
 
-            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log'){
-                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log' -Tail 100
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/portal.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/portal.log' -Tail 100
             }
 
             Write-Host ''
