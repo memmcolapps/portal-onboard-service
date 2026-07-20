@@ -7,7 +7,8 @@ on:
       - main
 
 jobs:
-  deploy:
+  deploy-linux:
+    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -202,3 +203,432 @@ jobs:
             echo "Deployment complete"
           EOF
 
+
+
+  deploy-windows:
+
+    if: github.ref == 'refs/heads/window'
+
+    runs-on: ubuntu-latest
+
+    env:
+      APP_NAME: portal-onboard-service
+      SERVICE_NAME: portal-onboard-service
+      DEPLOY_DIR: 'C:\${{ secrets.WIN_LOCATION }}'
+      JAR_NAME: portal-onboard-service.jar
+
+    steps:
+      #######################################################
+      # Checkout Repository
+      #######################################################
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #######################################################
+      # Setup Java
+      #######################################################
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # ==========================
+      # Build
+      # ==========================
+      - name: Build Application
+        run: mvn clean package -DskipTests
+
+      #######################################################
+      # Locate JAR
+      #######################################################
+      - name: Locate Executable JAR
+        shell: bash
+        run: |
+
+          JAR=$(find . \
+            -type f \
+            -path "*/target/*.jar" \
+            ! -name "*sources.jar" \
+            ! -name "*javadoc.jar" \
+            ! -name "*original*.jar" \
+            | head -n1)
+
+          if [ -z "$JAR" ]; then
+            echo "Executable jar not found."
+            exit 1
+          fi
+
+          echo "Found: $JAR"
+
+          cp "$JAR" app.jar
+
+      #######################################################
+      # Generate WinSW XML
+      #######################################################
+      - name: Generate WinSW XML
+        shell: bash
+        run: |
+          cp deployment/portal-onboard-service.xml.template portal-onboard-service.xml
+          
+          sed -i "s|\${EUREKA_ADDRESS}|${{ secrets.EUREKA_ADDRESS }}|g" portal-onboard-service.xml
+          sed -i "s|\${EUREKA_PORT}|${{ secrets.EUREKA_PORT }}|g" portal-onboard-service.xml
+          sed -i "s|\${WIN_LOCATION}|C:/${{secrets.WIN_LOCATION}}|g" portal-onboard-service.xml
+          sed -i "s|\${DB_HOST}|${{ secrets.PROD_DB_HOST }}|g" portal-onboard-service.xml
+          sed -i "s|\${DB_PORT}|${{ secrets.PROD_DB_PORT }}|g" portal-onboard-service.xml
+          sed -i "s|\${DB_NAME}|${{ secrets.PROD_DB_NAME }}|g" portal-onboard-service.xml
+          
+          sed -i "s|\${DB_USERNAME}|${{ secrets.PROD_DB_USERNAME }}|g" portal-onboard-service.xml
+          sed -i "s|\${DB_PASSWORD}|${{ secrets.PROD_DB_PASSWORD }}|g" portal-onboard-service.xml
+          sed -i "s|\${MONGO_HOST}|${{ secrets.PROD_MONGO_HOST }}|g" portal-onboard-service.xml
+          
+          sed -i "s|\${MONGO_PORT}|${{ secrets.PROD_MONGO_PORT }}|g" portal-onboard-service.xml
+          sed -i "s|\${MONGO_DB}|${{ secrets.PROD_MONGO_DB }}|g" portal-onboard-service.xml
+          sed -i "s|\${MONGO_USERNAME}|${{ secrets.PROD_MONGO_USERNAME }}|g" portal-onboard-service.xml
+          sed -i "s|\${MONGO_PASSWORD}|${{ secrets.PROD_MONGO_PASSWORD }}|g" portal-onboard-service.xml
+          
+          echo "Generated WinSW XML:"
+          
+          cat portal-onboard-service.xml
+
+      #######################################################
+      # Configure SSH
+      #######################################################
+      - name: Configure SSH
+        shell: bash
+        run: |
+
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.WINDOW_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan ${{ secrets.WINDOW_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      #######################################################
+      # Create Deployment Directory
+      #######################################################
+      - name: Create Deployment Directory
+        run: |
+          ssh \
+          -i ~/.ssh/id_rsa \
+          -o StrictHostKeyChecking=no \
+          -o ServerAliveInterval=30 \
+          -o ServerAliveCountMax=10 \
+          ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+          "powershell -NoProfile -NonInteractive -" <<'EOF'
+          
+          $ErrorActionPreference = 'Stop'
+          
+          New-Item `
+          -ItemType Directory `
+          -Force `
+          -Path 'C:/${{ secrets.WIN_LOCATION }}' | Out-Null
+          
+          New-Item `
+          -ItemType Directory `
+          -Force `
+          -Path 'C:/${{ secrets.WIN_LOCATION }}/logs' | Out-Null
+          
+          Write-Host "Deployment directory ready."
+          
+          EOF
+
+      #######################################################
+      # Stop WinSW Service
+      #######################################################
+      - name: Stop Windows Service
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            "powershell -NoProfile -NonInteractive -" <<'EOF'
+
+          $ErrorActionPreference = 'Stop'
+
+          $service = Get-Service -Name 'portal-onboard-service' -ErrorAction Stop
+
+          Write-Host "Current Status: $($service.Status)"
+
+          if ($service.Status -eq 'Running') {
+
+              Write-Host "Stopping service..."
+
+              Stop-Service -Name 'portal-onboard-service'
+
+              $service.WaitForStatus(
+                  'Stopped',
+                  '00:00:30'
+              )
+
+          }
+
+          $service = Get-Service -Name 'portal-onboard-service'
+
+          if ($service.Status -ne 'Stopped') {
+
+              throw "Failed to stop service."
+
+          }
+
+          Write-Host "Service stopped successfully."
+
+          EOF
+
+      #######################################################
+      # Backup Existing JAR
+      #######################################################
+      - name: Backup Existing JAR
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            "powershell -NoProfile -NonInteractive -" <<'EOF'
+
+          $ErrorActionPreference='Stop'
+
+          $jar="C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.jar"
+
+          $backup="C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.jar.bak"
+
+          if(Test-Path $jar){
+
+              Copy-Item `
+                  $jar `
+                  $backup `
+                  -Force
+
+              Write-Host "Backup completed."
+
+          }
+          else{
+
+              Write-Host "No existing JAR. Backup skipped."
+
+          }
+
+          EOF
+
+      #######################################################
+      # Upload New JAR
+      #######################################################
+      - name: Upload Application
+        run: |
+
+          scp \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            app.jar \
+            "${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }}:/C:/${{secrets.WIN_LOCATION}}/portal-onboard-service.jar"
+
+      #######################################################
+      # Upload WinSW XML
+      #######################################################
+      - name: Upload WinSW XML
+        run: |
+          scp \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            portal-onboard-service.xml \
+            "${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }}:/C:/${{secrets.WIN_LOCATION}}/portal-onboard-service.xml"
+
+      #######################################################
+      # Verify Uploaded Files
+      #######################################################
+      - name: Verify Upload
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            "powershell -NoProfile -NonInteractive -" <<'EOF'
+
+              $files = @(
+                  'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.exe',
+                  'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.jar',
+                  'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.xml'
+              )
+          
+              foreach($file in $files){
+          
+                  if(!(Test-Path $file)){
+                      throw "Missing: $file"
+                  }
+          
+                  Write-Host "Verified: $file"
+          
+              }
+          
+              Get-ChildItem C:\${{ secrets.WIN_LOCATION }}
+
+            END
+
+      #######################################################
+      # Start Windows Service
+      #######################################################
+      - name: Start Windows Service
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            "powershell -NoProfile -NonInteractive -" <<'EOF'
+
+          $ErrorActionPreference='Stop'
+
+          Write-Host "Starting portal-onboard-service..."
+
+          Start-Service -Name "portal-onboard-service"
+
+          Start-Sleep -Seconds 5
+
+          $service = Get-Service -Name "portal-onboard-service"
+
+          $service.WaitForStatus(
+              "Running",
+              "00:00:30"
+          )
+
+          $service = Get-Service -Name "portal-onboard-service"
+
+          if($service.Status -ne "Running"){
+
+              throw "Service failed to start."
+
+          }
+
+          Write-Host "Service started successfully."
+
+          EOF
+
+      #######################################################
+      # Verify Java Process
+      #######################################################
+      - name: Verify Java Process
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            "powershell -NoProfile -NonInteractive -" <<'EOF'
+
+          $ErrorActionPreference='Stop'
+
+          $java = Get-CimInstance Win32_Process |
+          Where-Object {
+
+              $_.Name -eq "java.exe" -and
+              $_.CommandLine -like "*portal-onboard-service.jar*"
+
+          }
+
+          if(!$java){
+
+              throw "Java process not running."
+
+          }
+
+          Write-Host "Java PID: $($java.ProcessId)"
+
+          EOF
+
+      #######################################################
+      # Verify Deployment
+      #######################################################
+      - name: Verify Deployment
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            powershell -Command "
+
+            Write-Host ''
+
+            Write-Host '========== SERVICE =========='
+
+            Get-Service portal-onboard-service
+
+            Write-Host ''
+
+            Write-Host '========== FILES =========='
+
+            Get-ChildItem C:/${{ secrets.WIN_LOCATION}}
+
+            Write-Host ''
+
+            Write-Host '========== LOGS =========='
+
+            Get-ChildItem C:/${{ secrets.WIN_LOCATION }}/logs -ErrorAction SilentlyContinue
+
+            "
+      #######################################################
+      # Display Logs On Failure
+      #######################################################
+      - name: Display Logs
+        if: failure()
+        run: |
+          ssh \
+            -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ${{ secrets.WINDOW_SERVER_USER }}@${{ secrets.WINDOW_SERVER_HOST }} \
+            powershell -Command "
+
+            Write-Host ''
+            Write-Host '========== WinSW OUT =========='
+
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.out.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.out.log' -Tail 100
+            }
+
+            Write-Host ''
+            Write-Host '========== WinSW ERR =========='
+
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.err.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/portal-onboard-service.err.log' -Tail 100
+            }
+
+            Write-Host ''
+            Write-Host '========== WRAPPER LOG =========='
+
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/wrapper.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/wrapper.log' -Tail 100
+            }
+
+            Write-Host ''
+            Write-Host '========== SPRING LOG =========='
+
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log' -Tail 100
+            }
+
+            Write-Host ''
+            Write-Host '========== GC LOG =========='
+
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/gc.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/gc.log' -Tail 100
+            }
+
+            "
