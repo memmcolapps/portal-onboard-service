@@ -280,7 +280,6 @@ jobs:
             -e "s/'/\&apos;/g" \
             -e 's/"/\&quot;/g')
 
-        # Escape '&' for sed replacement
           PROD_DB_PASSWORD_XML=$(printf '%s' "$PROD_DB_PASSWORD_XML" | sed 's/&/\\&/g')
           
           sed -i "s|\${EUREKA_ADDRESS}|${{ secrets.EUREKA_ADDRESS }}|g" portal-onboard-service.xml
