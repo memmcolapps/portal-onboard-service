@@ -5,6 +5,7 @@ on:
     branches:
       - staging
       - main
+      - window
 
 jobs:
   deploy-linux:
@@ -272,21 +273,30 @@ jobs:
         run: |
           cp deployment/portal-onboard-service.xml.template portal-onboard-service.xml
           
+          PROD_DB_PASSWORD_XML=$(printf '%s' "${{ secrets.PROD_DB_PASSWORD }}" \
+            | sed -e 's/&/\&amp;/g' \
+            -e 's/</\&lt;/g' \
+            -e 's/>/\&gt;/g' \
+            -e "s/'/\&apos;/g" \
+            -e 's/"/\&quot;/g')
+
+          PROD_DB_PASSWORD_XML=$(printf '%s' "$PROD_DB_PASSWORD_XML" | sed 's/&/\\&/g')
+          
           sed -i "s|\${EUREKA_ADDRESS}|${{ secrets.EUREKA_ADDRESS }}|g" portal-onboard-service.xml
           sed -i "s|\${EUREKA_PORT}|${{ secrets.EUREKA_PORT }}|g" portal-onboard-service.xml
           sed -i "s|\${WIN_LOCATION}|C:/${{secrets.WIN_LOCATION}}|g" portal-onboard-service.xml
-          sed -i "s|\${DB_HOST}|${{ secrets.PROD_DB_HOST }}|g" portal-onboard-service.xml
-          sed -i "s|\${DB_PORT}|${{ secrets.PROD_DB_PORT }}|g" portal-onboard-service.xml
-          sed -i "s|\${DB_NAME}|${{ secrets.PROD_DB_NAME }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_DB_HOST}|${{ secrets.PROD_DB_HOST }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_DB_PORT}|${{ secrets.PROD_DB_PORT }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_DB_NAME}|${{ secrets.PROD_DB_NAME }}|g" portal-onboard-service.xml
           
-          sed -i "s|\${DB_USERNAME}|${{ secrets.PROD_DB_USERNAME }}|g" portal-onboard-service.xml
-          sed -i "s|\${DB_PASSWORD}|${{ secrets.PROD_DB_PASSWORD }}|g" portal-onboard-service.xml
-          sed -i "s|\${MONGO_HOST}|${{ secrets.PROD_MONGO_HOST }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_DB_USERNAME}|${{ secrets.PROD_DB_USERNAME }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_DB_PASSWORD}|${PROD_DB_PASSWORD_XML}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_MONGO_HOST}|${{ secrets.PROD_MONGO_HOST }}|g" portal-onboard-service.xml
           
-          sed -i "s|\${MONGO_PORT}|${{ secrets.PROD_MONGO_PORT }}|g" portal-onboard-service.xml
-          sed -i "s|\${MONGO_DB}|${{ secrets.PROD_MONGO_DB }}|g" portal-onboard-service.xml
-          sed -i "s|\${MONGO_USERNAME}|${{ secrets.PROD_MONGO_USERNAME }}|g" portal-onboard-service.xml
-          sed -i "s|\${MONGO_PASSWORD}|${{ secrets.PROD_MONGO_PASSWORD }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_MONGO_PORT}|${{ secrets.PROD_MONGO_PORT }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_MONGO_DB}|${{ secrets.PROD_MONGO_DB }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_MONGO_USERNAME}|${{ secrets.PROD_MONGO_USERNAME }}|g" portal-onboard-service.xml
+          sed -i "s|\${PROD_MONGO_PASSWORD}|${{ secrets.PROD_MONGO_PASSWORD }}|g" portal-onboard-service.xml
           
           echo "Generated WinSW XML:"
           
@@ -620,8 +630,8 @@ jobs:
             Write-Host ''
             Write-Host '========== SPRING LOG =========='
 
-            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log'){
-                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/apigateway.log' -Tail 100
+            if(Test-Path 'C:/${{ secrets.WIN_LOCATION }}/logs/portal.log'){
+                Get-Content 'C:/${{ secrets.WIN_LOCATION }}/logs/portal.log' -Tail 100
             }
 
             Write-Host ''
@@ -632,3 +642,6 @@ jobs:
             }
 
             "
+          
+
+##

@@ -1,10 +1,10 @@
 <service>
 
-  <id>api-gateway-service</id>
+  <id>portal-onboard-service</id>
 
-  <name>API Gateway Service</name>
+  <name>Portal Onboard Service</name>
 
-  <description>Spring Boot API Gateway</description>
+  <description>Spring Boot Portal Onboard</description>
 
   <executable>java</executable>
 
@@ -18,7 +18,7 @@
 
     -XX:ErrorFile=%BASE%\logs\hs_err_pid%p.log
 
-    -jar "%BASE%\api-gateway-service.jar"
+    -jar "%BASE%\portal-onboard-service.jar"
   </arguments>
 
   <workingdirectory>%BASE%</workingdirectory>
@@ -26,16 +26,16 @@
   <env name="EUREKA_ADDRESS" value="${EUREKA_ADDRESS}"/>
   <env name="EUREKA_PORT" value="${EUREKA_PORT}"/>
   <env name="WIN_LOCATION" value="${WIN_LOCATION}"/>
-  <env name="DB_HOST" value="${PROD_DB_HOST}"/>
-  <env name="DB_PORT" value="${PROD_DB_PORT}"/>
-  <env name="DB_NAME" value="${PROD_DB_NAME}"/>
-  <env name="DB_USERNAME" value="${PROD_DB_USERNAME}"/>
-  <env name="DB_PASSWORD" value="${PROD_DB_PASSWORD}"/>
-  <env name="MONGO_HOST" value="${PROD_MONGO_HOST}"/>
-  <env name="MONGO_PORT" value="${PROD_MONGO_PORT}"/>
-  <env name="MONGO_DB" value="${PROD_MONGO_DB}"/>
-  <env name="MONGO_USERNAME" value="${PROD_MONGO_USERNAME}"/>
-  <env name="MONGO_PASSWORD" value="${PROD_MONGO_PASSWORD}"/>
+  <env name="PROD_DB_HOST" value="${PROD_DB_HOST}"/>
+  <env name="PROD_DB_PORT" value="${PROD_DB_PORT}"/>
+  <env name="PROD_DB_NAME" value="${PROD_DB_NAME}"/>
+  <env name="PROD_DB_USERNAME" value="${PROD_DB_USERNAME}"/>
+  <env name="PROD_DB_PASSWORD" value="${PROD_DB_PASSWORD}"/>
+  <env name="PROD_MONGO_HOST" value="${PROD_MONGO_HOST}"/>
+  <env name="PROD_MONGO_PORT" value="${PROD_MONGO_PORT}"/>
+  <env name="PROD_MONGO_DB" value="${PROD_MONGO_DB}"/>
+  <env name="PROD_MONGO_USERNAME" value="${PROD_MONGO_USERNAME}"/>
+  <env name="PROD_MONGO_PASSWORD" value="${PROD_MONGO_PASSWORD}"/>
 
   <log mode="roll-by-size">
     <sizeThreshold>10240</sizeThreshold>
