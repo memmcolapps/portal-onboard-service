@@ -83,17 +83,17 @@ jobs:
           
           ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{secrets.LOCATION }}/.env.portal" << EOF
           
-          EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
-          EUREKA_PORT=${{ secrets.EUREKA_PORT }}
-          LOCATION=${{ secrets.LOCATION }} 
-          DB_HOST=${{ secrets.STAGING_DB_HOST }}
-          DB_PORT=${{ secrets.STAGING_DB_PORT }}
-          DB_NAME=${{ secrets.STAGING_DB_NAME }}
-          DB_USERNAME=${{ secrets.STAGING_DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
-          MONGO_HOST=${{ secrets.STAGING_MONGO_HOST }}
-          MONGO_PORT=${{ secrets.STAGING_MONGO_PORT }}
-          MONGO_DB=${{ secrets.STAGING_MONGO_DB }}
+          EUREKA_ADDRESS="${{ secrets.EUREKA_ADDRESS }}"
+          EUREKA_PORT="${{ secrets.EUREKA_PORT }}"
+          LOCATION="${{ secrets.LOCATION }}" 
+          DB_HOST="${{ secrets.STAGING_DB_HOST }}"
+          DB_PORT="${{ secrets.STAGING_DB_PORT }}"
+          DB_NAME="${{ secrets.STAGING_DB_NAME }}"
+          DB_USERNAME="${{ secrets.STAGING_DB_USERNAME }}"
+          DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
+          MONGO_HOST="${{ secrets.STAGING_MONGO_HOST }}"
+          MONGO_PORT="${{ secrets.STAGING_MONGO_PORT }}"
+          MONGO_DB="${{ secrets.STAGING_MONGO_DB }}"
           EOF
           
           ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{secrets.LOCATION }}/.env.portal"
@@ -158,19 +158,19 @@ jobs:
           echo "Writing env file..."
           ssh -o StrictHostKeyChecking=no $SERVER "cat > /${{secrets.LOCATION }}/.env.portal" << EOF
           
-          EUREKA_ADDRESS=${{ secrets.EUREKA_ADDRESS }}
-          EUREKA_PORT=${{ secrets.EUREKA_PORT }}
-          LOCATION=${{ secrets.LOCATION }} 
-          DB_HOST=${{ secrets.PROD_DB_HOST }}
-          DB_PORT=${{ secrets.PROD_DB_PORT }}
-          DB_NAME=${{ secrets.PROD_DB_NAME }}
-          DB_USERNAME=${{ secrets.PROD_DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.PROD_DB_PASSWORD }}
-          MONGO_HOST=${{ secrets.PROD_MONGO_HOST }}
-          MONGO_PORT=${{ secrets.PROD_MONGO_PORT }}
-          MONGO_DB=${{ secrets.PROD_MONGO_DB }}
-          MONGO_USERNAME=${{ secrets.PROD_MONGO_USERNAME }}
-          MONGO_PASSWORD=${{ secrets.PROD_MONGO_PASSWORD }}
+          EUREKA_ADDRESS="${{ secrets.EUREKA_ADDRESS }}"
+          EUREKA_PORT="${{ secrets.EUREKA_PORT }}"
+          LOCATION="${{ secrets.LOCATION }}" 
+          DB_HOST="${{ secrets.PROD_DB_HOST }}"
+          DB_PORT="${{ secrets.PROD_DB_PORT }}"
+          DB_NAME="${{ secrets.PROD_DB_NAME }}"
+          DB_USERNAME="${{ secrets.PROD_DB_USERNAME }}"
+          DB_PASSWORD="${{ secrets.PROD_DB_PASSWORD }}"
+          MONGO_HOST="${{ secrets.PROD_MONGO_HOST }}"
+          MONGO_PORT="${{ secrets.PROD_MONGO_PORT }}"
+          MONGO_DB="${{ secrets.PROD_MONGO_DB }}"
+          MONGO_USERNAME="${{ secrets.PROD_MONGO_USERNAME }}"
+          MONGO_PASSWORD="${{ secrets.PROD_MONGO_PASSWORD }}"
           EOF
           
           ssh -o StrictHostKeyChecking=no $SERVER "chmod 600 /${{secrets.LOCATION }}/.env.portal"
