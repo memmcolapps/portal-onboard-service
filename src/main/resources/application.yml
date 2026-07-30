@@ -19,33 +19,38 @@ spring:
 ##  zipkin:
 ##    base-url: http://localhost:9411/
 
+# Eureka settings
 eureka:
   client:
     service-url:
       defaultZone: http://${EUREKA_ADDRESS}:${EUREKA_PORT}/eureka/
+
   instance:
     prefer-ip-address: true
+    ip-address: ${spring.cloud.client.ip-address}
+    instance-id: ${spring.application.name}:${server.port}
+    metadata-map:
+      management.port: ${management.server.port:${server.port}}
+    status-page-url-path: /actuator/info
     health-check-url-path: /actuator/health
-    health-check-interval-seconds: 10
-
-#management:
-#  endpoints:
-#    web:
-#      exposure:
-#        include: health, info, prometheus
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+      base-path: /actuator
+
   endpoint:
     prometheus:
-      enabled: true
-  prometheus:
-    metrics:
-      export:
-        enabled: true
+      access: read_only
+    health:
+      show-details: always
+      show-components: always
+
+  metrics:
+    enable:
+      cache: true
 
 
 resilience4j:
