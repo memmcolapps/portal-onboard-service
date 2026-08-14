@@ -104,8 +104,7 @@ jobs:
           echo "Verifying service is running..."
           ssh -o StrictHostKeyChecking=no $SERVER "sleep 5 && sudo systemctl is-active portal"
 
-            echo "Deployment complete"
-          EOF
+          echo "Deployment complete"
 
       # =====================================================
       # SSH SETUP (PRODUCTION)
