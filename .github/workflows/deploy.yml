@@ -73,6 +73,9 @@ jobs:
 
           echo "Creating remote directory..."
           ssh -o StrictHostKeyChecking=no $SERVER "mkdir -p /${{secrets.LOCATION }}"
+          
+          echo "Stopping service before upload..."
+          ssh -o StrictHostKeyChecking=no $SERVER "sudo systemctl stop portal"
 
           echo "Uploading JAR..."
           rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" \
